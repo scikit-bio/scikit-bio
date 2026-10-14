@@ -234,6 +234,85 @@ class NewickTests(TestCase):
         self.assertEqual(edges["a"], 3)
         self.assertEqual(edges["b"], 0)
 
+    def _assert_matches_treenode(self, in_):
+        obs = parse_newick(in_)
+        exp = skbio.TreeNode.read([in_])
+        npt.assert_equal(obs.data, skbio.tree.BPTree.from_treenode(exp).data)
+        self.assertEqual([obs.name(i) for i in np.flatnonzero(obs.data)],
+                         [n.name for n in exp.preorder()])
+        self.assertEqual([obs.length(i) or None for i in np.flatnonzero(obs.data)],
+                         [n.length for n in exp.preorder()])
+
+    def test_parse_newick_unlabelled_tips(self):
+        # a tip without a label still takes its place, so the labels after it
+        # go to the right nodes
+        for in_ in ["(,);", "((,),(,));", "(,b);", "(a,);", "(,(,b)c);",
+                    "((,)x,);", "(((,)));", "(,,,)r;", "((a,),(,b))r;",
+                    "(,(a,(,b)));", "((:1,b:2),:3)r:4;"]:
+            self._assert_matches_treenode(in_)
+
+        # many tips without labels
+        obs = parse_newick("(" + "," * 1000 + ");")
+        self.assertEqual(obs.data.size, 2004)
+        self.assertTrue(all(obs.name(i) is None for i in range(obs.data.size)))
+
+    def test_parse_newick_whitespace(self):
+        self._assert_matches_treenode("(\n  (a:1, b:2)c:3,\n  d\n) r;")
+        self._assert_matches_treenode("( (a,b) ,( c ,d ) )r;")
+
+    def test_parse_newick_double_quote_is_literal(self):
+        # only single quotes quote a label, as in the TreeNode reader
+        for in_ in ['(a"b,c);', "('a\"b',c);", '("a,b)c;']:
+            self._assert_matches_treenode(in_)
+
+        # and a name with one is written so that it reads back
+        tree = skbio.tree.BPTree(
+            np.array([1, 1, 0, 1, 0, 0], dtype=np.uint8),
+            names=np.array(['r', '5"', None, 'b', None, None], dtype=object))
+        buf = io.StringIO()
+        write_newick(tree, buf, False)
+        obs = parse_newick(buf.getvalue())
+        self.assertEqual([obs.name(i) for i in np.flatnonzero(obs.data)],
+                         ['r', '5"', 'b'])
+
+    def test_parse_newick_apostrophes(self):
+        # as the TreeNode reader: '' is an apostrophe anywhere in a label, each
+        # other quote opens or closes a quoted part, and underscores are spaces
+        # unless the label ends with a quote
+        for in_ in ["(O''Brien,b)r;", "('O''Brien',b)r;", "('''A''_1',b)r;",
+                    "(a_'b',c)r;", "('a_x'_b,c)r;", "('',b)r;",
+                    "(a'b c'd,e)r;", "('a b':1,c_d:2)'r_s';"]:
+            self._assert_matches_treenode(in_)
+        self.assertEqual(parse_newick("(O''Brien,b)r;").name(1), "O'Brien")
+
+    def test_apostrophes_round_trip(self):
+        # names written by either writer read back the same by the other reader
+        names = ["O'Brien", "it's a", "x_y", "'", "a'_b", "''"]
+        tn = skbio.TreeNode.read(["(%s)r;" % ",".join(
+            "t%d" % k for k in range(len(names)))])
+        for tip, name in zip(tn.tips(), names):
+            tip.name = name
+        buf = io.StringIO()
+        tn.write(buf)
+        obs = parse_newick(buf.getvalue())
+        self.assertEqual([obs.name(i) for i in np.flatnonzero(obs.data)][1:],
+                         names)
+        buf = io.StringIO()
+        write_newick(obs, buf, False)
+        back = skbio.TreeNode.read([buf.getvalue()])
+        self.assertEqual([t.name for t in back.tips()], names)
+
+    def test_parse_newick_unbalanced_quote_raises(self):
+        for in_ in ["(a,b)'x;", "('a,b);", "(a,b)'x[c];"]:
+            with self.assertRaisesRegex(ValueError, "quote"):
+                parse_newick(in_)
+
+    def test_parse_newick_not_a_tree_raises(self):
+        for in_ in ["((a,b)c,d));", "((a,b)c,d;", "(a,b)c,d;", "(a)(b);",
+                    "a(b,c);"]:
+            with self.assertRaises(ValueError):
+                parse_newick(in_)
+
 
 if __name__ == '__main__':
     main()

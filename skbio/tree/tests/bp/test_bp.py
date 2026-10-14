@@ -147,6 +147,41 @@ class BPTests(TestCase):
         with self.assertRaises(ValueError):
             BPTree(np.array([1, 1, 0], dtype=np.uint8))
 
+    def test_init_not_a_tree_raises(self):
+        # bytes other than 0 and 1
+        with self.assertRaisesRegex(ValueError, "only opening"):
+            BPTree(np.array([2, 0, 0, 0], dtype=np.uint8))
+        # a closing parenthesis before its opening one
+        with self.assertRaisesRegex(ValueError, "position 0 closes no node"):
+            BPTree(np.array([0, 1, 1, 0], dtype=np.uint8))
+        # more than one tree
+        for B in ([1, 0, 0, 1], [1, 0, 1, 0], [1, 1, 0, 0, 1, 1, 0, 0]):
+            with self.assertRaisesRegex(ValueError, "more than one tree"):
+                BPTree(np.array(B, dtype=np.uint8))
+
+    def test_positions_outside_tree(self):
+        # any position outside the tree, e.g. a -1 returned for no such node,
+        # gives -1 (False for a test) rather than reading outside the arrays
+        bp = self.bptree
+        n = self.fig1_B.size
+        for i in (-1, -n, n, n + 5):
+            for name in ('close', 'depth', 'parent', 'first_child', 'last_child',
+                         'next_sibling', 'previous_sibling', 'preorder_rank',
+                         'postorder_rank', 'count', 'level_next',
+                         'deepest_node', 'height'):
+                self.assertEqual(getattr(bp, name)(i), -1, (name, i))
+            self.assertEqual(bp.level_ancestor(i, 1), -1)
+            self.assertFalse(bp.is_tip(i))
+            for a, b in ((i, 1), (1, i)):
+                self.assertEqual(bp.lca(a, b), -1)
+                self.assertEqual(bp.rmq(a, b), -1)
+                self.assertEqual(bp.rMq(a, b), -1)
+                self.assertFalse(bp.is_ancestor(a, b))
+
+        # the -1 of one method passed to another
+        self.assertEqual(bp.first_child(bp.parent(0)), -1)
+        self.assertEqual(bp.preorder_rank(bp.preorder_select(0)), -1)
+
     def test_rmq(self):
         #       (  (  (  )  (  )  (  (  )  )   )   (   )   (   (   (   )   (   )   )   )   )
         #excess 1  2  3  2  3  2  3  4  3  2   1   2   1   2   3   4   3   4   3   2   1   0
@@ -514,6 +549,13 @@ class BPTests(TestCase):
         obs = self.bptree.shear(in_).data
         npt.assert_equal(obs, exp)
 
+    def test_shear_single_node(self):
+        bp = BPTree(np.array([1, 0], dtype=np.uint8),
+                    names=np.array(['a', None], dtype=object))
+        obs = bp.shear({'a'})
+        npt.assert_equal(obs.data, [1, 0])
+        self.assertEqual(obs.name(0), 'a')
+
     def test_shear_raise_tree_is_empty(self):
         names = np.array(['r', '2', '3', None, '4', None, '5', '6', None, None, None, '7', None, '8', '9', '10', None,
                           '11', None, None, None, None])
@@ -660,7 +702,10 @@ class BPIndexTests(TestCase):
     def test_build_index_matches_reference(self):
         for B in _index_test_topologies():
             with self.subTest(size=B.size):
-                self.assert_index_equal(_build_index(B), tbc.reference_index(B))
+                obs = _build_index(B)
+                self.assert_index_equal(obs, tbc.reference_index(B))
+                # a single tree: its root closes at the end
+                self.assertEqual(obs['root_close'], B.size - 1)
 
     def test_tree_index_matches_reference(self):
         # the arrays held by the tree (and viewed by the kernel) are the index
@@ -748,6 +793,18 @@ class BPTreeClassTests(TestCase):
         with self.assertRaises(TypeError):
             self.bp.shear(['4'])
 
+    def test_data_read_only(self):
+        # the parentheses the index was built from cannot be changed through
+        # the tree: a read-only view of them, with no copy
+        B = self.B.copy()
+        bp = BPTree(B)
+        self.assertFalse(bp.data.flags.writeable)
+        self.assertTrue(np.shares_memory(bp.data, B))
+        with self.assertRaises(ValueError):
+            bp.data[0] = 0
+        # the caller's array is left as it was
+        self.assertTrue(B.flags.writeable)
+
     def test_bool_topology(self):
         # accepted as uint8, as the compiled class always did (e.g. trees
         # saved from one built from a bool array)
@@ -812,6 +869,20 @@ class BPTreeClassTests(TestCase):
                 self.assertEqual(obs.name(i), self.bp.name(i))
                 self.assertEqual(obs.length(i), self.bp.length(i))
                 self.assertEqual(obs.close(i), self.bp.close(i))
+
+    def test_pickle_and_copy_edges(self):
+        # edge numbers and their lookup are kept
+        edges = np.arange(self.B.size, dtype=np.int32)
+        self.bp.set_edges(edges)
+        for obs in (pickle.loads(pickle.dumps(self.bp)), copy.copy(self.bp),
+                    copy.deepcopy(self.bp)):
+            npt.assert_array_equal(obs.edges, edges)
+            for i in np.flatnonzero(self.B):
+                self.assertEqual(obs.edge_from_number(edges[i]), i)
+
+        # a tree without edge numbers gets no lookup
+        bp = BPTree(self.B)
+        self.assertIsNone(copy.deepcopy(bp)._edge_lookup)
 
     def test_io_descriptors(self):
         self.assertIn('newick', BPTree.read.__doc__)
@@ -1204,7 +1275,7 @@ class BPDeviceTreeTests(TestCase, ArrayAPITestMixin):
             # and back to the host, from where the tree lives now
             back = bp.to_device(np)
             self.assertIsInstance(back.data, np.ndarray)
-            self.assertIs(back.data, host.data)
+            self.assertIs(back._data, host._data)
             npt.assert_array_equal(back.lca_batch(i, j), host.lca_batch(i, j))
 
         # setting an attribute of one tree leaves the other as it was (on a

@@ -79,6 +79,14 @@ cdef inline Py_ssize_t max(Py_ssize_t a, Py_ssize_t b) noexcept nogil:
         return b
 
 
+cdef inline bint _outside(Py_ssize_t i, Py_ssize_t size) noexcept nogil:
+    """Whether ``i`` is not a position of a tree of ``size`` parentheses.
+
+    One unsigned comparison: a negative ``i`` becomes larger than any size.
+    """
+    return <size_t>i >= <size_t>size
+
+
 @cython.final
 cdef class _BPKernel:
     """Compiled navigation over the arrays of a :class:`~skbio.tree.BPTree`.
@@ -194,6 +202,8 @@ cdef class _BPKernel:
 
     cpdef inline Py_ssize_t close(self, Py_ssize_t i) noexcept nogil:
         """The position of the closing parenthesis that matches B[i]"""
+        if _outside(i, self.size):
+            return -1
         if not self._b_ptr[i]:
             # identity: the close of a closed parenthesis is itself
             return i
@@ -229,6 +239,8 @@ cdef class _BPKernel:
             Py_ssize_t bi, bj, e_i
             Py_ssize_t b
 
+        if _outside(i, self.size) or _outside(j, self.size):
+            return -1
         if i >= j:
             return i
 
@@ -276,6 +288,8 @@ cdef class _BPKernel:
             Py_ssize_t bi, bj, e_i
             Py_ssize_t b
 
+        if _outside(i, self.size) or _outside(j, self.size):
+            return -1
         if i >= j:
             return i
 
@@ -355,6 +369,8 @@ cdef class _BPKernel:
 
     cpdef Py_ssize_t depth(self, Py_ssize_t i) noexcept nogil:
         """The depth of node ``i``."""
+        if _outside(i, self.size):
+            return -1
         return self._e_index[i]
 
     cpdef Py_ssize_t root(self) noexcept nogil:
@@ -363,6 +379,8 @@ cdef class _BPKernel:
 
     cpdef Py_ssize_t parent(self, Py_ssize_t i) noexcept nogil:
         """The parent of node ``i``, or -1 for the root."""
+        if _outside(i, self.size):
+            return -1
         if i == self.root() or i == (self.size - 1):
             return -1
         else:
@@ -370,10 +388,14 @@ cdef class _BPKernel:
 
     cpdef BOOL_t is_tip(self, Py_ssize_t i) noexcept nogil:
         """Whether node ``i`` is a tip."""
+        if _outside(i, self.size):
+            return 0
         return self._b_ptr[i] and (not self._b_ptr[i + 1])
 
     cpdef Py_ssize_t first_child(self, Py_ssize_t i) noexcept nogil:
         """Index of the first child of node ``i``, or 0 for a tip."""
+        if _outside(i, self.size):
+            return -1
         if self._b_ptr[i]:
             if self.is_tip(i):
                 return 0
@@ -384,6 +406,8 @@ cdef class _BPKernel:
 
     cpdef Py_ssize_t last_child(self, Py_ssize_t i) noexcept nogil:
         """Index of the last child of node ``i``, or 0 for a tip."""
+        if _outside(i, self.size):
+            return -1
         if self._b_ptr[i]:
             if self.is_tip(i):
                 return 0
@@ -396,6 +420,8 @@ cdef class _BPKernel:
         """Index of the next sibling of node ``i``, or 0 if none."""
         cdef Py_ssize_t pos
 
+        if _outside(i, self.size):
+            return -1
         if self._b_ptr[i]:
             pos = self.close(i) + 1
         else:
@@ -412,6 +438,8 @@ cdef class _BPKernel:
         """Index of the previous sibling of node ``i``, or 0 if none."""
         cdef Py_ssize_t pos
 
+        if _outside(i, self.size):
+            return -1
         if self._b_ptr[i]:
             if self._b_ptr[max(0, i - 1)]:
                 return 0
@@ -429,6 +457,8 @@ cdef class _BPKernel:
 
     cpdef Py_ssize_t preorder_rank(self, Py_ssize_t i) noexcept nogil:
         """Preorder rank of node ``i``."""
+        if _outside(i, self.size):
+            return -1
         if self._b_ptr[i]:
             return self.rank(1, i)
         else:
@@ -442,6 +472,8 @@ cdef class _BPKernel:
 
     cpdef Py_ssize_t postorder_rank(self, Py_ssize_t i) noexcept nogil:
         """Postorder rank of node ``i``."""
+        if _outside(i, self.size):
+            return -1
         if self._b_ptr[i]:
             return self.rank(0, self.close(i))
         else:
@@ -460,6 +492,8 @@ cdef class _BPKernel:
         descendant; ``i``'s own parentheses, its two ends, are not, so a node
         is not its own ancestor whichever parenthesis names it.
         """
+        if _outside(i, self.size) or _outside(j, self.size):
+            return 0
         if not self._b_ptr[i]:
             i = self.open(i)
 
@@ -470,6 +504,8 @@ cdef class _BPKernel:
         cdef:
             Py_ssize_t last, j, c
 
+        if _outside(i, self.size):
+            return -1
         if not self._b_ptr[i]:
             i = self.open(i)
 
@@ -491,6 +527,8 @@ cdef class _BPKernel:
 
     cpdef Py_ssize_t level_ancestor(self, Py_ssize_t i, Py_ssize_t d) noexcept nogil:
         """Index of the ancestor ``d`` levels above node ``i``."""
+        if _outside(i, self.size):
+            return -1
         if d <= 0:
             return -1
 
@@ -501,6 +539,8 @@ cdef class _BPKernel:
 
     cpdef Py_ssize_t level_next(self, Py_ssize_t i) noexcept nogil:
         """Index of the next node at the same depth as node ``i``."""
+        if _outside(i, self.size):
+            return -1
         return self.fwdsearch(self.close(i), 1)
 
     cpdef Py_ssize_t lca(self, Py_ssize_t i, Py_ssize_t j) noexcept nogil:
@@ -512,6 +552,8 @@ cdef class _BPKernel:
         opening-parenthesis arguments that is two byte tests and a compare.
         """
         cdef Py_ssize_t t
+        if _outside(i, self.size) or _outside(j, self.size):
+            return -1
         if not self._b_ptr[i]:
             i = self.open(i)
         if not self._b_ptr[j]:
@@ -532,10 +574,14 @@ cdef class _BPKernel:
 
     cpdef Py_ssize_t deepest_node(self, Py_ssize_t i) noexcept nogil:
         """Index of the deepest node descending from node ``i``."""
+        if _outside(i, self.size):
+            return -1
         return self.rMq(self.open(i), self.close(i))
 
     cpdef Py_ssize_t height(self, Py_ssize_t i) noexcept nogil:
         """The height of node ``i``, in edges."""
+        if _outside(i, self.size):
+            return -1
         return self.excess(self.deepest_node(i)) - self.excess(self.open(i))
 
     cdef Py_ssize_t scan_block_forward(self, Py_ssize_t i, Py_ssize_t k, Py_ssize_t b, Py_ssize_t d) noexcept nogil:
@@ -611,9 +657,6 @@ cdef class _BPKernel:
         # note that this is an inclusive boundary since this is a backward search
         upper_bound = min((k + 1) * b, self.size) - 1
         upper_bound = min(i - 1, upper_bound)
-
-        if upper_bound <= 0:
-            return -1
 
         for j in range(upper_bound, lower_bound, -1):
             if self.excess(j) == d:
@@ -795,7 +838,8 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
         in order, so the k-th is at ``k - 1``), ``m``,
         ``M`` and ``r`` (minimum excess, maximum excess and rank of the rmM tree
         nodes in heap order), ``b`` (block size) and ``height`` (rmM tree
-        height). Arrays are of intp.
+        height), ``root_close`` (the first position where the excess drops below 1).
+        Arrays are of intp.
 
     """
     cdef:
@@ -805,6 +849,7 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
         Py_ssize_t n_total = n_tip + n_internal
         Py_ssize_t n_open, i, j, k, upper, lvl, pos, node, lchild, rchild
         Py_ssize_t excess = 0, rank = 0, min_, max_, ptr_0 = 0, ptr_1 = 0
+        Py_ssize_t root_close = -1
         Py_ssize_t[::1] e_index, k_index_0, k_index_1, m, M, r
 
     n_open = np.count_nonzero(B)
@@ -829,6 +874,8 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
                 excess += -1 + (2 * B[j])
                 rank += B[j]
                 e_index[j] = excess
+                if excess < 1 and root_close < 0:
+                    root_close = j
                 if B[j]:
                     k_index_1[ptr_1] = j
                     ptr_1 += 1
@@ -869,6 +916,7 @@ def build_index(const BOOL_t[::1] B, Py_ssize_t b, Py_ssize_t height):
         "r": r_arr,
         "b": b,
         "height": height,
+        "root_close": root_close,
     }
 
 
@@ -1048,7 +1096,7 @@ def shear_mask(_BPKernel k, set tips):
                     mask[i + 1] = 1
 
                     p = k.parent(i)
-                    while p != 0 and mask[p] == 0:
+                    while p > 0 and mask[p] == 0:
                         mask[p] = 1
                         mask[k.close(p)] = 1
 
