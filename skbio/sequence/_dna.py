@@ -18,35 +18,33 @@ class DNA(GrammaredSequence, NucleotideMixin):
 
     Parameters
     ----------
-    sequence : str, Sequence, or 1D np.ndarray (np.uint8 or '\|S1')
-        Characters representing the DNA sequence itself.
+    sequence : str, bytes-like, 1D ndarray (uint8 or '\|S1'), or Sequence
+        Characters representing the DNA sequence.
     metadata : dict, optional
         Arbitrary metadata which applies to the entire sequence.
-    positional_metadata : Pandas DataFrame consumable, optional
-        Arbitrary per-character metadata. For example, quality data from
-        sequencing reads. Must be able to be passed directly to the Pandas
-        DataFrame constructor.
-    interval_metadata : IntervalMetadata
-        Arbitrary interval metadata which applies to intervals within
-        a sequence to store interval features (such as genes on the
-        DNA sequence).
+    positional_metadata : pd.DataFrame consumable, optional
+        Arbitrary per-character metadata. For example, quality scores of sequencing
+        reads. Must be able to pass directly to the ``pd.DataFrame`` constructor.
+    interval_metadata : IntervalMetadata, optional
+        Arbitrary interval metadata which applies to intervals within the a sequence to
+        store interval features (such as genes on the DNA sequence).
     lowercase : bool or str, optional
-        If ``True``, lowercase sequence characters will be converted to
-        uppercase characters in order to be valid IUPAC DNA characters. If
-        ``False``, no characters will be converted. If a str, it will be
-        treated as a key into the positional metadata of the object. All
-        lowercase characters will be converted to uppercase, and a ``True``
-        value will be stored in a boolean array in the positional metadata
-        under the key.
+        If True, lowercase sequence characters will be converted to uppercase to ensure
+        they are valid IUPAC DNA characters. If False (default), characters will not be
+        converted. If a string, in addition to the uppercase conversion, a boolean array
+        indicating which positions were originally lowercase will be stored in the
+        positional metadata under this key.
     validate : bool, optional
-        If ``True``, validation will be performed to ensure that all sequence
-        characters are in the IUPAC DNA character set. If ``False``, validation
-        will not be performed. Turning off validation will improve runtime
-        performance. If invalid characters are present, however, there is
-        **no guarantee that operations performed on the resulting object will
-        work or behave as expected.** Only turn off validation if you are
-        certain that the sequence characters are valid. To store sequence data
-        that is not IUPAC-compliant, use ``Sequence``.
+        If True (default), validation will be performed to ensure that all sequence
+        characters are in the IUPAC DNA character set. Turning off validation (False)
+        will improve performance. If invalid characters are present, however, there is
+        **no guarantee that subsequent operations will retain the expected behavior.**
+        Only turn off validation if you are certain that the sequence characters are
+        valid. To store sequence data that is not IUPAC-compliant, use ``Sequence``.
+    copy : bool, optional
+        Control copying of sequence data. See :class:`Sequence` for details.
+
+        .. versionadded:: 0.7.5
 
     See Also
     --------
@@ -103,12 +101,12 @@ class DNA(GrammaredSequence, NucleotideMixin):
 
     Characters other than the above 17 are not allowed. If you intend to use additional
     characters to represent non-canonical nucleobases, such as ``I`` (Inosine), you may
-    create a custom alphabet using ``GrammaredSequence``. Directly modifying the
+    create a custom alphabet using :class:`GrammaredSequence`. Directly modifying the
     alphabet of ``DNA`` may break methods that rely on the IUPAC alphabet.
 
     It should be noted that some functions do not support degenerate characters. In
-    such cases, they will be replaced with `N` to represent any of the canonical
-    nucleotides.
+    such cases, they will be replaced with the wildcard character ``N`` to represent
+    any of the canonical nucleotides.
 
     References
     ----------

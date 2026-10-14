@@ -29,19 +29,17 @@ def align_score(
 ) -> float:
     r"""Calculate the alignment score of two or more aligned sequences.
 
-    For two sequences, their pairwise alignment score will be calculated. For three or
-    more sequences, the sum-of-pairs (SP) alignment score will be returned.
+    For two sequences, the pairwise alignment score is calculated. For three or more
+    sequences, the sum-of-pairs (SP) alignment score is returned.
 
     .. versionadded:: 0.7.0
 
     Parameters
     ----------
-    alignment : TabularMSA, iterable, or (AlignPath, iterable)
-        Aligned sequences. Can be any of the following:
-
-        - ``TabularMSA`` instance.
-        - List of *aligned* sequences as raw strings or ``Sequence`` objects.
-        - Tuple of ``AlignPath`` and the corresponding list of *unaligned* sequences.
+    alignment : alignment_like
+        Alignment to score. Can be a :class:`TabularMSA`, a sequence of equal-length,
+        aligned :ref:`sequence-like <sequence_like>` objects, or an :class:`AlignPath`
+        paired with the corresponding sequence of unaligned sequence-like objects.
 
     sub_score : tuple of (float, float), SubstitutionMatrix, or str
         Score of a substitution. May be two numbers (match, mismatch), a substitution
@@ -55,9 +53,9 @@ def align_score(
     free_ends : bool, optional
         If True (default), gaps at the sequence terminals are free from penalization.
 
-    gap_chars : iterable of 1-length str, optional
-        Character(s) that represent gaps. Only relevant when ``alignment`` is
-        a list of aligned sequences.
+    gap_chars : iterable of hashable, optional
+        Symbols that represent gaps. Only relevant when ``alignment`` is an iterable
+        of aligned sequences.
 
     Returns
     -------

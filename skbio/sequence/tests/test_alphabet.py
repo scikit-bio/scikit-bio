@@ -14,7 +14,7 @@ import numpy.testing as npt
 from skbio.sequence._alphabet import (
     _encode_alphabet, _alphabet_to_hashes,
     _indices_in_alphabet, _indices_in_alphabet_ascii,
-    _indices_in_observed)
+    _indices_in_sorted, _indices_in_observed)
 
 
 class TestAlphabet(TestCase):
@@ -37,8 +37,16 @@ class TestAlphabet(TestCase):
 
         # 2d array
         alpha = np.array([[65, 67], [71, 84]], dtype=np.uint8)
-        obs = _encode_alphabet(alpha)
-        npt.assert_array_equal(obs, alpha)
+        with self.assertRaises(ValueError):
+            _encode_alphabet(alpha)
+
+        # bytes
+        npt.assert_array_equal(_encode_alphabet(b"ACGT"), exp)
+        npt.assert_array_equal(_encode_alphabet(bytearray(b"ACGT")), exp)
+        with self.assertRaises(ValueError):
+            _encode_alphabet(b"\xff")
+        with self.assertRaises(ValueError):
+            _encode_alphabet(bytearray(b"\xff"))
 
         # wrong data types
         with self.assertRaises(TypeError):
@@ -207,13 +215,13 @@ class TestAlphabet(TestCase):
                         [1, 1, 4, 3, 0, -1, 0]])
         npt.assert_array_equal(obs, exp)
 
-    def test_indices_in_observed(self):
+    def test_indices_in_sorted(self):
         # data from human TP53 protein (NP_000537.3)
         seqs = ('MEEPQSDPSVEPPLSQETFSDLWKLLPE',
                 'NNVLSPLPSQAMDDLMLSP',
                 'DDIEQWFTEDPGPDEAPRMPEAA')
 
-        obs_idx, obs_alp = _indices_in_observed(seqs)
+        obs_idx, obs_alp = _indices_in_sorted(seqs)
         exp_alp = np.array(tuple('ADEFGIKLMNPQRSTVW'))
         exp_idx = (
             np.array([8, 2, 2, 10, 11, 13, 1, 10, 13, 15, 2, 10, 10, 7, 13, 11,
@@ -234,7 +242,7 @@ class TestAlphabet(TestCase):
         seqs = ([1, 4, 6, 7, 8],
                 [3, 3, 4, 1, 0],
                 [5, 2, 5, 8, 0])
-        obs_idx, obs_alp = _indices_in_observed(seqs)
+        obs_idx, obs_alp = _indices_in_sorted(seqs)
         npt.assert_array_equal(obs_alp, np.arange(9))
         for idx, seq in zip(obs_idx, seqs):
             npt.assert_array_equal(obs_alp[idx], np.array(seq))
@@ -243,22 +251,39 @@ class TestAlphabet(TestCase):
         seqs = (['this', 'is', 'a', 'cat'],
                 ['that', 'is', 'a', 'dog'],
                 ['cat', 'is', 'not', 'dog'])
-        obs_idx, obs_alp = _indices_in_observed(seqs)
+        obs_idx, obs_alp = _indices_in_sorted(seqs)
         exp_alp = np.unique(np.concatenate(seqs))
         npt.assert_array_equal(obs_alp, exp_alp)
         for idx, seq in zip(obs_idx, seqs):
             npt.assert_array_equal(obs_alp[idx], np.array(seq))
 
         # sequences are individual characters
-        obs_idx, obs_alp = _indices_in_observed(['hello'])
+        obs_idx, obs_alp = _indices_in_sorted(['hello'])
         npt.assert_array_equal(obs_alp, np.array(['e', 'h', 'l', 'o']))
         self.assertEqual(''.join(obs_alp[np.concatenate(obs_idx)]), 'hello')
 
         # empty sequence
-        obs_idx, obs_alp = _indices_in_observed([[]])
+        obs_idx, obs_alp = _indices_in_sorted([[]])
         self.assertEqual(obs_alp.size, 0)
         self.assertEqual(len(obs_idx), 1)
         self.assertEqual(obs_idx[0].size, 0)
+
+    def test_indices_in_observed(self):
+        seqs = [
+            ["abc", None, frozenset({"x"})],
+            [b"xyz", None, ("codon", 1)],
+        ]
+        indices, alphabet = _indices_in_observed(seqs)
+        npt.assert_array_equal(indices[0], [0, 1, 2])
+        npt.assert_array_equal(indices[1], [3, 1, 4])
+        self.assertEqual(
+            alphabet, ("abc", None, frozenset({"x"}), b"xyz", ("codon", 1))
+        )
+        self.assertIs(indices[0].dtype.type, np.intp)
+
+        msg = "Sequence 1 contains an unhashable symbol at position 0: list."
+        with self.assertRaisesRegex(TypeError, msg):
+            _indices_in_observed([[['not', 'hashable']]])
 
 
 if __name__ == "__main__":
