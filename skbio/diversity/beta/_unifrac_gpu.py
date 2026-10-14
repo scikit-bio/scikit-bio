@@ -518,8 +518,14 @@ def _evict_kernel_cache_entry(cuda, tile, node_chunk, variance_adjust):
 #       MI300A: works, but slower than (32, 32).
 #   (16, 32): 256 threads/block, 2*16*33*8 + 2*16*32*8 = 16640 bytes
 #       (~16.25KB) shared mem. The config known to launch and run correctly
-#       on NVIDIA cards tested (RTX 2080 Ti, A10, RTX A4000); previously
-#       the hardcoded NVIDIA default.
+#       on NVIDIA cards tested (RTX 2080 Ti, A10, RTX A4000) for the
+#       variance_adjust=True kernel variant; previously the hardcoded
+#       NVIDIA default. That NVIDIA testing did not separately exercise the
+#       variance_adjust=False variant -- a real A10 hit
+#       CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES on it at this same (TILE,
+#       NODE_CHUNK), despite variance_adjust=True working fine, which is why
+#       `_probe_tile_config` now probes both variants before accepting a
+#       candidate (see its docstring).
 #   (8, 32): 64 threads/block, 2*8*33*8 + 2*8*32*8 = 8320 bytes (~8.125KB)
 #       shared mem. A defensive floor rung below anything actually tuned,
 #       for hardware with even tighter per-block limits than tested
@@ -555,7 +561,7 @@ _TILE_CONFIG_CACHE = {}
 _TILE_CONFIG_LOCK = threading.Lock()
 
 
-def _probe_tile_config_candidate(cuda, tile, node_chunk):
+def _probe_tile_config_candidate(cuda, tile, node_chunk, variance_adjust):
     """Compile and launch the real kernel at ``(tile, node_chunk)`` against
     tiny synthetic dummy data, to see whether this configuration is safe on
     the GPU actually present.
@@ -572,20 +578,27 @@ def _probe_tile_config_candidate(cuda, tile, node_chunk):
     Raises whatever exception the backend produces; the caller decides
     whether to try the next candidate.
 
-    Probes with ``variance_adjust=True``: since that compiles and launches
-    the higher shared-memory-pressure of the 2 ``variance_adjust`` kernel
-    variants (see `_make_unifrac_kernel`), a tile config that is safe for
-    it is presumptively safe for the ``variance_adjust=False`` variant too
-    (strictly less shared memory, nothing added) -- but that variant is
-    never itself launched during probing, only compiled fresh later from
-    the same cache-safe tile config on first real use.
+    ``variance_adjust`` selects which of the 2 compile-time kernel variants
+    (see `_make_unifrac_kernel`) this probes. It used to be hardcoded to
+    ``True`` on the theory that the ``variance_adjust=True`` variant's extra
+    shared-memory tiles make it strictly more resource-hungry, so a config
+    safe for it would be safe for ``variance_adjust=False`` too -- but that
+    reasoning only accounts for *shared memory*. Register allocation is
+    decided by NVVM/LLVM codegen on the whole compiled function body, not
+    just its shared-memory footprint, and is not guaranteed monotonic in
+    the amount of source code removed: confirmed on a real NVIDIA A10, the
+    ``variance_adjust=False`` variant hit
+    ``CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES`` at a tile config the
+    ``variance_adjust=True`` variant had already launched successfully.
+    Each variant must therefore be probed on its own; see
+    `_probe_tile_config`, which now calls this once per variant.
     """
     # Minimal data: 2 samples (one valid i<j pair) and 2 nodes (one real
     # node-chunk iteration), just enough to exercise one full (tile, tile)
     # block launch of the real kernel body -- cheap to construct, and the
-    # resource limits this probes for (threads/block, shared-memory/block)
-    # depend only on the launch configuration and compiled kernel, not on
-    # the data size.
+    # resource limits this probes for (threads/block, shared-memory/block,
+    # registers/thread) depend only on the launch configuration and
+    # compiled kernel, not on the data size.
     n_samples = 2
     n_nodes = 2
     _launch_unifrac_kernel(
@@ -598,7 +611,7 @@ def _probe_tile_config_candidate(cuda, tile, node_chunk):
         np.zeros(n_nodes, dtype=np.float64),
         UNWEIGHTED,
         1.0,
-        True,
+        variance_adjust,
     )
 
 
@@ -610,11 +623,19 @@ def _probe_tile_config(cuda, backend):
     against synthetic data, not user input -- contrast `_dispatch_gpu_or_xp`,
     whose ``except`` narrows deliberately because its inputs *are*
     user-controlled.
+
+    A candidate is accepted only if *both* the ``variance_adjust=True`` and
+    ``variance_adjust=False`` kernel variants probe clean at it (see
+    `_probe_tile_config_candidate`'s docstring for why one variant probing
+    safe does not imply the other is): `_get_tile_config` caches a single
+    (TILE, NODE_CHUNK) per backend and hands it to whichever variant a real
+    call needs, so the cached config must actually be safe for both.
     """
     failures = []
     for tile, node_chunk in _TILE_CANDIDATES:
         try:
-            _probe_tile_config_candidate(cuda, tile, node_chunk)
+            _probe_tile_config_candidate(cuda, tile, node_chunk, True)
+            _probe_tile_config_candidate(cuda, tile, node_chunk, False)
             return tile, node_chunk
         except Exception as exc:  # noqa: BLE001 -- see docstring above
             failures.append(

@@ -250,14 +250,20 @@ class ProbeTileConfigCandidateTests(TestCase):
         fake = _ProbingFakeCuda(launch_outcomes=[None])
         self.addCleanup(_cleanup_kernel_cache, fake)
         # Should not raise.
-        _probe_tile_config_candidate(fake, 16, 32)
+        _probe_tile_config_candidate(fake, 16, 32, True)
+        self.assertEqual(fake.jit_call_count, 1)
+
+    def test_succeeds_silently_for_the_variance_adjust_false_variant_too(self):
+        fake = _ProbingFakeCuda(launch_outcomes=[None])
+        self.addCleanup(_cleanup_kernel_cache, fake)
+        _probe_tile_config_candidate(fake, 16, 32, False)
         self.assertEqual(fake.jit_call_count, 1)
 
     def test_propagates_the_launch_exception(self):
         fake = _ProbingFakeCuda(launch_outcomes=[RuntimeError("boom")])
         self.addCleanup(_cleanup_kernel_cache, fake)
         with self.assertRaisesRegex(RuntimeError, "boom"):
-            _probe_tile_config_candidate(fake, 32, 32)
+            _probe_tile_config_candidate(fake, 32, 32, True)
 
 
 class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
@@ -273,12 +279,20 @@ class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
     def test_failed_launch_does_not_linger_in_kernel_cache(self):
         fake = _ProbingFakeCuda(launch_outcomes=[RuntimeError("boom")])
         self.addCleanup(_cleanup_kernel_cache, fake)
-        # `_probe_tile_config_candidate` always probes the variance_adjust=
-        # True variant (see its docstring/A2): that's the key shape that
-        # must not linger after a failed launch.
         cache_key = (id(fake), 16, 32, True)
         with self.assertRaisesRegex(RuntimeError, "boom"):
-            _probe_tile_config_candidate(fake, 16, 32)
+            _probe_tile_config_candidate(fake, 16, 32, True)
+        self.assertNotIn(cache_key, _KERNEL_CACHE)
+
+    def test_failed_launch_does_not_linger_in_kernel_cache_variance_adjust_false(self):
+        # Same as above, for the variance_adjust=False variant -- the key
+        # shape behind the real A10 regression (see `_probe_tile_config`'s
+        # docstring): this variant's cache entry must not linger either.
+        fake = _ProbingFakeCuda(launch_outcomes=[RuntimeError("boom")])
+        self.addCleanup(_cleanup_kernel_cache, fake)
+        cache_key = (id(fake), 16, 32, False)
+        with self.assertRaisesRegex(RuntimeError, "boom"):
+            _probe_tile_config_candidate(fake, 16, 32, False)
         self.assertNotIn(cache_key, _KERNEL_CACHE)
 
     def test_successful_launch_still_caches_the_kernel(self):
@@ -288,7 +302,7 @@ class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
         fake = _ProbingFakeCuda(launch_outcomes=[None])
         self.addCleanup(_cleanup_kernel_cache, fake)
         cache_key = (id(fake), 16, 32, True)
-        _probe_tile_config_candidate(fake, 16, 32)
+        _probe_tile_config_candidate(fake, 16, 32, True)
         self.assertIn(cache_key, _KERNEL_CACHE)
 
     def test_later_retry_after_a_failed_launch_recompiles_rather_than_reusing(self):
@@ -298,9 +312,9 @@ class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
         fake = _ProbingFakeCuda(launch_outcomes=[RuntimeError("boom"), None])
         self.addCleanup(_cleanup_kernel_cache, fake)
         with self.assertRaisesRegex(RuntimeError, "boom"):
-            _probe_tile_config_candidate(fake, 16, 32)
+            _probe_tile_config_candidate(fake, 16, 32, True)
         self.assertEqual(fake.jit_call_count, 1)
-        _probe_tile_config_candidate(fake, 16, 32)
+        _probe_tile_config_candidate(fake, 16, 32, True)
         self.assertEqual(fake.jit_call_count, 2)
 
 
@@ -313,16 +327,20 @@ class ProbeTileConfigTests(TestCase):
     """
 
     def test_first_candidate_succeeding_is_used_without_trying_others(self):
-        fake = _ProbingFakeCuda(launch_outcomes=[None])
+        # Both the variance_adjust=True and =False probes of the first
+        # candidate must succeed -- 2 jit() calls, not 1 (see
+        # `_probe_tile_config`'s docstring for why both are probed).
+        fake = _ProbingFakeCuda(launch_outcomes=[None, None])
         self.addCleanup(_cleanup_kernel_cache, fake)
         result = _probe_tile_config(fake, "hip")
         self.assertEqual(result, _TILE_CANDIDATES[0])
-        self.assertEqual(fake.jit_call_count, 1)
+        self.assertEqual(fake.jit_call_count, 2)
 
     def test_nvidia_style_launch_error_falls_through_to_next_candidate(self):
         # Simulates the real NVIDIA failure mode: the most aggressive
-        # candidate(s) raise a launch-time resource error, and the probe
-        # moves on to try the next candidate instead of giving up.
+        # candidate(s) raise a launch-time resource error on their
+        # variance_adjust=True probe, and the probe moves on to try the
+        # next candidate instead of giving up.
         cuda_error = type("CudaAPIError", (Exception,), {})(
             "CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES"
         )
@@ -330,7 +348,7 @@ class ProbeTileConfigTests(TestCase):
         self.addCleanup(_cleanup_kernel_cache, fake)
         result = _probe_tile_config(fake, "cuda")
         self.assertEqual(result, _TILE_CANDIDATES[2])
-        self.assertEqual(fake.jit_call_count, 3)
+        self.assertEqual(fake.jit_call_count, 4)
 
     def test_amd_style_compile_error_falls_through_to_next_candidate(self):
         # Simulates the real AMD failure mode: a compile-time RuntimeError
@@ -341,11 +359,11 @@ class ProbeTileConfigTests(TestCase):
             "AMD_COMGR_ACTION_CODEGEN_BC_TO_RELOCATABLE failed: "
             "local memory (66560) exceeds limit (65536)"
         )
-        fake = _ProbingFakeCuda(launch_outcomes=[comgr_error, None])
+        fake = _ProbingFakeCuda(launch_outcomes=[comgr_error, None, None])
         self.addCleanup(_cleanup_kernel_cache, fake)
         result = _probe_tile_config(fake, "hip")
         self.assertEqual(result, _TILE_CANDIDATES[1])
-        self.assertEqual(fake.jit_call_count, 2)
+        self.assertEqual(fake.jit_call_count, 3)
 
     def test_mixed_failure_types_are_all_caught(self):
         # A third, unanticipated exception type should also be caught by
@@ -355,12 +373,13 @@ class ProbeTileConfigTests(TestCase):
             RuntimeError("AMD_COMGR_ACTION_CODEGEN_BC_TO_RELOCATABLE failed"),
             ValueError("some other, unanticipated failure"),
             None,
+            None,
         ]
         fake = _ProbingFakeCuda(launch_outcomes=outcomes)
         self.addCleanup(_cleanup_kernel_cache, fake)
         result = _probe_tile_config(fake, "cuda")
         self.assertEqual(result, _TILE_CANDIDATES[3])
-        self.assertEqual(fake.jit_call_count, 4)
+        self.assertEqual(fake.jit_call_count, 5)
 
     def test_raises_clear_error_when_every_candidate_fails(self):
         fail = RuntimeError("nope")
@@ -369,6 +388,23 @@ class ProbeTileConfigTests(TestCase):
         with self.assertRaisesRegex(RuntimeError, "No safe"):
             _probe_tile_config(fake, "cuda")
         self.assertEqual(fake.jit_call_count, len(_TILE_CANDIDATES))
+
+    def test_variance_adjust_false_failing_rejects_a_candidate_whose_true_variant_passed(
+        self,
+    ):
+        # Regression for the real A10 CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES
+        # crash: variance_adjust is a compile-time constant (see A2), so its
+        # True/False kernel variants are two separately-compiled artifacts
+        # whose register footprints are not reliably ordered. A tile config
+        # whose variance_adjust=True probe passes but whose
+        # variance_adjust=False probe fails must still be rejected, not
+        # cached and handed to real variance_adjust=False calls later.
+        fail = RuntimeError("CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES")
+        fake = _ProbingFakeCuda(launch_outcomes=[None, fail, None, None])
+        self.addCleanup(_cleanup_kernel_cache, fake)
+        result = _probe_tile_config(fake, "cuda")
+        self.assertEqual(result, _TILE_CANDIDATES[1])
+        self.assertEqual(fake.jit_call_count, 4)
 
 
 class GetTileConfigTests(TestCase):
