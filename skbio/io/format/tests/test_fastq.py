@@ -401,18 +401,8 @@ class TestReaders(unittest.TestCase):
 
             @classproperty
             @overrides(GrammaredSequence)
-            def default_gap_char(cls):
-                return '-'
-
-            @classproperty
-            @overrides(GrammaredSequence)
             def definite_chars(cls):
                 return set(string.ascii_letters)
-
-            @classproperty
-            @overrides(GrammaredSequence)
-            def degenerate_map(cls):
-                return {}
 
         for valid_files, kwargs, components in self.valid_configurations:
             for valid in valid_files:
@@ -549,6 +539,16 @@ class TestWriters(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, r'2nd.*quality scores'):
             _generator_to_fastq(gen(), io.StringIO(), variant='illumina1.8')
+
+    def test_lowercase_keeps_non_letters(self):
+        # Gaps and degenerate characters covered by the lowercase mask are
+        # written unchanged instead of becoming control characters.
+        seq = DNA('ACGT-NNAC', metadata={'id': 's1'},
+                  positional_metadata={'quality': [30] * 9})
+        fh = io.StringIO()
+        seq.write(fh, format='fastq', variant='illumina1.8', lowercase=[
+            False, False, True, True, True, True, False, False, False])
+        self.assertEqual(fh.getvalue(), '@s1\nACgt-nNAC\n+\n?????????\n')
 
 
 class TestConversions(unittest.TestCase):

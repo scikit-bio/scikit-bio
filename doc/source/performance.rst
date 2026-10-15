@@ -160,8 +160,11 @@ GPU-resident arrays (tensors)::
     result = clr(tensor)
 
 2\. The :ref:`Numba engines <compute_engines>` of some functions are capable of GPU
-computing through the extensions `numba-cuda <https://nvidia.github.io/numba-cuda/>`_
-(for CUDA GPUs) and `numba-hip <https://github.com/ROCm/numba-hip>`_ (for ROCm GPUs).
+computing through the extensions
+`numba-cuda-mlir <https://github.com/NVIDIA/numba-cuda-mlir>`_ (for CUDA GPUs) and
+`numba-hip <https://github.com/ROCm/numba-hip>`_ (for ROCm GPUs). The deprecated
+`numba-cuda <https://nvidia.github.io/numba-cuda/>`_ is used when numba-cuda-mlir is
+not installed; it requires NumPy 2.4 or earlier.
 Refer to the :install:`installation instructions <#numba>`. With a compatible GPU
 extension installed, these Numba engines can automatically use GPU computation for
 supported CuPy and PyTorch arrays residing on the GPU. The function will fall back to

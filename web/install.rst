@@ -85,8 +85,14 @@ After installing scikit-bio, verify the installation by running the following in
 
 This should print the installed version of scikit-bio without errors.
 
-For a more robust verification of the installation you may run the scikit-bio's unit tests in the environment where scikit-bio is installed. This will require the `pytest <https://github.com/pytest-dev/pytest>`_ package to be installed::
+For a more robust verification, install `pytest <https://github.com/pytest-dev/pytest>`_ and run scikit-bio's unit tests in the same environment::
 
+    pip install pytest
+    python -m skbio.test
+
+Tests requiring optional packages such as Matplotlib are skipped when those packages are absent. To run the full test suite, install the test dependencies instead::
+
+    pip install "scikit-bio[test]"
     python -m skbio.test
 
 
@@ -115,8 +121,11 @@ See the `compute engine guide <https://scikit.bio/docs/latest/performance.html#c
 
 Some functions' Numba engines support GPU computing if available. To enable GPU computing via Numba, you need to install an architecture-specific Numba extension that matches your GPU device::
 
-    pip install numba-cuda  # for NVIDIA CUDA GPUs
-    pip install numba-hip   # for AMD ROCm GPUs
+    # numba-cuda-mlir also needs the CUDA toolkit to be installed
+    pip install numba-cuda-mlir  # for NVIDIA CUDA GPUs
+    pip install numba-hip        # for AMD ROCm GPUs
+
+The older NVIDIA extension, numba-cuda, is still supported but is deprecated and requires NumPy 2.4 or earlier.
 
 see the `GPU computing guide <https://scikit.bio/docs/latest/performance.html#gpu-computing>`_. for details.
 

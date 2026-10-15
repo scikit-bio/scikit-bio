@@ -34,7 +34,7 @@ class NucleotideMixin(metaclass=ABCMeta):
         if cls.__complement_lookup is not None:
             return cls.__complement_lookup
 
-        lookup = np.zeros(cls._num_extended_ascii_codes, dtype=np.uint8)
+        lookup = np.zeros(cls._num_ascii_codes, dtype=np.uint8)
         for key, value in cls.complement_map.items():
             lookup[ord(key)] = ord(value)
         cls.__complement_lookup = lookup
@@ -352,7 +352,7 @@ class NucleotideMixin(metaclass=ABCMeta):
         0
 
         """
-        counts = np.bincount(self._bytes, minlength=self._num_extended_ascii_codes)
+        counts = np.bincount(self._bytes, minlength=self._num_ascii_codes)
         gc = counts[self._gc_codes].sum()
         if relative:
             seq = self.degap()
