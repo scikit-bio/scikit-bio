@@ -214,6 +214,7 @@ Specifications/blob/master/gff3.md
 
 import re
 from collections.abc import Iterable
+from urllib.parse import unquote
 
 from skbio.sequence import DNA, Sequence
 from skbio.io import create_format, GFF3FormatError
@@ -461,7 +462,9 @@ def _parse_attr(s):
     # in case the line ending with ';', strip it.
     s = s.rstrip(";")
     for attr in s.split(";"):
-        k, v = attr.split("=")
+        k, v = attr.split("=", 1)
+        k = unquote(k)
+        v = ",".join(unquote(x) for x in v.split(","))
         if k in voca_change:
             k = voca_change[k]
         md[k] = v
