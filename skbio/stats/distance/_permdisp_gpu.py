@@ -70,9 +70,8 @@ def _kernel_supports_shape(dims, num_groups):
     return dims <= _MAX_DIMS and num_groups <= _MAX_GROUPS
 
 
-# Upper bound on the grouping buffer held at once, host side and device side.
-# At n = 25145 the unchunked int64 array was 2.01 GB; int8 alone takes that to
-# 251 MB, and this caps it regardless of permutation count.
+# Upper bound on the grouping buffer held at once, host side and device side,
+# which would otherwise be (permutations + 1) x n.
 _PERM_CHUNK_BYTES = 64 * 1024 * 1024
 
 
@@ -549,7 +548,7 @@ def _run_permdisp_gpu(
     kernel = _get_kernel(cache, builder, gpu, gpu.__name__)
     d_samples = gpu.to_device(samples)
 
-    chunk = max(1, _PERM_CHUNK_BYTES // max(1, codes32.shape[0]))
+    chunk = max(1, _PERM_CHUNK_BYTES // max(1, codes32.nbytes))
     stats = np.empty(n_total, dtype=np.float64)
     for start, block in _permutation_chunks(codes32, permutations, seed, chunk):
         size = block.shape[0]
