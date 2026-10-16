@@ -213,14 +213,8 @@ def _gram_from_chunks(Ui, Vj, chunk_size=_GRAM_CHUNK_SIZE):
 def _numerical_rank(magnitudes, tol):
     """Count the magnitudes that are significant relative to the largest one.
 
-    Both factorizations of the S-Jacobian decide rank the same way, from a
-    set of magnitudes in any order: the pivoted QR thresholds the absolute
-    values of the diagonal of ``R`` (:func:`_obs_basis`), and the Gram path
-    thresholds the eigenvalues of ``A^T A`` (:func:`_gram_is_well_conditioned`).
-    In both cases a value counts as nonzero only while it exceeds ``tol`` times
-    the largest value, and a largest value that is itself zero (or, for
-    eigenvalues of a semidefinite matrix computed in floating point, negative)
-    leaves no scale to measure against and makes the rank zero.
+    Shared by :func:`_obs_basis` (QR pivot magnitudes) and
+    :func:`_gram_is_well_conditioned` (Gram eigenvalues).
 
     Parameters
     ----------
@@ -249,24 +243,14 @@ def _numerical_rank(magnitudes, tol):
 def _gram_is_well_conditioned(eigvals, tol=1e-12, kappa_max=_KAPPA_MAX):
     """Test whether solving through the Gram matrix is numerically safe.
 
-    The normal equations square the conditioning of the problem,
+    Normal equations square the conditioning: ``kappa(G) = kappa(A) ** 2``.
+    A non-positive or negligible smallest eigenvalue means ``A`` is rank
+    deficient, so ``kappa(A)`` is infinite and the Gram solve is rejected
+    without dividing by a near-zero value.
 
-    kappa(G) = kappa(A^T A) = kappa(A) ** 2,
-
-    so the Gram solve is only usable while ``A`` itself is well conditioned.
-    ``G`` is symmetric positive semidefinite and at most ``(r ** 2, r ** 2)``
-    (9 by 9 at the default rank of 3), so its extreme eigenvalues, and hence
-    ``kappa(A) = sqrt(kappa(G))``, are cheap to obtain exactly.
-
-    A smallest eigenvalue that is non-positive or negligible relative to the
-    largest means ``A`` does not have full column rank, in which case
-    ``kappa(A)`` is infinite and the Gram solve is rejected without dividing
-    by a near-zero value.
-
-    The eigenvalues are passed in rather than ``G`` itself because
-    :func:`_s_jacobian_basis` needs the full eigendecomposition anyway to build
-    the inverse of ``G``, so decomposing once and sharing the result here
-    avoids a second decomposition of the same matrix.
+    Eigenvalues are passed in rather than ``G`` itself because
+    :func:`_s_jacobian_basis` already needs them to build the inverse of
+    ``G``, so this reuses that decomposition instead of repeating it.
 
     Parameters
     ----------
@@ -531,16 +515,10 @@ def _s_jacobian_basis(Ui, Vj, tol=1e-12, kappa_max=_KAPPA_MAX):
 class _GNContext(NamedTuple):
     """State of the UV-component Jacobian at a fixed ``(U, V, S)``.
 
-    :func:`jacobian_UV` and :func:`jacobian_UV_adj` are applied many times per
-    outer iteration, once for every matrix-vector product LSMR requests, but
-    everything they need besides the direction being mapped depends only on the
-    current ``(U, V, S)``. Bundling that state keeps it built once per outer
-    iteration, in particular the gathers ``US[rows]`` and ``VST[cols]``, which
-    are ``(n_observed, r)`` and would otherwise be repeated on every product.
-
-    Build one with :func:`_build_gn_context`. A context belongs to the exact
-    ``(U, V, S)`` it was built from, so a line search trial, which proposes a
-    different ``(U, V)``, needs its own.
+    Built once per outer iteration by :func:`_build_gn_context`, including the
+    gathers ``US[rows]``/``VST[cols]``, which :func:`jacobian_UV` and
+    :func:`jacobian_UV_adj` would otherwise repeat on every LSMR product. A
+    line search trial proposes a different ``(U, V)`` and needs its own.
 
     Attributes
     ----------
@@ -972,10 +950,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
 
         prev_obj = obj
 
-        # Bundle the state the Jacobian products below reuse, gathering the
-        # S-scaled factor rows at the observed entries once for this iteration
-        # instead of once per product. The bundle is tied to this (U, V, S), so
-        # the line search, which tries other (U, V) pairs, must not be given it.
+        # Tied to this (U, V, S); the line search below builds its own.
         ctx = _build_gn_context(rows, cols, U @ S, V @ S.T, project_fn)
 
         # Update via gradient descent with line search
