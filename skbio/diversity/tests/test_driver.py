@@ -801,6 +801,29 @@ class BetaDiversityTests(TestCase):
                             taxa=self.oids1)
         self.assertEqual(dm.shape, (3, 3))
 
+    def test_all_zero_samples_nan_warns(self):
+        # Two or more all-zero samples make 'braycurtis' divide by zero,
+        # producing `nan` in the resulting distance matrix (see issue
+        # #1702). This should be surfaced to the user as a warning rather
+        # than passing silently.
+        counts = [[0, 0, 0],
+                 [1, 2, 3],
+                 [0, 0, 0]]
+        with self.assertWarnsRegex(UserWarning, "nan"):
+            dm = beta_diversity('braycurtis', counts)
+        self.assertTrue(np.isnan(dm[0, 2]))
+
+    def test_all_zero_samples_nan_does_not_warn_for_unaffected_metric(self):
+        # A single all-zero sample, or a metric that isn't susceptible to
+        # 0/0 division (e.g., 'euclidean'), should not trigger the warning.
+        counts = [[0, 0, 0],
+                 [1, 2, 3],
+                 [4, 5, 6]]
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            beta_diversity('braycurtis', counts)
+            beta_diversity('euclidean', [[0, 0, 0], [0, 0, 0], [1, 2, 3]])
+
 
 class MetricGetters(TestCase):
 

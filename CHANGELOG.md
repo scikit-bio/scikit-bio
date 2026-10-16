@@ -141,6 +141,10 @@
 * Fixed pickling and copying a `BPTree` losing its edge numbers ([#2634](https://github.com/scikit-bio/scikit-bio/pull/2634)).
 * Fixed `BPTree.mincount` and `BPTree.minselect` raising `ValueError`, or counting a negative position from the end, for a position outside the tree, and raising `ValueError` for an empty range (`i > j`). They now return -1 for a position outside the tree, as the other navigation methods and their Numba functions do, and 0 (`mincount`) or -1 (`minselect`) for an empty range ([#2638](https://github.com/scikit-bio/scikit-bio/pull/2638)).
 
+### Miscellaneous
+
+* `beta_diversity` now emits a `UserWarning` when the returned distance matrix contains `nan` values, which can happen, for example, when two or more samples all have an all-zero count vector and the chosen metric (e.g., `'braycurtis'`) divides by the total count. Previously this passed silently ([#1702](https://github.com/scikit-bio/scikit-bio/issues/1702)).
+
 ## Version 0.7.3
 
 ### Features
