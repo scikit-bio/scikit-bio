@@ -17,24 +17,15 @@ statistics come back.
 
 One block owns one (permutation, group) pair and reduces over that group's
 samples in shared memory, so no thread holds a per-group or per-dimension array.
-An earlier version gave one thread the whole permutation; at 9999 permutations
-and 128 threads per block that left roughly 79 blocks against the MI210's ~104
-compute units, and most of the device idle. ``_MAX_DIMS`` bounds the shared
-arrays the kernels declare; ``_MAX_GROUPS`` bounds nothing in the current
-kernels and is kept only as a conservative untested limit.
 
 The median test runs the same modified Weiszfeld iteration as
 ``_cutils.geomedian_axis_one`` and the CPU Numba port, including breaking before
 adopting the new estimate, so all three stop on the same iterate. Permutations
-are drawn on the host in the same RNG order as the CPU paths. Both tests were
-measured against Cython on an MI210 and an RTX 4060 and agree to better than
-1e-14, with identical p-values.
+are drawn on the host in the same RNG order as the CPU paths.
 
-Correctness-first stays the rule: this backend runs only when the device maps to
-an available Numba GPU module. If the kernel cannot build or run, the caller
-catches it, marks the backend, and keeps the host Numba engine. Both branches
-are handed ``seed`` rather than a live generator, the shape #2537 settled on,
-so a failed attempt does not shift the permutations the host path draws.
+This backend runs only when the device maps to an available Numba GPU module. If
+the kernel cannot build or run, the caller marks the backend unavailable and keeps
+the host Numba engine.
 """
 
 import math
@@ -47,10 +38,9 @@ from ._gpu import _get_kernel
 _kernels = {}  # backend name -> compiled kernel (built on first use)
 
 # _MAX_DIMS bounds the shared arrays the kernels declare, which need a
-# compile-time constant shape on both numba.cuda and numba.hip. _MAX_GROUPS
-# bounds nothing in the current kernels, which index groups through the grid;
-# it is kept as a conservative limit because nothing above it has been run on
-# hardware. Both are checked on the host before launch.
+# compile-time constant shape on both numba.cuda and numba.hip. _MAX_GROUPS is
+# a limit on the grid's group axis, not on a kernel array. Both are checked on
+# the host before launch.
 _MAX_GROUPS = 64
 _MAX_DIMS = 64
 
@@ -58,14 +48,8 @@ _MAX_DIMS = 64
 def _kernel_supports_shape(dims, num_groups):
     """Whether the fused kernel can take an ordination of this shape.
 
-    ``dims`` bounds the fixed-size shared-memory arrays the kernels declare.
-    ``num_groups`` does not bound anything in the current kernels, which index
-    groups through the grid rather than a per-thread buffer; it is kept as a
-    conservative limit because nothing above it has been run on hardware.
-
-    Both are properties of the call, not of the machine, so a caller that
-    dispatches automatically takes its normal path instead of treating the
-    kernel as unavailable.
+    True if ``dims`` and ``num_groups`` are within ``_MAX_DIMS`` and
+    ``_MAX_GROUPS``.
     """
     return dims <= _MAX_DIMS and num_groups <= _MAX_GROUPS
 
@@ -81,17 +65,10 @@ _TPB_BG = 64
 def _build_centroid_kernel_bg(gpu):
     """Compile the block-per-(permutation, group) centroid kernel.
 
-    One block owns one group of one permutation and reduces over the samples
-    with the shared-memory tree :func:`._permanova_gpu._build_kernel` already
-    uses, so no thread ever holds a per-group or per-dimension array.
-
-    Dimensions are looped on the outside, one reduction each, so a thread only
-    ever holds a scalar. ``samples`` is ``(dims, n)`` so the threads of a
-    reduction read consecutive addresses.
-
-    Each block writes its own slot of ``out_count``/``out_sum``/``out_ss``, so
-    there are no atomics anywhere; ``gpu.atomic.add`` is unusable on this
-    numba.hip build. The host turns the partials into F.
+    Dimensions are looped on the outside, one shared-memory reduction each, so
+    a thread only holds a scalar. ``samples`` is ``(dims, n)`` so the threads of
+    a reduction read consecutive addresses. Each block writes its own slot of
+    the outputs, so no atomics are needed; the host turns the partials into F.
     """
     # numpy's float64 rather than numba's, which numba-cuda-mlir does not accept.
     nb_f64 = np.float64
@@ -200,9 +177,8 @@ def _build_centroid_kernel_bg(gpu):
 def _assemble_f_from_partials(counts, sums, ss, num_groups):
     """Turn per-(permutation, group) partials into one F per permutation.
 
-    Mirrors the kernel's own final block and the CPU driver: the grand mean is
-    over samples rather than over groups, so it is the total distance divided
-    by the total count.
+    Mirrors the CPU driver: the grand mean is over samples rather than over
+    groups, so it is the total distance divided by the total count.
     """
     total = counts.sum(axis=1)
     grand = sums.sum(axis=1) / total
@@ -225,10 +201,7 @@ _GEO_MAXITERS = 500
 
 # Dimension-tile width for the Weiszfeld weighted sum. Each thread holds this
 # many float64 accumulators, so it trades registers against repeated distance
-# work. Swept against the dimension count on an RTX 4060 at n=5116: the best
-# width tracks dims (8 wins at dims=5, 16 at dims=10, 32 at dims=20 and 64).
-# 16 is the default because permdisp retains ten dimensions by default, and the
-# only case it loses is dims=5, which is also the cheapest kernel of the set.
+# work.
 _JCH = 16
 
 
@@ -236,14 +209,9 @@ def _build_median_kernel_bg(gpu):
     """Compile the block-per-(permutation, group) spatial-median kernel.
 
     Same shape as the centroid kernel. The geometric median is the modified
-    Weiszfeld iteration of ``_geomedian_nb``, with the same ``eps`` and
-    ``maxiters``, the same placement of the all-coincident test, and the same
-    break before the new estimate is adopted, so the three agree.
-
-    The block exits on convergence rather than running a fixed budget: measured
-    across twelve configurations, clean data converges in 5 to 31 iterations
-    while groups with coincident samples (the case #2574 fixed) run past 200,
-    so any single budget is either wrong or wasteful.
+    Weiszfeld iteration of ``_geomedian_nb``, with the same ``eps``,
+    ``maxiters`` and stopping rule, so the GPU and CPU paths agree. The block
+    exits on convergence rather than running a fixed number of iterations.
     """
     # numpy's float64 rather than numba's, which numba-cuda-mlir does not accept.
     nb_f64 = np.float64
@@ -353,10 +321,7 @@ def _build_median_kernel_bg(gpu):
                 # Weighted sum over the samples that are off the estimate.
                 # The weight 1/di depends on the sample, not on the dimension,
                 # so the dimension loop is tiled _JCH wide and the distance is
-                # computed once per tile rather than once per dimension. The
-                # untiled version recomputed a dims-long distance inside the
-                # dimension loop, doing dims times the distance work the
-                # algorithm needs; at the _MAX_DIMS=64 ceiling that is 64x.
+                # computed once per tile rather than once per dimension.
                 for j0 in range(0, dims, _JCH):
                     accs = gpu.local.array(_JCH, nb_f64)
                     for jj in range(_JCH):
@@ -415,10 +380,7 @@ def _build_median_kernel_bg(gpu):
                     flag[0] = math.sqrt(mv)
                 gpu.syncthreads()
                 # Break before adopting y1. hdmedians and both CPU ports return
-                # the previous estimate on the converging iteration, and copying
-                # first left this kernel one iteration ahead of them: measured as
-                # a 2.8e-07 disagreement in the median F against Cython on an
-                # MI210, where the centroid test agreed to 4.4e-16.
+                # the previous estimate on the converging iteration.
                 if flag[0] < _GEO_EPS:
                     break
                 if t == 0:
@@ -476,12 +438,10 @@ def _build_median_kernel_bg(gpu):
 def _permutation_chunks(codes, permutations, seed, chunk):
     """Yield ``(start, block)`` covering the observed grouping then permutations.
 
-    ``block[k]`` is the grouping for permutation ``start + k``, with row 0 of
-    the first block the observed grouping. ``rng.permutation`` is called once
-    per permutation in the same order as :func:`._permdisp._run_permdisp_numba`
-    regardless of ``chunk``, so p-values do not depend on the chunk size.
-    Chunking bounds the grouping buffer, otherwise ``(permutations + 1) x n``
-    held whole on both host and device, the same reason the CPU driver chunks.
+    ``block[k]`` is the grouping for permutation ``start + k``; row 0 of the
+    first block is the observed grouping. Permutations are drawn in the same
+    order as :func:`._permdisp._run_permdisp_numba` whatever ``chunk`` is, so
+    the p-value does not depend on the chunk size.
     """
     rng = get_rng(seed)
     n_total = permutations + 1
@@ -504,9 +464,9 @@ def _assemble_stat_p(stats, permutations):
     return stat, float(p_value)
 
 
-_median_kernels = {}  # separate from _kernels: _get_kernel's cache key is only
-# the backend name, so sharing one dict between the centroid and median
-# builders would return whichever kernel got compiled first for that backend.
+# Separate from _kernels: _get_kernel's cache key is only the backend name, so
+# one shared dict would return whichever kernel was compiled first.
+_median_kernels = {}
 
 
 def _run_permdisp_gpu(
@@ -514,11 +474,9 @@ def _run_permdisp_gpu(
 ):
     """Shared driver for the block-per-(permutation, group) kernels.
 
-    ``sample_data`` is the host-side ordination coordinates, uploaded once.
-    ``builder`` and ``cache`` select which statistic's kernel to compile and
-    reuse. Both kernels take ``samples`` as ``(dims, n)`` rather than the
-    ``(n, dims)`` it arrives in, so a reduction's threads read consecutive
-    addresses; the transpose happens once here, not per permutation.
+    ``sample_data`` is the host-side ordination, transposed to ``(dims, n)``
+    and uploaded once. ``builder`` and ``cache`` select which statistic's
+    kernel to compile and reuse.
     """
     n_samples, dims = sample_data.shape
     if num_groups > _MAX_GROUPS:

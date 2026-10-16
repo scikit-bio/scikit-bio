@@ -428,15 +428,7 @@ def permdisp(
 
     The kernel falls back to the CPU Numba engine, with no change in behavior,
     when the backend has no usable Numba GPU module, when the ordination retains
-    more than 64 dimensions, which its fixed-size shared arrays hold, or when
-    the grouping has more than 64 groups.
-
-    With ``engine='numba'``, GPU buffers must belong to the default device. On a
-    system with several devices, the default must be changed to match the buffer
-    ownership before this function is invoked, through
-    ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
-    A mismatch is not reported when the kernel is launched, and on ROCm it has
-    been observed to leave the GPU context unusable for the rest of the process.
+    more than 64 dimensions, or when the grouping has more than 64 groups.
 
     The significance of the results from this function will be the same as the
     results found in vegan's betadisper, however due to floating point
@@ -566,9 +558,8 @@ def permdisp(
     if test not in ("centroid", "median"):
         raise ValueError("Test must be centroid or median.")
 
-    # A distance matrix backed by a non-NumPy (e.g. GPU-resident) buffer says the
-    # caller is already computing on a device. Held onto here so the permutation
-    # loop below can run there too, rather than handing the work to the host.
+    # A non-NumPy (e.g. GPU-resident) buffer lets the permutation loop below run
+    # on the device.
     device_buf = None
 
     if isinstance(distmat, OrdinationResults):
@@ -692,9 +683,9 @@ def _try_permdisp_gpu(buf, sample_data, codes, num_groups, permutations, seed, t
     except Exception:
         # The fused kernel could not be compiled or launched here. Flag the
         # backend so later calls go straight to the host, and take that now.
-        # Both branches are handed ``seed`` rather than a live generator, the
-        # shape #2537 settled on for mantel and permanova, so a failed attempt
-        # does not shift the permutations the host path then draws.
+        # Both branches get ``seed`` rather than a live generator, as in mantel
+        # and permanova, so with an integer seed the host path draws the same
+        # permutations the failed attempt did.
         _mark_gpu_unavailable(buf)
         return None
 

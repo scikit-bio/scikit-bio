@@ -817,10 +817,8 @@ class PermdispArrayAPITests(TestCase, ArrayAPITestMixin):
         self.grouping = ['a', 'a', 'a', 'b', 'b', 'b',
                          'c', 'c', 'c', 'd', 'd', 'd']
         # The reference comes from a separate pcoa on a NumPy matrix, so these
-        # comparisons cross two eigendecompositions AND two array backends.
-        # #2595 fixed a sibling test that failed on macOS at 4e-15 for the
-        # single-backend version of exactly this; its fix, reusing one
-        # ordination, is not available here because the GPU dispatch only
+        # comparisons cross two eigendecompositions and two array backends.
+        # Reusing one ordination is not an option, because the GPU dispatch only
         # engages for a DistanceMatrix. The tolerances below are set for that.
         self.ref = {
             test: permdisp(
@@ -870,13 +868,7 @@ class PermdispArrayAPITests(TestCase, ArrayAPITestMixin):
 
 
 class PermdispGpuKernelTests(TestCase, ArrayAPITestMixin):
-    """Whether the fused kernel is reached, asked of the kernel cache itself.
-
-    Result values cannot answer this: the GPU and host paths agree by design, so
-    comparing them proves nothing about which one ran. The module's kernel cache
-    is empty until a kernel is compiled and only a dispatch can populate it, so
-    it is the one witness available without patching anything.
-    """
+    """Whether the fused kernel is reached, asked of the kernel cache."""
 
     def setUp(self):
         rng = np.random.default_rng(1)
@@ -903,12 +895,12 @@ class PermdispGpuKernelTests(TestCase, ArrayAPITestMixin):
     @numba_code
     @array_backends("jax", "torch", "cupy")
     def test_gpu_kernel_is_used_on_device_input(self, xp, device):
-        # The only test here that fails if the GPU dispatch is deleted outright.
-        # It needs a real device, so it runs in the GPU CI lane and on a GPU
-        # node, and is skipped everywhere else. JAX has no Numba GPU path and is
-        # skipped too; it is listed because the harness errors on a GPU lane that
-        # runs no backend. It also checks the backend was not marked unavailable,
-        # as a kernel that fails to compile or launch would be.
+        # Result values cannot tell the GPU and host paths apart, so this asks
+        # the kernel cache, which only a dispatch to the kernel populates, and
+        # checks the backend was not marked unavailable, as a kernel that fails
+        # to compile or launch would be. JAX has no Numba GPU path and is
+        # skipped; it is listed because the harness errors on a GPU lane that
+        # runs no backend.
         if device == "cpu" or _get_backend_name(xp) == "jax":
             self.skipTest("needs a device-resident CuPy or PyTorch matrix")
         dm = DistanceMatrix(self.make_array(xp, device, self.data))
