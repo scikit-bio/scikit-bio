@@ -46,6 +46,7 @@ are supported by each format, see the associated documentation.
    fastq
    genbank
    gff3
+   jplace
    lsmat
    newick
    ordination
@@ -120,6 +121,7 @@ Exceptions and warnings
    GFF3FormatError
    LSMatFormatError
    NewickFormatError
+   JplaceFormatError
    OrdinationFormatError
    PhylipFormatError
    PhylipDMFormatError
@@ -319,6 +321,7 @@ from ._exception import (
     FASTQFormatError,
     LSMatFormatError,
     NewickFormatError,
+    JplaceFormatError,
     OrdinationFormatError,
     PhylipFormatError,
     PhylipDMFormatError,
@@ -354,6 +357,7 @@ __all__ = [
     "GFF3FormatError",
     "LSMatFormatError",
     "NewickFormatError",
+    "JplaceFormatError",
     "OrdinationFormatError",
     "PhylipFormatError",
     "PhylipDMFormatError",
@@ -376,6 +380,7 @@ import_module("skbio.io.format.fasta")
 import_module("skbio.io.format.fastq")
 import_module("skbio.io.format.lsmat")
 import_module("skbio.io.format.newick")
+import_module("skbio.io.format.jplace")
 import_module("skbio.io.format.ordination")
 import_module("skbio.io.format.phylip")
 import_module("skbio.io.format.qseq")

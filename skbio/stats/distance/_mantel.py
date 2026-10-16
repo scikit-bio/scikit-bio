@@ -319,8 +319,9 @@ def mantel(
 
     With ``engine='numba'``, GPU buffers must belong to the default device. On a
     system with several devices, the default must be changed to match the buffer
-    ownership before this function is invoked, through
-    ``numba.cuda.select_device`` on CUDA or ``numba.hip.select_device`` on ROCm.
+    ownership before this function is invoked, through ``select_device`` of the
+    Numba GPU module in use: ``numba_cuda_mlir.cuda`` or ``numba.cuda`` on CUDA,
+    ``numba.hip`` on ROCm.
     A mismatch is not reported when the kernel is launched, and on ROCm it has
     been observed to leave the GPU context unusable for the rest of the process.
     The array-API path, taken when ``engine='numba'`` is not requested, honors

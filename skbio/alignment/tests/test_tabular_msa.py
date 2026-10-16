@@ -34,6 +34,12 @@ class TabularMSASubclass(TabularMSA):
     pass
 
 
+class NoGapSequence(GrammaredSequence):
+    @classproperty
+    def definite_chars(cls):
+        return set("ACGT")
+
+
 class TestTabularMSAMetadata(unittest.TestCase, ReallyEqualMixin,
                              MetadataMixinTests):
     def setUp(self):
@@ -921,6 +927,13 @@ class TestTabularMSA(unittest.TestCase, ReallyEqualMixin):
         with self.assertRaises(ValueError) as cm:
             TabularMSA.from_path_seqs(path=path, seqs=seqs[:-1])
         self.assertEqual(str(cm.exception), msg)
+
+    def test_from_path_seqs_no_gap_char(self):
+        path = AlignPath.from_bits(np.zeros((2, 2), dtype=bool))
+        seqs = [NoGapSequence("AC"), NoGapSequence("GT")]
+
+        with self.assertRaisesRegex(ValueError, r"does not define a default gap"):
+            TabularMSA.from_path_seqs(path, seqs)
 
 class TestContains(unittest.TestCase):
     def test_no_sequences(self):
@@ -2533,6 +2546,13 @@ class TestJoin(unittest.TestCase):
             TabularMSA([DNA('AC-C'),
                         DNA('G..G')]))
 
+    def test_outer_join_no_gap_char(self):
+        msa1 = TabularMSA([NoGapSequence("AC")], index=["a"])
+        msa2 = TabularMSA([NoGapSequence("GT")], index=["b"])
+
+        with self.assertRaisesRegex(ValueError, r"does not define a default gap"):
+            msa1.join(msa2, how="outer")
+
     def test_ignores_metadata(self):
         msa1 = TabularMSA([DNA('AC', metadata={'id': 'a'}),
                            DNA('G.', metadata={'id': 'b'}),
@@ -3024,6 +3044,11 @@ class TestConsensus(unittest.TestCase):
         cons = msa.consensus()
 
         self.assertEqual(cons, DNA('-'))
+
+    def test_no_gap_chars(self):
+        msa = TabularMSA([NoGapSequence("A"), NoGapSequence("A")])
+
+        self.assertEqual(msa.consensus(), NoGapSequence("A"))
 
     def test_different_dtype(self):
         msa = TabularMSA([RNA('---'),

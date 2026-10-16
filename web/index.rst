@@ -319,7 +319,7 @@
 
       :fa:`dna;fa-2x sd-text-success`
 
-      **Biological sequences**: Efficient data structure with a :docs:`flexible grammar <sequence.GrammaredSequence>` for easy manipulation, :docs:`annotation <sequence.GrammaredSequence.has_positional_metadata>`, :docs:`alignment <alignment.global_pairwise_align>`, and conversion into :docs:`motifs <sequence.GrammaredSequence.find_motifs>` or :docs:`k-mers <sequence.GrammaredSequence.iter_kmers>` for in-depth analysis.
+      **Biological sequences**: Efficient data structure with a :docs:`flexible grammar <sequence.GrammaredSequence>` for easy manipulation, :docs:`annotation <sequence.GrammaredSequence.has_positional_metadata>`, :docs:`alignment <alignment.global_pairwise_align>`, and conversion into :docs:`motifs <sequence.GrammaredSequence.find_motifs>` or :docs:`k-mers <sequence.Sequence.iter_kmers>` for in-depth analysis.
 
    .. grid-item-card::
 

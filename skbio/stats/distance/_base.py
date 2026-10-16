@@ -307,6 +307,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         metric: Callable,
         key: Any | None = None,
         keys: Iterable[Any] | None = None,
+        **kwargs: Any,
     ) -> Self:
         r"""Create a pairwise matrix from an iterable of objects given a metric.
 
@@ -323,6 +324,8 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
             for each object in the ``iterable``. If None, the default IDs will be used.
         keys : iterable of str, optional
             IDs of the objects. Must be the same length as ``iterable``.
+        kwargs : dict, optional
+            Additional keyword arguments passed to ``metric``.
 
         Returns
         -------
@@ -341,7 +344,7 @@ class PairwiseMatrix(SkbioObject, PlottableMixin):
         dm = np.empty((len(iterable),) * 2)
         for i, a in enumerate(iterable):
             for j, b in enumerate(iterable):
-                dm[i, j] = metric(a, b)
+                dm[i, j] = metric(a, b, **kwargs)
 
         return cls(dm, keys_)  # type: ignore[operator]
 
@@ -1618,6 +1621,7 @@ class SymmetricMatrix(PairwiseMatrix):
         validate: bool = True,
         condensed: bool = False,
         diagonal: float | ArrayLike = 0.0,
+        **kwargs: Any,
     ) -> Self:
         r"""Create a symmetric matrix from an iterable given a metric.
 
@@ -1634,7 +1638,7 @@ class SymmetricMatrix(PairwiseMatrix):
             for each object in the ``iterable``. If None, the default IDs will be used.
         keys : iterable of str, optional
             IDs of the objects. Must be the same length as ``iterable``.
-        validate : boolean, optional
+        validate : bool, optional
             If True, all pairwise relationships are computed, including upper
             and lower triangles and the diagonal. If False, ``metric`` is
             assumed to be symmetric and only the lower triangle (excluding the
@@ -1645,10 +1649,12 @@ class SymmetricMatrix(PairwiseMatrix):
         diagonal : float or array_like, optional
             Value(s) with which to fill the diagonal of the matrix. Relevant only when
             ``validate`` is False.
+        kwargs : dict, optional
+            Additional keyword arguments passed to ``metric``.
 
         Returns
         -------
-        PairwiseMatrix
+        SymmetricMatrix
             The ``metric`` applied to all pairwise elements in the ``iterable``.
 
         Raises
@@ -1664,13 +1670,13 @@ class SymmetricMatrix(PairwiseMatrix):
         if validate:
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable):
-                    dm[i, j] = metric(a, b)
+                    dm[i, j] = metric(a, b, **kwargs)
         else:
             # This assumes that metric will return a symmetric matrix. That is, that
             # metric(a, b) is the same as metric(b, a)
             for i, a in enumerate(iterable):
                 for j, b in enumerate(iterable[:i]):
-                    dm[i, j] = dm[j, i] = metric(a, b)
+                    dm[i, j] = dm[j, i] = metric(a, b, **kwargs)
             np.fill_diagonal(dm, diagonal)
         return cls(dm, keys_, condensed=condensed)  # type: ignore[operator]
 
