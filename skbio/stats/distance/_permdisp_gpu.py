@@ -9,10 +9,11 @@
 """PERMDISP GPU backend: a fused single-source Numba CUDA/HIP kernel.
 
 This is the fast path taken when a DistanceMatrix is already on a GPU device and
-``engine="numba"`` is requested: the same source compiles through ``numba.cuda``
-on NVIDIA and ``numba.hip`` on AMD. pcoa returns its coordinates to the host
-either way, so the kernel reads that much smaller array rather than the distance
-matrix itself, and only the per-permutation statistics come back.
+``engine="numba"`` is requested: the same source compiles through
+``numba_cuda_mlir.cuda`` or ``numba.cuda`` on NVIDIA and ``numba.hip`` on AMD. pcoa
+returns its coordinates to the host either way, so the kernel reads that much
+smaller array rather than the distance matrix itself, and only the per-permutation
+statistics come back.
 
 One block owns one (permutation, group) pair and reduces over that group's
 samples in shared memory, so no thread holds a per-group or per-dimension array.
