@@ -910,6 +910,27 @@ class PermdispGpuKernelTests(TestCase, ArrayAPITestMixin):
                                 "dispatch never reached the GPU kernel")
                 self.assertNotIn(_get_backend_name(xp), gpu_mod._unavailable)
 
+    @numba_code
+    @array_backends("jax", "torch", "cupy")
+    def test_median_kernel_two_tiles(self, xp, device):
+        # 20 retained dimensions need two of the median kernel's 16-wide tiles.
+        if device == "cpu" or _get_backend_name(xp) == "jax":
+            self.skipTest("needs a device-resident CuPy or PyTorch matrix")
+        rng = np.random.default_rng(2)
+        data = squareform(pdist(rng.random((40, 25))))
+        grouping = [str(i % 4) for i in range(40)]
+        ref = permdisp(DistanceMatrix(data), grouping, test="median",
+                       permutations=99, dimensions=20, seed=0, engine="numba")
+        permdisp_gpu._median_kernels.clear()
+        res = permdisp(DistanceMatrix(self.make_array(xp, device, data)),
+                       grouping, test="median", permutations=99,
+                       dimensions=20, seed=0, engine="numba")
+        self.assertTrue(permdisp_gpu._median_kernels)
+        self.assertNotIn(_get_backend_name(xp), gpu_mod._unavailable)
+        self.assertAlmostEqual(res["test statistic"], ref["test statistic"],
+                               places=7)
+        self.assertAlmostEqual(res["p-value"], ref["p-value"], places=7)
+
 
 class PermdispGpuHostTests(TestCase):
     """The GPU dispatch decisions that are checkable without a GPU."""
