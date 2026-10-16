@@ -25,6 +25,7 @@ from skbio.stats.distance._permdisp import (
     _try_permdisp_gpu,
     NUMBA_AVAILABLE,
 )
+from skbio.stats.distance import _gpu as gpu_mod
 from skbio.stats.distance import _permdisp_gpu as permdisp_gpu
 from skbio.stats.distance._permdisp_gpu import (
     _kernel_supports_shape,
@@ -884,11 +885,13 @@ class PermdispGpuKernelTests(TestCase, ArrayAPITestMixin):
         self.grouping = ['a', 'a', 'a', 'b', 'b', 'b',
                          'c', 'c', 'c', 'd', 'd', 'd']
 
-    def _run(self, dm):
-        permdisp_gpu._kernels.clear()
-        permdisp(dm, self.grouping, test="centroid", permutations=9, seed=0,
+    def _run(self, dm, test="centroid"):
+        cache = {"centroid": permdisp_gpu._kernels,
+                 "median": permdisp_gpu._median_kernels}[test]
+        cache.clear()
+        permdisp(dm, self.grouping, test=test, permutations=9, seed=0,
                  engine="numba")
-        return permdisp_gpu._kernels
+        return cache
 
     @numba_code
     def test_numpy_input_never_reaches_kernel(self):
@@ -904,11 +907,16 @@ class PermdispGpuKernelTests(TestCase, ArrayAPITestMixin):
         # It needs a real device, so it runs in the GPU CI lane and on a GPU
         # node, and is skipped everywhere else. JAX has no Numba GPU path and is
         # skipped too; it is listed because the harness errors on a GPU lane that
-        # runs no backend.
+        # runs no backend. It also checks the backend was not marked unavailable,
+        # as a kernel that fails to compile or launch would be.
         if device == "cpu" or _get_backend_name(xp) == "jax":
             self.skipTest("needs a device-resident CuPy or PyTorch matrix")
         dm = DistanceMatrix(self.make_array(xp, device, self.data))
-        self.assertTrue(self._run(dm), "dispatch never reached the GPU kernel")
+        for test in ("centroid", "median"):
+            with self.subTest(test=test):
+                self.assertTrue(self._run(dm, test),
+                                "dispatch never reached the GPU kernel")
+                self.assertNotIn(_get_backend_name(xp), gpu_mod._unavailable)
 
 
 class PermdispGpuHostTests(TestCase):
