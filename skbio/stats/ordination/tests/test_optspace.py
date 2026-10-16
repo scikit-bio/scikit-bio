@@ -429,16 +429,23 @@ class TestNumericalRank(unittest.TestCase):
         self.assertEqual(_numerical_rank(np.linalg.svd(A)[1], 1e-12), r)
 
     def test_matches_gram_conditioning_test(self):
-        """Full rank of the reversed eigenvalues is what the Gram test needs."""
+        """Full rank of the ascending eigenvalues is what the Gram test needs."""
         # Well conditioned: full rank, so the conditioning test can proceed.
         eigvals = np.array([1.0, 2.0, 4.0])
-        self.assertEqual(_numerical_rank(eigvals[::-1], 1e-12), eigvals.size)
+        self.assertEqual(_numerical_rank(eigvals, 1e-12), eigvals.size)
         self.assertTrue(_gram_is_well_conditioned(eigvals))
 
         # Singular: rank deficient, so the Gram path is rejected.
         eigvals = np.array([0.0, 2.0, 4.0])
-        self.assertLess(_numerical_rank(eigvals[::-1], 1e-12), eigvals.size)
+        self.assertLess(_numerical_rank(eigvals, 1e-12), eigvals.size)
         self.assertFalse(_gram_is_well_conditioned(eigvals))
+
+    def test_order_independent(self):
+        """The rank does not depend on the input order."""
+        magnitudes = np.array([1e-4, 1.0, 1e-14, 1e-2, 1e-18])
+        rank = _numerical_rank(magnitudes, 1e-12)
+        self.assertEqual(rank, _numerical_rank(np.sort(magnitudes), 1e-12))
+        self.assertEqual(rank, _numerical_rank(magnitudes[::-1], 1e-12))
 
 
 class TestGNContext(unittest.TestCase):

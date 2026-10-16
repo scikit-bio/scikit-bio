@@ -214,33 +214,36 @@ def _numerical_rank(magnitudes, tol):
     """Count the magnitudes that are significant relative to the largest one.
 
     Both factorizations of the S-Jacobian decide rank the same way, from a
-    non-increasing sequence of magnitudes: the pivoted QR thresholds the
-    absolute values of the diagonal of ``R`` (:func:`_obs_basis`), and the Gram
-    path thresholds the eigenvalues of ``A^T A`` (:func:`_gram_is_well_conditioned`).
+    set of magnitudes in any order: the pivoted QR thresholds the absolute
+    values of the diagonal of ``R`` (:func:`_obs_basis`), and the Gram path
+    thresholds the eigenvalues of ``A^T A`` (:func:`_gram_is_well_conditioned`).
     In both cases a value counts as nonzero only while it exceeds ``tol`` times
-    the leading value, and a leading value that is itself zero (or, for
+    the largest value, and a largest value that is itself zero (or, for
     eigenvalues of a semidefinite matrix computed in floating point, negative)
     leaves no scale to measure against and makes the rank zero.
 
     Parameters
     ----------
     magnitudes : ndarray of shape (n,)
-        Non-negative magnitudes sorted non-increasingly, so that
-        ``magnitudes[0]`` is the largest.
+        Non-negative magnitudes, in any order.
     tol : float
         Relative threshold below which a magnitude counts as zero.
 
     Returns
     -------
     int
-        Number of magnitudes exceeding ``tol * magnitudes[0]``, or 0 if the
-        sequence is empty or its leading value is not positive.
+        Number of magnitudes exceeding ``tol * magnitudes.max()``, or 0 if the
+        sequence is empty or its largest value is not positive.
     """
 
-    if magnitudes.size == 0 or magnitudes[0] <= 0.0:
+    if magnitudes.size == 0:
         return 0
 
-    return int(np.count_nonzero(magnitudes > tol * magnitudes[0]))
+    largest = magnitudes.max()
+    if largest <= 0.0:
+        return 0
+
+    return int(np.count_nonzero(magnitudes > tol * largest))
 
 
 def _gram_is_well_conditioned(eigvals, tol=1e-12, kappa_max=_KAPPA_MAX):
@@ -282,13 +285,12 @@ def _gram_is_well_conditioned(eigvals, tol=1e-12, kappa_max=_KAPPA_MAX):
         Whether ``kappa(A)`` is finite and below ``kappa_max``.
     """
 
-    # np.linalg.eigh and np.linalg.eigvalsh both order eigenvalues ascending,
-    # so reversing them gives the non-increasing order _numerical_rank expects.
+    # np.linalg.eigh and np.linalg.eigvalsh both order eigenvalues ascending.
     largest, smallest = eigvals[-1], eigvals[0]
 
     # Anything short of full rank leaves kappa(A) infinite, which also covers a
     # non-positive largest eigenvalue, so the division below is safe.
-    if _numerical_rank(eigvals[::-1], tol) < eigvals.size:
+    if _numerical_rank(eigvals, tol) < eigvals.size:
         return False
 
     return np.sqrt(largest / smallest) < kappa_max
