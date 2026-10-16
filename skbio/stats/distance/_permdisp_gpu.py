@@ -93,7 +93,8 @@ def _build_centroid_kernel_bg(gpu):
     there are no atomics anywhere; ``gpu.atomic.add`` is unusable on this
     numba.hip build. The host turns the partials into F.
     """
-    from numba import float64 as nb_f64
+    # numpy's float64 rather than numba's, which numba-cuda-mlir does not accept.
+    nb_f64 = np.float64
 
     @gpu.jit
     def _pd_centroid_bg(
@@ -244,7 +245,8 @@ def _build_median_kernel_bg(gpu):
     while groups with coincident samples (the case #2574 fixed) run past 200,
     so any single budget is either wrong or wasteful.
     """
-    from numba import float64 as nb_f64
+    # numpy's float64 rather than numba's, which numba-cuda-mlir does not accept.
+    nb_f64 = np.float64
 
     @gpu.jit
     def _pd_median_bg(
