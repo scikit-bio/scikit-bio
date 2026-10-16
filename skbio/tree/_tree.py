@@ -6443,3 +6443,46 @@ class TreeNode(SkbioObject):
             length_v = results["length"]
             length_v[np.isnan(length_v)] = nan_length_value
         return results
+
+    @classonlymethod
+    def from_bptree(cls, bp):
+        """Construct a tree from a balanced-parentheses ``BPTree``.
+
+        Parameters
+        ----------
+        bp : skbio.tree.BPTree
+            The balanced-parentheses tree to convert.
+
+        Returns
+        -------
+        TreeNode
+            The tree represented as a ``TreeNode``. The type matches the class
+            on which this method is called, so subclasses are preserved.
+
+        See Also
+        --------
+        skbio.tree.BPTree.from_treenode
+
+        """
+        # The balanced-parentheses traversal (a Python/C call per node) is done
+        # in one compiled pass; ``tolist()`` then yields native Python scalars so
+        # the per-node attribute assignment below matches the previous behaviour
+        # (and avoids numpy scalar boxing). Only TreeNode assembly stays here.
+        name, length, edge, parent = bp._to_node_arrays()
+
+        nodes = [cls() for _ in range(len(name))]
+
+        for node, node_name, node_length, node_edge, node_parent in zip(
+            nodes, name.tolist(), length.tolist(), edge.tolist(), parent.tolist()
+        ):
+            node.name = node_name
+            node.length = node_length
+            node.edge_num = node_edge
+
+            if node_parent != -1:
+                # uncache=False avoids repeated cache clearing during bulk construction
+                nodes[node_parent].append(node, uncache=False)
+
+        nodes[0].length = None
+
+        return nodes[0]
