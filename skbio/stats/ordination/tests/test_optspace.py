@@ -15,8 +15,10 @@ import numpy as np
 from skbio.stats.ordination._optspace import (
     optspace,
     _KAPPA_MAX,
+    _build_gn_context,
     _gram_from_chunks,
     _gram_is_well_conditioned,
+    _numerical_rank,
     _obs_basis,
     _project_S_complement,
     _s_jacobian_basis,
@@ -25,6 +27,7 @@ from skbio.stats.ordination._optspace import (
     jacobian_S_adj,
     jacobian_UV,
     jacobian_UV_adj,
+    solve_gauss_newton_step,
 )
 
 
@@ -223,6 +226,9 @@ class TestJacobian(unittest.TestCase):
         self.VST = self.V @ self.S.T
         self.Q, self.R, self.perm = _obs_basis(self.Ui, self.Vj)
         self.solve_fn, self.project_fn = _s_jacobian_basis(self.Ui, self.Vj)
+        self.ctx = _build_gn_context(
+            self.rows, self.cols, self.US, self.VST, self.project_fn
+        )
 
         self.rng = rng
 
@@ -320,17 +326,7 @@ class TestJacobian(unittest.TestCase):
         dU = self.rng.normal(size=(self.m, self.r))
         dV = self.rng.normal(size=(self.n, self.r))
 
-        observed = jacobian_UV(
-            self.U,
-            self.V,
-            dU,
-            dV,
-            self.rows,
-            self.cols,
-            self.US,
-            self.VST,
-            self.project_fn,
-        )
+        observed = jacobian_UV(self.U, self.V, dU, dV, self.ctx)
         np.testing.assert_allclose(
             observed, self.dense_jacobian_UV(dU, dV), atol=1e-9
         )
@@ -339,16 +335,7 @@ class TestJacobian(unittest.TestCase):
         """Entry-indexed J_UV* agrees with the dense formulation."""
         w = self.rng.normal(size=self.n_observed)
 
-        dU, dV = jacobian_UV_adj(
-            self.U,
-            self.V,
-            w,
-            self.rows,
-            self.cols,
-            self.US,
-            self.VST,
-            self.project_fn,
-        )
+        dU, dV = jacobian_UV_adj(self.U, self.V, w, self.ctx)
         dU_dense, dV_dense = self.dense_jacobian_UV_adj(w)
 
         np.testing.assert_allclose(dU, dU_dense, atol=1e-9)
@@ -366,31 +353,218 @@ class TestJacobian(unittest.TestCase):
             dV = rng.normal(size=(self.n, self.r))
             y = rng.normal(size=self.n_observed)
 
-            Jx = jacobian_UV(
-                self.U,
-                self.V,
-                dU,
-                dV,
-                self.rows,
-                self.cols,
-                self.US,
-                self.VST,
-                self.project_fn,
-            )
-            JtY_U, JtY_V = jacobian_UV_adj(
-                self.U,
-                self.V,
-                y,
-                self.rows,
-                self.cols,
-                self.US,
-                self.VST,
-                self.project_fn,
-            )
+            Jx = jacobian_UV(self.U, self.V, dU, dV, self.ctx)
+            JtY_U, JtY_V = jacobian_UV_adj(self.U, self.V, y, self.ctx)
 
             lhs = Jx @ y
             rhs = np.sum(dU * JtY_U) + np.sum(dV * JtY_V)
             self.assertAlmostEqual(lhs, rhs, delta=1e-12 * max(1.0, abs(lhs)))
+
+
+class TestNumericalRank(unittest.TestCase):
+    """Tests for the shared relative-threshold rank count.
+
+    Both factorizations of the S-Jacobian decide rank from a non-increasing
+    sequence of magnitudes, the pivoted QR from |diag(R)| and the Gram path
+    from the eigenvalues of A^T A, so they share this helper.
+    """
+
+    def test_well_separated(self):
+        """Magnitudes above and below the threshold are counted apart."""
+        magnitudes = np.array([1.0, 1e-2, 1e-4, 1e-14, 1e-18])
+        self.assertEqual(_numerical_rank(magnitudes, 1e-12), 3)
+
+    def test_threshold_is_strict(self):
+        """A magnitude exactly at the threshold does not count."""
+        magnitudes = np.array([1.0, 1e-12])
+        self.assertEqual(_numerical_rank(magnitudes, 1e-12), 1)
+
+    def test_all_below_threshold(self):
+        """Everything trailing the leading value can fall below it."""
+        magnitudes = np.array([1.0, 1e-13, 1e-15])
+        self.assertEqual(_numerical_rank(magnitudes, 1e-12), 1)
+
+    def test_none_above_threshold_with_loose_tol(self):
+        """A tolerance of one leaves nothing above the leading value."""
+        magnitudes = np.array([1.0, 0.5, 0.25])
+        self.assertEqual(_numerical_rank(magnitudes, 1.0), 0)
+
+    def test_zero_leading_value(self):
+        """An all-zero sequence has no scale to measure against."""
+        self.assertEqual(_numerical_rank(np.zeros(5), 1e-12), 0)
+
+    def test_negative_leading_value(self):
+        """A non-positive leading value is rejected, not divided by.
+
+        Eigenvalues of a semidefinite matrix can come back slightly negative in
+        floating point, which the Gram path must treat as rank zero rather than
+        thresholding against a negative scale.
+        """
+        magnitudes = np.array([-1e-18, -1.0])
+        self.assertEqual(_numerical_rank(magnitudes, 1e-12), 0)
+
+    def test_empty(self):
+        """An empty sequence has rank zero."""
+        self.assertEqual(_numerical_rank(np.array([]), 1e-12), 0)
+
+    def test_returns_python_int(self):
+        """The count is a plain int, usable directly as a slice bound."""
+        rank = _numerical_rank(np.array([1.0, 0.5]), 1e-12)
+        self.assertIsInstance(rank, int)
+
+    def test_matches_obs_basis_rank(self):
+        """The helper agrees with the rank the pivoted QR reports."""
+        rng = np.random.default_rng(7)
+
+        # A rank-r (not r ** 2) basis, from degenerate factor rows.
+        r = 3
+        Ui = np.tile(np.linalg.qr(rng.normal(size=(8, r)))[0][:1], (8, 1))
+        Vj = np.linalg.qr(rng.normal(size=(8, r)))[0]
+
+        Q, _, _ = _obs_basis(Ui, Vj)
+        A = (Ui[:, :, None] * Vj[:, None, :]).reshape(-1, r**2)
+
+        # Singular values come back non-increasing, like pivoted |diag(R)|.
+        self.assertEqual(Q.shape[1], r)
+        self.assertEqual(_numerical_rank(np.linalg.svd(A)[1], 1e-12), r)
+
+    def test_matches_gram_conditioning_test(self):
+        """Full rank of the ascending eigenvalues is what the Gram test needs."""
+        # Well conditioned: full rank, so the conditioning test can proceed.
+        eigvals = np.array([1.0, 2.0, 4.0])
+        self.assertEqual(_numerical_rank(eigvals, 1e-12), eigvals.size)
+        self.assertTrue(_gram_is_well_conditioned(eigvals))
+
+        # Singular: rank deficient, so the Gram path is rejected.
+        eigvals = np.array([0.0, 2.0, 4.0])
+        self.assertLess(_numerical_rank(eigvals, 1e-12), eigvals.size)
+        self.assertFalse(_gram_is_well_conditioned(eigvals))
+
+    def test_order_independent(self):
+        """The rank does not depend on the input order."""
+        magnitudes = np.array([1e-4, 1.0, 1e-14, 1e-2, 1e-18])
+        rank = _numerical_rank(magnitudes, 1e-12)
+        self.assertEqual(rank, _numerical_rank(np.sort(magnitudes), 1e-12))
+        self.assertEqual(rank, _numerical_rank(magnitudes[::-1], 1e-12))
+
+
+class TestGNContext(unittest.TestCase):
+    """Tests for the per-iteration bundle of UV-Jacobian state.
+
+    The point of the bundle is that the (n_observed, r) gathers of ``U @ S``
+    and ``V @ S.T`` happen once per outer iteration instead of once per LSMR
+    matrix-vector product, and that each candidate ``(U, V)`` gets its own.
+    """
+
+    @staticmethod
+    def problem(m=40, n=30, r=3, p=0.5, seed=5):
+        """A partially observed low-rank matrix."""
+        rng = np.random.default_rng(seed)
+        M = rng.normal(size=(m, r)) @ rng.normal(size=(n, r)).T
+        M[~(rng.random((m, n)) < p)] = np.nan
+        return M
+
+    def test_context_holds_the_gathered_rows(self):
+        """The bundle carries the gathers, not the ungathered factors."""
+        rng = np.random.default_rng(11)
+        m, n, r = 9, 7, 3
+
+        rows, cols = np.where(rng.random((m, n)) < 0.5)
+        US = rng.normal(size=(m, r))
+        VST = rng.normal(size=(n, r))
+
+        def project_fn(w):
+            return w
+
+        ctx = _build_gn_context(rows, cols, US, VST, project_fn)
+
+        np.testing.assert_array_equal(ctx.rows, rows)
+        np.testing.assert_array_equal(ctx.cols, cols)
+        np.testing.assert_array_equal(ctx.US_rows, US[rows])
+        np.testing.assert_array_equal(ctx.VST_cols, VST[cols])
+        self.assertIs(ctx.project_fn, project_fn)
+
+    def test_gather_is_hoisted_out_of_the_lsmr_products(self):
+        """Gauss-Newton builds one context per step, not one per product.
+
+        Each Gauss-Newton step hands its context to LSMR, which asks for many
+        matrix-vector products against it, so the context count must track the
+        number of steps and stay far below the number of products.
+        """
+        M = self.problem()
+
+        with patch(
+            "skbio.stats.ordination._optspace._build_gn_context",
+            wraps=_build_gn_context,
+        ) as mock_ctx:
+            with patch(
+                "skbio.stats.ordination._optspace.solve_gauss_newton_step",
+                wraps=solve_gauss_newton_step,
+            ) as mock_step:
+                with patch(
+                    "skbio.stats.ordination._optspace.jacobian_UV",
+                    wraps=jacobian_UV,
+                ) as mock_matvec:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", RuntimeWarning)
+                        optspace(M, dimensions=3, max_iter=5, method="GN")
+
+        self.assertGreater(mock_ctx.call_count, 0)
+
+        # One context per Gauss-Newton step.
+        self.assertEqual(mock_ctx.call_count, mock_step.call_count)
+
+        # Many matrix-vector products per context.
+        self.assertGreater(mock_matvec.call_count, mock_ctx.call_count)
+
+    def test_gradient_descent_builds_one_context_per_iteration(self):
+        """Gradient descent needs one context per iteration and no more.
+
+        It applies the adjoint once per iteration to get the gradient, so the
+        context count must match that, and the line search must not pull a
+        context of its own into being.
+        """
+        M = self.problem()
+
+        with patch(
+            "skbio.stats.ordination._optspace._build_gn_context",
+            wraps=_build_gn_context,
+        ) as mock_ctx:
+            with patch(
+                "skbio.stats.ordination._optspace.jacobian_UV_adj",
+                wraps=jacobian_UV_adj,
+            ) as mock_adj:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", RuntimeWarning)
+                    optspace(M, dimensions=3, max_iter=5, method="GD")
+
+        self.assertGreater(mock_ctx.call_count, 0)
+        self.assertEqual(mock_ctx.call_count, mock_adj.call_count)
+
+    def test_line_search_trials_refactorize_for_their_own_factors(self):
+        """Every line search trial gets its own J_S factorization.
+
+        The trial objective is evaluated at a retracted ``(U, V)`` that differs
+        from the one the outer iteration gathered for, so reusing the outer
+        iteration's factorization would evaluate the wrong objective. The
+        trials therefore drive ``_s_jacobian_basis`` past the one call per
+        iteration that builds the context.
+        """
+        M = self.problem()
+
+        with patch(
+            "skbio.stats.ordination._optspace._build_gn_context",
+            wraps=_build_gn_context,
+        ) as mock_ctx:
+            with patch(
+                "skbio.stats.ordination._optspace._s_jacobian_basis",
+                wraps=_s_jacobian_basis,
+            ) as mock_basis:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", RuntimeWarning)
+                    optspace(M, dimensions=3, max_iter=5, method="GD")
+
+        self.assertGreater(mock_basis.call_count, mock_ctx.call_count)
 
 
 class TestGramBasis(unittest.TestCase):
