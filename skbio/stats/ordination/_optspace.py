@@ -32,6 +32,8 @@ References
 
 """
 
+from collections.abc import Callable
+from typing import NamedTuple
 from warnings import warn
 
 import numpy as np
@@ -208,6 +210,39 @@ def _gram_from_chunks(Ui, Vj, chunk_size=_GRAM_CHUNK_SIZE):
     return G
 
 
+def _numerical_rank(magnitudes, tol):
+    """Count the magnitudes that are significant relative to the largest one.
+
+    Both factorizations of the S-Jacobian decide rank the same way, from a
+    non-increasing sequence of magnitudes: the pivoted QR thresholds the
+    absolute values of the diagonal of ``R`` (:func:`_obs_basis`), and the Gram
+    path thresholds the eigenvalues of ``A^T A`` (:func:`_gram_is_well_conditioned`).
+    In both cases a value counts as nonzero only while it exceeds ``tol`` times
+    the leading value, and a leading value that is itself zero (or, for
+    eigenvalues of a semidefinite matrix computed in floating point, negative)
+    leaves no scale to measure against and makes the rank zero.
+
+    Parameters
+    ----------
+    magnitudes : ndarray of shape (n,)
+        Non-negative magnitudes sorted non-increasingly, so that
+        ``magnitudes[0]`` is the largest.
+    tol : float
+        Relative threshold below which a magnitude counts as zero.
+
+    Returns
+    -------
+    int
+        Number of magnitudes exceeding ``tol * magnitudes[0]``, or 0 if the
+        sequence is empty or its leading value is not positive.
+    """
+
+    if magnitudes.size == 0 or magnitudes[0] <= 0.0:
+        return 0
+
+    return int(np.count_nonzero(magnitudes > tol * magnitudes[0]))
+
+
 def _gram_is_well_conditioned(eigvals, tol=1e-12, kappa_max=_KAPPA_MAX):
     """Test whether solving through the Gram matrix is numerically safe.
 
@@ -247,10 +282,13 @@ def _gram_is_well_conditioned(eigvals, tol=1e-12, kappa_max=_KAPPA_MAX):
         Whether ``kappa(A)`` is finite and below ``kappa_max``.
     """
 
-    # np.linalg.eigh and np.linalg.eigvalsh both order eigenvalues ascending.
+    # np.linalg.eigh and np.linalg.eigvalsh both order eigenvalues ascending,
+    # so reversing them gives the non-increasing order _numerical_rank expects.
     largest, smallest = eigvals[-1], eigvals[0]
 
-    if largest <= 0.0 or smallest <= tol * largest:
+    # Anything short of full rank leaves kappa(A) infinite, which also covers a
+    # non-positive largest eigenvalue, so the division below is safe.
+    if _numerical_rank(eigvals[::-1], tol) < eigvals.size:
         return False
 
     return np.sqrt(largest / smallest) < kappa_max
@@ -310,11 +348,7 @@ def _obs_basis(Ui, Vj, tol=1e-12):
 
     # Pivoting orders |diag(R)| non-increasingly, so the numerical rank is the
     # length of the leading run of pivots above the relative threshold.
-    pivots = np.abs(np.diag(R))
-    if pivots.size == 0 or pivots[0] == 0.0:
-        rank = 0
-    else:
-        rank = int(np.count_nonzero(pivots > tol * pivots[0]))
+    rank = _numerical_rank(np.abs(np.diag(R)), tol)
 
     return Q[:, :rank], R[:rank, :rank], perm[:rank]
 
@@ -492,7 +526,65 @@ def _s_jacobian_basis(Ui, Vj, tol=1e-12, kappa_max=_KAPPA_MAX):
     return solve_fn, project_fn
 
 
-def jacobian_UV(U, V, dU, dV, rows, cols, US, VST, project_fn):
+class _GNContext(NamedTuple):
+    """State of the UV-component Jacobian at a fixed ``(U, V, S)``.
+
+    :func:`jacobian_UV` and :func:`jacobian_UV_adj` are applied many times per
+    outer iteration, once for every matrix-vector product LSMR requests, but
+    everything they need besides the direction being mapped depends only on the
+    current ``(U, V, S)``. Bundling that state keeps it built once per outer
+    iteration, in particular the gathers ``US[rows]`` and ``VST[cols]``, which
+    are ``(n_observed, r)`` and would otherwise be repeated on every product.
+
+    Build one with :func:`_build_gn_context`. A context belongs to the exact
+    ``(U, V, S)`` it was built from, so a line search trial, which proposes a
+    different ``(U, V)``, needs its own.
+
+    Attributes
+    ----------
+    rows, cols : ndarray of shape (n_observed,)
+        Row and column indices of the observed entries.
+    US_rows : ndarray of shape (n_observed, r)
+        Rows of ``U @ S`` gathered at the observed row indices.
+    VST_cols : ndarray of shape (n_observed, r)
+        Rows of ``V @ S.T`` gathered at the observed column indices.
+    project_fn : callable
+        Projection onto the orthogonal complement of ``range(J_S)``, as
+        returned by :func:`_s_jacobian_basis`.
+    """
+
+    rows: np.ndarray
+    cols: np.ndarray
+    US_rows: np.ndarray
+    VST_cols: np.ndarray
+    project_fn: Callable
+
+
+def _build_gn_context(rows, cols, US, VST, project_fn):
+    """Gather the S-scaled factor rows once and bundle the Jacobian state.
+
+    Parameters
+    ----------
+    rows, cols : ndarray of shape (n_observed,)
+        Row and column indices of the observed entries.
+    US : ndarray of shape (m, r)
+        The product ``U @ S``.
+    VST : ndarray of shape (n, r)
+        The product ``V @ S.T``.
+    project_fn : callable
+        Projection onto the orthogonal complement of ``range(J_S)`` built for
+        the same ``(U, V)`` by :func:`_s_jacobian_basis`.
+
+    Returns
+    -------
+    _GNContext
+        The bundled state, with ``US[rows]`` and ``VST[cols]`` already gathered.
+    """
+
+    return _GNContext(rows, cols, US[rows], VST[cols], project_fn)
+
+
+def jacobian_UV(U, V, dU, dV, ctx):
     """Compute J_UV(dU, dV).
 
     The Jacobian is
@@ -509,12 +601,13 @@ def jacobian_UV(U, V, dU, dV, rows, cols, US, VST, project_fn):
 
     J_UV(dU, dV)[k] = dU[i] . (V S^T)[j] + (U S)[i] . dV[j],
 
-    so ``US = U @ S`` and ``VST = V @ S.T`` are precomputed once per outer
-    iteration and no dense ``(m, n)`` array is ever formed.
+    so the rows of ``U @ S`` and ``V @ S.T`` are gathered at the observed
+    entries once per outer iteration, into ``ctx`` (see :func:`_GNContext`),
+    and no dense ``(m, n)`` array is ever formed.
 
     This is pre-composed with projection of the pair (dU, dV) onto the tangent
-    space of (U, V), and post-composed with ``project_fn``, the projection onto
-    the orthogonal complement of the S tangent space built for the current
+    space of (U, V), and post-composed with ``ctx.project_fn``, the projection
+    onto the orthogonal complement of the S tangent space built for the current
     ``(U, V)`` by :func:`_s_jacobian_basis`.
     """
 
@@ -523,14 +616,14 @@ def jacobian_UV(U, V, dU, dV, rows, cols, US, VST, project_fn):
     dV_t = dV - V @ (V.T @ dV)
 
     # Compute Jacobian over the observed entries only
-    w = (dU_t[rows] * VST[cols]).sum(axis=1)
-    w += (US[rows] * dV_t[cols]).sum(axis=1)
+    w = (dU_t[ctx.rows] * ctx.VST_cols).sum(axis=1)
+    w += (ctx.US_rows * dV_t[ctx.cols]).sum(axis=1)
 
     # Project output onto complement of S tangent space
-    return project_fn(w)
+    return ctx.project_fn(w)
 
 
-def jacobian_UV_adj(U, V, w, rows, cols, US, VST, project_fn):
+def jacobian_UV_adj(U, V, w, ctx):
     """Compute J*(W).
 
     The Jacobian adjoint is defined with respect to the inner product by
@@ -546,7 +639,7 @@ def jacobian_UV_adj(U, V, w, rows, cols, US, VST, project_fn):
     dU[i] += w[k] * (V S^T)[j],   dV[j] += w[k] * (U S)[i].
 
     The input is first projected onto the orthogonal complement of the S tangent
-    space by ``project_fn`` and the output is projected back to the tangent
+    space by ``ctx.project_fn`` and the output is projected back to the tangent
     space of (U, V). Both projections are self-adjoint, so this is the exact
     adjoint of :func:`jacobian_UV`.
     """
@@ -555,14 +648,14 @@ def jacobian_UV_adj(U, V, w, rows, cols, US, VST, project_fn):
     n = V.shape[0]
 
     # Project input onto complement of S tangent space
-    w = project_fn(w)
+    w = ctx.project_fn(w)
 
     # Compute Jacobian adjoint by scattering into the factor rows
     dU = np.empty((m, r), dtype=U.dtype)
     dV = np.empty((n, r), dtype=V.dtype)
     for q in range(r):
-        dU[:, q] = np.bincount(rows, weights=w * VST[cols, q], minlength=m)
-        dV[:, q] = np.bincount(cols, weights=w * US[rows, q], minlength=n)
+        dU[:, q] = np.bincount(ctx.rows, weights=w * ctx.VST_cols[:, q], minlength=m)
+        dV[:, q] = np.bincount(ctx.cols, weights=w * ctx.US_rows[:, q], minlength=n)
 
     # Project output onto (U, V) tangent space
     dU -= U @ (U.T @ dU)
@@ -586,7 +679,7 @@ def unpack(x, U_shape, V_shape):
     return dU, dV
 
 
-def solve_gauss_newton_step(U, V, rows, cols, US, VST, project_fn, residual, tol, damp):
+def solve_gauss_newton_step(U, V, ctx, residual, tol, damp):
     """Solve (J_UV* J_UV)dx = -J_UV* residual.
 
     The Gauss-Newton step is the vector dx = (dU, dV), where dU and dV are
@@ -594,24 +687,24 @@ def solve_gauss_newton_step(U, V, rows, cols, US, VST, project_fn, residual, tol
     least-squares solution of the system J_UV dx = -residual, and it is
     computed using the LSMR algorithm.
 
-    ``US``, ``VST`` and ``project_fn`` depend only on the current ``(U, V, S)``,
-    which are fixed for the duration of this call, so they are built once by the
-    caller and closed over by the matrix-vector products rather than being
-    rebuilt on every LSMR iteration.
+    ``ctx`` holds the Jacobian state at the current ``(U, V, S)``, which are
+    fixed for the duration of this call, so it is built once by the caller (see
+    :func:`_build_gn_context`) and closed over by the matrix-vector products
+    rather than being rebuilt on every LSMR iteration.
     """
 
     nvars = U.size + V.size
 
     def matvec(x):
         dU, dV = unpack(x, U.shape, V.shape)
-        return jacobian_UV(U, V, dU, dV, rows, cols, US, VST, project_fn)
+        return jacobian_UV(U, V, dU, dV, ctx)
 
     def rmatvec(y):
-        dU, dV = jacobian_UV_adj(U, V, y, rows, cols, US, VST, project_fn)
+        dU, dV = jacobian_UV_adj(U, V, y, ctx)
         return pack(dU, dV)
 
     J_UV = LinearOperator(
-        shape=(rows.size, nvars),
+        shape=(ctx.rows.size, nvars),
         matvec=matvec,
         rmatvec=rmatvec,
         dtype=U.dtype,
@@ -825,7 +918,10 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
 
     # Objective function
     def _compute_obj(U, V):
-        # Gather the factor rows at the observed entries and factorize J_S
+        # Gather the factor rows at the observed entries and factorize J_S.
+        # Both are specific to the (U, V) being tried, so every trial of the
+        # line search rebuilds them rather than reusing anything gathered for
+        # the (U, V) of the current outer iteration.
         Ui_curr, Vj_curr = U[rows], V[cols]
         solve_curr, _ = _s_jacobian_basis(Ui_curr, Vj_curr)
 
@@ -849,10 +945,6 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
 
         # Compute optimal S given current U, V
         S = solve_fn(b)
-
-        # Precompute the S-scaled factors used by the Jacobian products
-        US = U @ S
-        VST = V @ S.T
 
         # Compute current error
         R = jacobian_S(Ui, Vj, S) - b
@@ -878,10 +970,16 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
 
         prev_obj = obj
 
+        # Bundle the state the Jacobian products below reuse, gathering the
+        # S-scaled factor rows at the observed entries once for this iteration
+        # instead of once per product. The bundle is tied to this (U, V, S), so
+        # the line search, which tries other (U, V) pairs, must not be given it.
+        ctx = _build_gn_context(rows, cols, U @ S, V @ S.T, project_fn)
+
         # Update via gradient descent with line search
         if method == "GD":
             # Compute gradient directions
-            dU, dV = jacobian_UV_adj(U, V, -R, rows, cols, US, VST, project_fn)
+            dU, dV = jacobian_UV_adj(U, V, -R, ctx)
 
             # Perform backtracking line search
             U, V, obj, alpha = line_search(
@@ -891,9 +989,7 @@ def optspace(X, dimensions=3, max_iter=10000, tol=1e-5, method="GD"):
         # Update via Gauss-Newton
         if method == "GN":
             # Compute Gauss-Newton step
-            dU, dV = solve_gauss_newton_step(
-                U, V, rows, cols, US, VST, project_fn, R, tol, damp
-            )
+            dU, dV = solve_gauss_newton_step(U, V, ctx, R, tol, damp)
 
             # Retract updates back to Grassmann manifold
             U = retract_grassmann(U, dU)
