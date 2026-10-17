@@ -17,6 +17,7 @@ Functions
 
     unweighted_unifrac
     weighted_unifrac
+    generalized_unifrac
 
 """  # noqa: D205, D415
 
@@ -28,6 +29,6 @@ Functions
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._unifrac import unweighted_unifrac, weighted_unifrac
+from ._unifrac import unweighted_unifrac, weighted_unifrac, generalized_unifrac
 
-__all__ = ["unweighted_unifrac", "weighted_unifrac"]
+__all__ = ["unweighted_unifrac", "weighted_unifrac", "generalized_unifrac"]

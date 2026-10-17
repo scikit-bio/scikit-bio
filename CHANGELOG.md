@@ -12,6 +12,14 @@
 * Enriched documentation of `GrammaredSequence`, explaining how to create subclasses or modify existing subclasses to represent new biological sequence types ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
 * Added parameters `validate` and `copy` to `Sequence` to control data validation and copying behaviors. Default ensures data safety, while `validate=False, copy=False` maximizes performance. `copy=False` raises if a copy would be required ([#2614](https://github.com/scikit-bio/scikit-bio/pull/2614)).
 * Numba GPU kernels now run through numba-cuda-mlir on NVIDIA GPUs when it is installed, and through numba-cuda otherwise. numba-cuda is deprecated and does not support NumPy 2.5 or later ([#2622](https://github.com/scikit-bio/scikit-bio/pull/2622)).
+* Added `generalized_unifrac` (GUniFrac) to `skbio.diversity.beta`, with an `alpha` parameter controlling the weight given to abundant lineages. Currently requires `engine='gpu'`; CPU/Numba support is planned for a future release.
+* Added `engine='gpu'` to `unweighted_unifrac`, `weighted_unifrac`, `generalized_unifrac` and `beta_diversity`, dispatching to a GPU-agnostic Numba kernel backed by `numba-cuda` on NVIDIA or `numba.hip` on AMD devices. When no such GPU backend is detected (or its kernel fails to build/run), `engine='gpu'` now falls back to an array-API-generic implementation that runs on the CPU instead of raising `ImportError`.
+* Added `normalized=False` and `variance_adjust` to `unweighted_unifrac`, and `variance_adjust` to `weighted_unifrac`, downweighting branches whose node counts across the two samples have high variance. Both are currently only supported with `engine='gpu'`; CPU/Numba support is planned for a future release.
+* Added an optional `gpu-nvidia` extra for installing the NVIDIA GPU backend (`numba-cuda`). AMD support requires `numba-hip`, which is published only on test.pypi and must be pinned to match the installed ROCm version, so it has no extra and must be installed manually.
+
+### Performance enhancements
+
+* `unweighted_unifrac`'s `engine='numba'` path (as used directly and through `beta_diversity`) now delegates its non-`variance_adjust` case to the array-API BLAS-matmul implementation added for the `engine='gpu'` CPU fallback, instead of running its own `@njit(parallel=True)` loop kernel from [#2558](https://github.com/scikit-bio/scikit-bio/pull/2558). Measured ~8.6x faster at 5000 samples on a 48-core CPU node (11.5s to 1.35s). This is **not** bit-for-bit identical to the original #2558 kernel any more -- summation order changed from sequential per-node accumulation to a BLAS reduction -- but matches it, and the `ssu`-generated reference fixtures, well within floating-point tolerance (max abs deviation ~6e-15, far inside the 1e-10 bar used elsewhere for this kind of comparison). `weighted_unifrac` and `generalized_unifrac`'s CPU kernels are unaffected.
 
 ### Bug Fixes
 
@@ -32,6 +40,7 @@
 * `GrammaredSequence` subclasses may define only `definite_chars`, without defining gap or degenerate characters. When a subclass defines `gap_chars` but not `default_gap_char`, its first sorted gap character is used as the default.
 * Clarified the notion of "internal node" in `TreeNode`, which are nodes with at least one child. The root of a tree is an internal node as long as it has any children. Fixed `TreeNode.__repr__` internal node count to match this definition.
 
+* `unweighted_unifrac`, `weighted_unifrac` and `generalized_unifrac` now require all parameters after `tree` to be passed as keyword arguments. Previously these were positional-or-keyword, so a call like `unweighted_unifrac(u, v, taxa, tree, False)` relied on positional order and silently changed meaning whenever a new parameter was inserted. Code calling these functions with more than 4 positional arguments must switch to keyword arguments.
 
 ## Version 0.7.4
 

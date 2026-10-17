@@ -3,6 +3,9 @@
 \#*#
 .pytest_cache/*
 
+# Internal planning docs (writing-plans/writing-specs skill output), not part of the project
+docs/superpowers/
+
 *.py[cod]
 
 # C extensions

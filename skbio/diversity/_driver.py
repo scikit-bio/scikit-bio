@@ -25,6 +25,9 @@ from skbio.diversity.beta._unifrac import (
     _normalize_weighted_unifrac_by_default,
     _unweighted_unifrac_pdist_numba,
     _weighted_unifrac_pdist_numba,
+    _reject_gpu_only_options,
+    _validate_unifrac_engine,
+    _GENERALIZED_UNIFRAC_GPU_ONLY,
     NUMBA_AVAILABLE,
 )
 from skbio.stats.distance import DistanceMatrix
@@ -56,7 +59,7 @@ _qualitative_metrics = {
 }
 
 # Names of beta diversity callables that have a faster string-keyed equivalent.
-_slow_beta_callables = {"unweighted_unifrac", "weighted_unifrac"}
+_slow_beta_callables = {"unweighted_unifrac", "weighted_unifrac", "generalized_unifrac"}
 
 
 # Beta diversity metrics implemented in SciPy's pdist.
@@ -132,7 +135,11 @@ def get_beta_diversity_metrics() -> list[str]:
     SciPy's :func:`~scipy.spatial.distance.pdist` for more details.
 
     """
-    return sorted(_pdist_metrics.union(["unweighted_unifrac", "weighted_unifrac"]))
+    return sorted(
+        _pdist_metrics.union(
+            ["unweighted_unifrac", "weighted_unifrac", "generalized_unifrac"]
+        )
+    )
 
 
 def alpha_diversity(
@@ -246,14 +253,13 @@ def _numba_unifrac_fast_path_eligible(engine, pairwise_func, kwargs):
     asked for engine="numba" but can't get it, so that case stays visible
     instead of silently falling back to the cython/pairwise_func path.
     """
-    if pairwise_func is None and not kwargs:
+    if pairwise_func is not None:
+        reason = "a pairwise_func was provided"
+    elif kwargs:
+        reason = f"unrecognized keyword argument(s) {sorted(kwargs)} were provided"
+    else:
         return True
     if engine == "numba":
-        reason = (
-            "a pairwise_func was provided"
-            if pairwise_func is not None
-            else f"unrecognized keyword argument(s) {sorted(kwargs)} were provided"
-        )
         warnings.warn(
             f"engine='numba' was requested but {reason}, which the numba "
             "unifrac kernels cannot use; falling back to the cython/"
@@ -261,6 +267,37 @@ def _numba_unifrac_fast_path_eligible(engine, pairwise_func, kwargs):
             stacklevel=3,
         )
     return False
+
+
+def _reject_partial_variance_adjust(metric, kwargs):
+    """Reject variance_adjust for partial_beta_diversity's unifrac metrics.
+
+    The per-pair functions partial_beta_diversity builds have no
+    variance-adjusted form (they would fail on the missing sample totals),
+    and its upstream count qualification has already altered the abundances
+    variance adjustment is defined over, so the result would be wrong even if
+    it ran.
+    """
+    if kwargs.pop("variance_adjust", False):
+        raise ValueError(
+            f"variance_adjust is not supported by partial_beta_diversity for "
+            f"metric '{metric}'. Use beta_diversity instead."
+        )
+
+
+def _reject_unusable_gpu_kwargs(metric, pairwise_func, kwargs):
+    """Raise rather than silently ignore what the GPU path cannot honor."""
+    if kwargs:
+        raise TypeError(
+            f"beta_diversity got unexpected keyword argument(s) "
+            f"{sorted(kwargs)} for metric '{metric}'."
+        )
+    if pairwise_func is not None:
+        raise ValueError(
+            f"pairwise_func is not supported by engine='gpu' for metric "
+            f"'{metric}'; the GPU kernel computes the whole distance matrix "
+            "directly."
+        )
 
 
 def beta_diversity(
@@ -297,11 +334,16 @@ def beta_diversity(
         Examples of functions that can be provided are SciPy's
         :func:`~scipy.spatial.distance.pdist` (default) and scikit-learn's
         :func:`~sklearn.metrics.pairwise_distances`.
-    engine : {'cython', 'numba', 'fast'}, optional
-        Compute engine for 'unweighted_unifrac' and 'weighted_unifrac'. Ignored for
-        other metrics. If None (default), use the global ``compute_engine`` setting.
-        'fast' selects Numba if installed, otherwise Cython. See :ref:`compute_engines`
-        for details.
+    engine : {'cython', 'numba', 'fast', 'gpu'}, optional
+        Compute engine for 'unweighted_unifrac', 'weighted_unifrac' and
+        'generalized_unifrac'. Ignored for other metrics. If None (default),
+        use the global ``compute_engine`` setting. 'fast' selects Numba if
+        installed, otherwise Cython. 'gpu' dispatches to a GPU-accelerated
+        implementation: a fused kernel when a usable GPU backend
+        (``numba-cuda`` or ``numba.hip``) is detected, otherwise an
+        array-API-generic implementation that runs on the CPU; unlike
+        'fast', 'gpu' is never selected automatically. See
+        :ref:`compute_engines` for details.
 
         .. versionadded:: 0.7.4
     kwargs : dict, optional
@@ -342,12 +384,37 @@ def beta_diversity(
         return DistanceMatrix(np.zeros((len(ids), len(ids))), ids)
     if validate:
         counts = _validate_counts_matrix(counts)
-    if metric in _qualitative_metrics:
+    if metric in _qualitative_metrics and not (
+        metric == "unweighted_unifrac" and kwargs.get("variance_adjust")
+    ):
+        # variance_adjust needs the real abundances (sample/node totals), so
+        # skip the presence/absence qualification that the plain (non-VAW)
+        # unweighted UniFrac metric would otherwise get here.
         counts = _qualify_counts(counts)
-    if metric in ("unweighted_unifrac", "weighted_unifrac"):
+    if metric in ("unweighted_unifrac", "weighted_unifrac", "generalized_unifrac"):
         taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
 
     if metric == "unweighted_unifrac":
+        normalized = kwargs.pop("normalized", True)
+        variance_adjust = kwargs.pop("variance_adjust", False)
+        if engine == "gpu":
+            _reject_unusable_gpu_kwargs(metric, pairwise_func, kwargs)
+            from skbio.diversity.beta._unifrac_gpu import (
+                _unweighted_unifrac_gpu_or_xp,
+            )
+
+            distances = _unweighted_unifrac_gpu_or_xp(
+                counts,
+                taxa,
+                tree,
+                normalized=normalized,
+                variance_adjust=variance_adjust,
+                validate=validate,
+            )
+            return DistanceMatrix(distances, ids)
+        _reject_gpu_only_options(
+            metric, normalized=normalized, variance_adjust=variance_adjust
+        )
         resolved_engine = _resolve_engine(
             engine, ("cython", "numba"), fast=_UNIFRAC_FAST_ENGINE
         )
@@ -365,6 +432,23 @@ def beta_diversity(
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)
+        variance_adjust = kwargs.pop("variance_adjust", False)
+        if engine == "gpu":
+            _reject_unusable_gpu_kwargs(metric, pairwise_func, kwargs)
+            from skbio.diversity.beta._unifrac_gpu import (
+                _weighted_unifrac_gpu_or_xp,
+            )
+
+            distances = _weighted_unifrac_gpu_or_xp(
+                counts,
+                taxa,
+                tree,
+                normalized=normalized,
+                variance_adjust=variance_adjust,
+                validate=validate,
+            )
+            return DistanceMatrix(distances, ids)
+        _reject_gpu_only_options(metric, variance_adjust=variance_adjust)
         resolved_engine = _resolve_engine(
             engine, ("cython", "numba"), fast=_UNIFRAC_FAST_ENGINE
         )
@@ -382,6 +466,32 @@ def beta_diversity(
         metric, counts = _setup_multiple_weighted_unifrac(
             counts, taxa=taxa, tree=tree, normalized=normalized, validate=validate
         )
+    elif metric == "generalized_unifrac":
+        _validate_unifrac_engine(engine)
+        alpha = kwargs.pop("alpha", 1.0)
+        variance_adjust = kwargs.pop("variance_adjust", False)
+        if engine != "gpu":
+            # generalized_unifrac has no CPU implementation in this release
+            # (it ships GPU-only; CPU/numba support is planned for a future
+            # PR), so this must raise rather than silently compute something
+            # else -- deliberately before alpha-range validation below.
+            raise NotImplementedError(_GENERALIZED_UNIFRAC_GPU_ONLY)
+        _reject_unusable_gpu_kwargs(metric, pairwise_func, kwargs)
+        if not (0.0 <= alpha <= 1.0):
+            raise ValueError(f"alpha must be in [0, 1], got {alpha}.")
+        from skbio.diversity.beta._unifrac_gpu import (
+            _generalized_unifrac_gpu_or_xp,
+        )
+
+        distances = _generalized_unifrac_gpu_or_xp(
+            counts,
+            taxa,
+            tree,
+            alpha=alpha,
+            variance_adjust=variance_adjust,
+            validate=validate,
+        )
+        return DistanceMatrix(distances, ids)
     elif metric == "manhattan":
         metric = "cityblock"
     elif metric == "mahalanobis":
@@ -492,11 +602,13 @@ def partial_beta_diversity(
         raise ValueError("A duplicate or a self-self pair was observed.")
 
     if metric == "unweighted_unifrac":
+        _reject_partial_variance_adjust(metric, kwargs)
         taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
         func, counts = _setup_multiple_unweighted_unifrac(
             counts, taxa=taxa, tree=tree, validate=validate
         )
     elif metric == "weighted_unifrac":
+        _reject_partial_variance_adjust(metric, kwargs)
         # get the value for normalized. if it was not provided, it will fall
         # back to the default value inside of _weighted_unifrac_pdist_f
         normalized = kwargs.pop("normalized", _normalize_weighted_unifrac_by_default)

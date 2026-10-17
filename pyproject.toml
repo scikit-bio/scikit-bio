@@ -78,6 +78,10 @@ lint = [
     "ruff",
     "pre-commit"
 ]
+# AMD has no counterpart extra: numba-hip is published only on test.pypi and
+# must be pinned to the installed ROCm version, so there is no single pip
+# specification that works across releases. See get_cuda_module's Notes.
+gpu-nvidia = ["numba-cuda"]
 dev = [
     "pytest",
     "coverage",
