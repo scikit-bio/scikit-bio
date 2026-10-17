@@ -198,14 +198,14 @@ built-in :class:`~io.StringIO` class to mimic an open file:
 >>> open_filehandle = StringIO('(a, b);')
 >>> tree = sk_read(open_filehandle, format='newick', into=TreeNode)
 >>> tree
-<TreeNode, name: unnamed, internal node count: 0, tips count: 2>
+<TreeNode, name: unnamed, internal node count: 1, tips count: 2>
 
 Or, using the object-oriented interface:
 
 >>> open_filehandle = StringIO('(a, b);')
 >>> tree = TreeNode.read(open_filehandle, format='newick')
 >>> tree
-<TreeNode, name: unnamed, internal node count: 0, tips count: 2>
+<TreeNode, name: unnamed, internal node count: 1, tips count: 2>
 
 In the case of :func:`skbio.io.registry.read` if ``into`` is not provided, then a
 generator will be returned. What the generator yields will depend on what
@@ -221,7 +221,7 @@ As an example:
 >>> open_filehandle = StringIO('(a, b);')
 >>> tree = TreeNode.read(open_filehandle)
 >>> tree
-<TreeNode, name: unnamed, internal node count: 0, tips count: 2>
+<TreeNode, name: unnamed, internal node count: 1, tips count: 2>
 
 We call format inference **sniffing**, much like the :class:`csv.Sniffer`
 class of Python's standard library. The goal of a ``sniffer`` is two-fold: to

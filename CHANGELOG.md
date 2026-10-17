@@ -30,9 +30,7 @@
 ### Miscellaneous
 
 * `GrammaredSequence` subclasses may define only `definite_chars`, without defining gap or degenerate characters. When a subclass defines `gap_chars` but not `default_gap_char`, its first sorted gap character is used as the default.
-
-
-### Backward-incompatible changes
+* Clarified the notion of "internal node" in `TreeNode`, which are nodes with at least one child. The root of a tree is an internal node as long as it has any children. Fixed `TreeNode.__repr__` internal node count to match this definition.
 
 
 ## Version 0.7.4
