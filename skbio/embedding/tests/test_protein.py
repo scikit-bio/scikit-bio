@@ -77,8 +77,13 @@ class ProteinEmbeddingTests(TestCase):
         self.assertTupleEqual(p_emb.embedding.shape, (62, 1024))
 
     def test_assert_length(self):
-        with self.assertRaises(ValueError):
+        msg = (
+            "The number of rows in the embedding (62) must match the number "
+            "of characters in the sequence (63)."
+        )
+        with self.assertRaises(ValueError) as cm:
             ProteinEmbedding(self.emb, self.seq + "A")
+        self.assertEqual(str(cm.exception), msg)
 
     def test_invalid_sequence(self):
         emb, s = self.emb, self.invalid_seq
