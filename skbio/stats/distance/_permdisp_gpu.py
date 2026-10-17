@@ -40,7 +40,11 @@ _kernels = {}  # backend name -> compiled kernel (built on first use)
 # _MAX_DIMS bounds the shared arrays the kernels declare, which need a
 # compile-time constant shape on both numba.cuda and numba.hip. _MAX_GROUPS is
 # a limit on the grid's group axis, not on a kernel array. Both are checked on
-# the host before launch.
+# the host before launch. 64 dimensions cover the 10 axes permdisp retains by
+# default, and up to about 2000 would still fit the median kernel in 48 KB of
+# shared memory. The group limit was not tuned. Each (permutation, group) block
+# scans all samples, so GPU time grows with the number of groups much faster
+# than the CPU engine's.
 _MAX_GROUPS = 64
 _MAX_DIMS = 64
 
@@ -55,10 +59,16 @@ def _kernel_supports_shape(dims, num_groups):
 
 
 # Upper bound on the grouping buffer held at once, host side and device side,
-# which would otherwise be (permutations + 1) x n.
+# which would otherwise be (permutations + 1) x n. The result does not depend on
+# it, because the permutations are drawn in the same order whatever the chunk
+# size. It is a memory cap, not a tuned value.
 _PERM_CHUNK_BYTES = 64 * 1024 * 1024
 
 
+# Threads per block, one block per (permutation, group). It sizes the shared
+# reduction array and the reductions halve it, so it must be a compile-time power
+# of two. 64 sits in the middle of the range that ran within 2% on an RTX 4060
+# (32 to 128), and 256 was 9% slower on the median test.
 _TPB_BG = 64
 
 
@@ -196,12 +206,16 @@ def _assemble_f_from_partials(counts, sums, ss, num_groups):
     return out
 
 
+# Tolerance and iteration cap of the Weiszfeld iteration. They are the
+# defaults of _cutils.geomedian_axis_one and the CPU Numba port, and must stay
+# equal to them for the three engines to stop on the same iterate.
 _GEO_EPS = 1e-7
 _GEO_MAXITERS = 500
 
 # Dimension-tile width for the Weiszfeld weighted sum. Each thread holds this
 # many float64 accumulators, so it trades registers against repeated distance
-# work.
+# work. The best width follows the number of dimensions (8 at 5, 16 at 10, 32 at
+# 20 on an RTX 4060), and 16 suits the 10 axes permdisp retains by default.
 _JCH = 16
 
 
