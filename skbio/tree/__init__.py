@@ -125,12 +125,13 @@ Loading a tree
 
 A tree can be constructed from a Newick string. :wiki:`Newick <Newick_format>` is a
 common file format used to represent tree structure based on nesting with parentheses.
-For instance, the following string describes a 3-taxon tree, with one internal node:
+For instance, the following string describes a 3-taxon tree:
 
     ((A,B)C,D)root;
 
 Where A, B, and D are tips of the tree, and C is an internal node that unites tips A
-and B. C and D are in turn united by the root of the tree.
+and B. C and D are in turn united by the root of the tree, which is also an internal
+node (defined as nodes with at least one child).
 
 If this string is stored in a file ``input.nwk``, we can read it into scikit-bio with:
 
@@ -142,7 +143,7 @@ Alternatively, we can directly convert a Newick string into a tree with:
 
 >>> tree = TreeNode.read(["((A,B)C,D)root;"])
 >>> tree
-<TreeNode, name: root, internal node count: 1, tips count: 3>
+<TreeNode, name: root, internal node count: 2, tips count: 3>
 
 Let's display an ASCII representation of the tree:
 
@@ -276,8 +277,8 @@ which traversal starts. One can pass the ``include_self=False`` flag to the meth
 if you wish to exclude it.
 
 ``TreeNode`` provides multiple methods for iterating over certain nodes. For examples,
-:meth:`~TreeNode.tips` and :meth:`~TreeNode.non_tips` iterate over tips and internal
-nodes, respectively:
+:meth:`~TreeNode.tips` and :meth:`~TreeNode.non_tips` iterate over tips and non-tip
+(internal) nodes below the current node, respectively:
 
 >>> for node in tree.tips():
 ...    print(node.name)
@@ -288,6 +289,14 @@ D
 >>> for node in tree.non_tips():
 ...    print(node.name)
 C
+
+By default, ``non_tips`` excludes the current node. Pass ``include_self=True`` to
+include it:
+
+>>> for node in tree.non_tips(include_self=True):
+...    print(node.name)
+C
+root
 
 If we just want to know the total number of nodes (or just tips) in a tree, we can do:
 
