@@ -139,6 +139,10 @@
 * Fixed pickling and copying a `BPTree` losing its edge numbers ([#2634](https://github.com/scikit-bio/scikit-bio/pull/2634)).
 * Fixed `BPTree.mincount` and `BPTree.minselect` raising `ValueError`, or counting a negative position from the end, for a position outside the tree, and raising `ValueError` for an empty range (`i > j`). They now return -1 for a position outside the tree, as the other navigation methods and their Numba functions do, and 0 (`mincount`) or -1 (`minselect`) for an empty range ([#2638](https://github.com/scikit-bio/scikit-bio/pull/2638)).
 
+### Bug Fixes
+
+* Fixed the GenBank/EMBL/GFF3 feature-location parser raising `FileFormatError` on remote entry references with fuzzy boundaries (e.g. `AB000684.1:<1..>275`). Such references are now dropped consistently with other remote entry references (whose coordinates refer to a different sequence), rather than raising ([#2502](https://github.com/scikit-bio/scikit-bio/pull/2502)).
+
 ## Version 0.7.3
 
 ### Features

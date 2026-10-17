@@ -74,6 +74,22 @@ class Tests(TestCase):
             parsed = _parse_loc_str(example)
             self.assertEqual(parsed, expect)
 
+    def test_parse_loc_str_remote_entry_fuzzy(self):
+        # Remote entry references (INSDC case e) are dropped because their
+        # coordinates refer to a different sequence. Fuzzy boundaries in such
+        # references must be dropped consistently rather than raising an error
+        # (issue #1489).
+        examples = [
+            'AB000684.1:<1..>275',
+            'J00194.1:1..>9',
+            'join(J00194.1:<1..>9,3..8)']
+        expects = [
+            ([], [], {'strand': '+'}),
+            ([], [], {'strand': '+'}),
+            ([(2, 8)], [(False, False)], {'strand': '+'})]
+        for example, expect in zip(examples, expects):
+            self.assertEqual(_parse_loc_str(example), expect)
+
     def test_parse_loc_str_invalid(self):
         examples = [
             'abc',
