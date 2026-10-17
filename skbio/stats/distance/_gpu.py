@@ -8,12 +8,12 @@
 
 """Shared helpers for the single-source Numba CUDA/HIP GPU backends.
 
-The permutation-test statistics (PERMANOVA, Mantel) each ship a fused kernel that
-compiles through ``numba_cuda_mlir.cuda`` or ``numba.cuda`` on NVIDIA and
-``numba.hip`` on AMD. This module holds the piece they share: choosing the Numba
-GPU module for a given device-resident array, and a correctness-first fallback to
-the array-API path whenever the fused kernel is unavailable or fails to build on
-the running stack.
+The permutation-test statistics (PERMANOVA, Mantel, PERMDISP) each ship a fused
+kernel that compiles through ``numba_cuda_mlir.cuda`` or ``numba.cuda`` on NVIDIA
+and ``numba.hip`` on AMD. This module holds the piece they share: choosing the
+Numba GPU module for a given device-resident array, and a correctness-first
+fallback whenever the fused kernel is unavailable or fails to build on the running
+stack.
 """
 
 from warnings import warn
@@ -28,7 +28,7 @@ _TPB = 128
 
 # Backend names whose fused Numba GPU kernel failed to build or run in this
 # process. Populated by ``_mark_gpu_unavailable`` so that later calls skip the
-# kernel and take the array-API path instead of retrying a failing compilation.
+# kernel and take their fallback instead of retrying a failing compilation.
 _unavailable = set()
 
 
@@ -41,7 +41,7 @@ def _numba_gpu_module_for(arr):
     flag disambiguates them). Returns None for any other namespace (e.g. JAX,
     Dask), an unavailable backend, when Numba GPU support is not installed, or when
     this backend's fused kernel has already failed once in this process (see
-    :func:`_mark_gpu_unavailable`); the caller then takes the array-API path.
+    :func:`_mark_gpu_unavailable`); the caller then takes its fallback.
 
     Parameters
     ----------
@@ -97,14 +97,16 @@ def _mark_gpu_unavailable(arr):
 
     Called by the statistic dispatchers when the fused kernel raises (for example
     a numba-hip build that fails to compile on the running ROCm stack). Warns once
-    per backend, then routes that backend to the array-API path from then on.
+    per backend, then routes that backend to its fallback from then on. That is
+    the array-API path for permanova and mantel; permdisp has no array-API path,
+    so it falls back to the host Numba engine.
     """
     name = _get_backend_name(_aac.array_namespace(arr))
     if name not in _unavailable:
         _unavailable.add(name)
         warn(
             f"The Numba GPU kernel could not be used for the '{name}' backend on "
-            "this system; using the array-API fallback instead.",
+            "this system; using the fallback path instead.",
             UserWarning,
         )
 

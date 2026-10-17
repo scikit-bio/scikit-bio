@@ -167,9 +167,9 @@ computing through the extensions
 not installed; it requires NumPy 2.4 or earlier.
 Refer to the :install:`installation instructions <#numba>`. With a compatible GPU
 extension installed, these Numba engines can automatically use GPU computation for
-supported CuPy and PyTorch arrays residing on the GPU. The function will fall back to
-the array-API implementation for other array formats or if the GPU kernel is
-unavailable.
+supported CuPy and PyTorch arrays residing on the GPU. For other array formats, or if
+the GPU kernel is unavailable, the function falls back to its array-API implementation
+where it has one, and to the CPU Numba engine otherwise.
 
 We will demonstrate this using the :func:`~skbio.stats.distance.permanova` function,
 which performs the Permutational Multivariate Analysis of Variance (PERMANOVA) on a
