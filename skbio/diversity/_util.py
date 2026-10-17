@@ -10,7 +10,7 @@ import numpy as np
 
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._phylogenetic import _nodes_by_counts
-
+from skbio.util._array import ingest_array
 
 def _validate_counts(counts, cast_int=False):
     """Validate and convert input to an acceptable counts vector/matrix type.
@@ -47,18 +47,20 @@ def _validate_counts(counts, cast_int=False):
     .. [1] https://numpy.org/doc/stable/reference/arrays.scalars.html
 
     """
-    counts = np.asarray(counts)
+
+    xp, counts = ingest_array(counts)
+    counts = xp.asarray(counts)
 
     dtype = counts.dtype
-    if np.issubdtype(dtype, np.floating):
+    if xp.isdtype(dtype, "real floating"):
         if cast_int:
-            counts = counts.astype(int)
-    elif not np.issubdtype(dtype, np.integer) and dtype is not np.dtype("bool"):
+            counts = xp.astype(counts,xp.int64)
+    elif not xp.isdtype(dtype, "integral") and dtype != xp.bool:
         raise ValueError("Counts must be integers or floating-point numbers.")
 
     # This is more efficient that `(counts < 0).any()`, but a more efficient way is to
     # iterate by element and exit early on the first negative value.
-    if counts.size > 0 and counts.min() < 0:
+    if xp.size(counts) > 0 and xp.min(counts) < 0:
         raise ValueError("Counts cannot contain negative values.")
 
     return counts
