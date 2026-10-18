@@ -429,6 +429,7 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         dataframe,
         column_missing_schemes=None,
         default_missing_scheme=DEFAULT_MISSING,
+        missing_masks=None,
     ):
         if not isinstance(dataframe, pd.DataFrame):
             raise TypeError(
@@ -441,13 +442,13 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         if column_missing_schemes is None:
             column_missing_schemes = {}
 
-        self._dataframe, self._columns = self._normalize_dataframe(
-            dataframe, column_missing_schemes, default_missing_scheme
+        self._dataframe, self._columns, self._missing_masks = self._normalize_dataframe(
+            dataframe, column_missing_schemes, default_missing_scheme, missing_masks
         )
         self._validate_index(self._dataframe.columns, axis="column")
 
     def _normalize_dataframe(
-        self, dataframe, column_missing_schemes, default_missing_scheme
+        self, dataframe, column_missing_schemes, default_missing_scheme, missing_masks
     ):
         norm_df = dataframe.copy()
 
@@ -458,21 +459,34 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         norm_df.index = norm_df.index.str.strip()
 
         columns = OrderedDict()
+        if encoding_done := missing_masks is not None:
+            masks = missing_masks
+        else:
+            masks = OrderedDict()
         for column_name, series in norm_df.items():
+            # column_missing_schemes is {column_name: missing_scheme}
             missing_scheme = column_missing_schemes.get(
                 column_name, default_missing_scheme
             )
-            metadata_column = self._metadata_column_factory(series, missing_scheme)
+            mask = masks.get(column_name, None)
+            metadata_column = self._metadata_column_factory(
+                series, missing_scheme, mask
+            )
+            if not encoding_done:
+                masks[column_name] = metadata_column._missing_mask
             norm_df[column_name] = metadata_column.to_series()
             properties = ColumnProperties(
                 type=metadata_column.type, missing_scheme=missing_scheme
             )
             columns[column_name] = properties
 
-        return norm_df, columns
+        return norm_df, columns, masks
 
-    def _metadata_column_factory(self, series, missing_scheme):
-        series = _missing.series_encode_missing(series, missing_scheme)
+    def _metadata_column_factory(self, series, missing_scheme, missing_mask):
+        if missing_mask is None:
+            series, missing_mask = _missing.series_encode_missing(
+                series, missing_scheme
+            )
         # Collapse dtypes except for all NaN columns so that we can preserve
         # empty categorical columns. Empty numeric columns will already have
         # the expected dtype and values
@@ -480,9 +494,13 @@ class SampleMetadata(_MetadataBase, SkbioObject):
             series = series.infer_objects()
         dtype = series.dtype
         if NumericMetadataColumn._is_supported_dtype(dtype):
-            column = NumericMetadataColumn(series, missing_scheme)
+            column = NumericMetadataColumn(
+                series, missing_scheme, missing_mask=missing_mask
+            )
         elif CategoricalMetadataColumn._is_supported_dtype(dtype):
-            column = CategoricalMetadataColumn(series, missing_scheme)
+            column = CategoricalMetadataColumn(
+                series, missing_scheme, missing_mask=missing_mask
+            )
         else:
             raise TypeError(
                 "Metadata column %r has an unsupported pandas dtype of %s. "
@@ -606,16 +624,14 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         """
         df = self._dataframe.copy()
         if encode_missing:
-
-            def replace_nan(series):
-                missing = _missing.series_extract_missing(series)
-                # avoid dtype changing if there's no missing values
+            for col_name, series in df.items():
+                missing = _missing.series_extract_missing(
+                    series, self._missing_masks[col_name]
+                )
                 if not missing.empty:
                     series = series.astype(object)
-                    series[missing.index] = missing
-                return series
-
-            df = df.apply(replace_nan)
+                    series.update(missing)
+                    df[col_name] = series
 
         return df
 
@@ -641,13 +657,14 @@ class SampleMetadata(_MetadataBase, SkbioObject):
         try:
             series = self._dataframe[name]
             missing_scheme = self._columns[name].missing_scheme
+            missing_mask = self._missing_masks[name]
         except KeyError:
             raise ValueError(
                 "%r is not a column in the metadata. Available columns: "
                 "%s" % (name, ", ".join(repr(c) for c in self.columns))
             )
 
-        return self._metadata_column_factory(series, missing_scheme)
+        return self._metadata_column_factory(series, missing_scheme, missing_mask)
 
     def get_ids(self, where=None):
         """Retrieve IDs matching search criteria.
@@ -936,6 +953,13 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
     missing_scheme : "blank", "no-missing", "INSDC:missing"
         How to interpret terms for missing values. These will be converted
         to NaN. The default treatment is to take no action.
+    missing_mask : pd.Series or None, optional
+        A Series with the same index as `series` that records the original
+        missing value terms (e.g. "not applicable", "missing") for entries
+        that were converted to NaN during encoding. Non-null entries in the
+        mask indicate the original term; null entries indicate no encoded
+        term. When None (the default), the mask is computed automatically
+        from `series` using the provided `missing_scheme`.
 
     """
 
@@ -1006,7 +1030,7 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
         """
         pass
 
-    def __init__(self, series, missing_scheme=DEFAULT_MISSING):
+    def __init__(self, series, missing_scheme=DEFAULT_MISSING, missing_mask=None):
         if not isinstance(series, pd.Series):
             raise TypeError(
                 "%s constructor requires a pandas.Series object, not %r"
@@ -1015,7 +1039,10 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
 
         super().__init__(series.index)
 
-        series = _missing.series_encode_missing(series, missing_scheme)
+        if missing_mask is None:
+            series, missing_mask = _missing.series_encode_missing(
+                series, missing_scheme
+            )
         # if the series has values with a consistent dtype, make the series
         # that dtype. Don't change the dtype if there is a column of all NaN
         if not series.isna().all():
@@ -1035,6 +1062,7 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
 
         self._missing_scheme = missing_scheme
         self._series = self._normalize_(series)
+        self._missing_mask = missing_mask
 
         self._validate_index([self._series.name], axis="column")
 
@@ -1126,6 +1154,9 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
         if encode_missing:
             missing = self.get_missing()
             if not missing.empty:
+                # Convert to object dtype to allow mixing numeric with string values
+                if series.dtype != object:
+                    series = series.astype(object)
                 series[missing.index] = missing
 
         return series
@@ -1162,8 +1193,16 @@ class MetadataColumn(_MetadataBase, metaclass=ABCMeta):
         If the column was constructed with a missing scheme, then the values
         of the series will be the original terms instead of NaN.
 
+        Returns a series with object dtype to allow for both NaN values
+        and string terms (e.g., INSDC vocabulary).
+
         """
-        return _missing.series_extract_missing(self._series)
+        result = _missing.series_extract_missing(self._series, self._missing_mask)
+        # Always return object dtype for consistency - the result could contain
+        # strings (INSDC terms) or NaN values
+        if result.dtype != object:
+            result = result.astype(object)
+        return result
 
     def get_value(self, id):
         """Retrieve metadata column value associated with an ID.
@@ -1320,7 +1359,6 @@ class CategoricalMetadataColumn(MetadataColumn):
                     return value
             elif pd.isna(value):  # permits np.nan, Python float nan, None
                 if isinstance(value, float) and np.isnan(value):
-                    # if type(value) is float and np.isnan(value):
                     return value
                 return np.nan
             else:
@@ -1331,7 +1369,10 @@ class CategoricalMetadataColumn(MetadataColumn):
                 )
 
         norm_series = series.apply(normalize)
-        norm_series = norm_series.astype(object)
+        # Preserve object dtype for all-NaN categorical columns
+        # (series.apply can convert object to float64 when all values are NaN)
+        if series.dtype == object and norm_series.dtype != object:
+            norm_series = norm_series.astype(object)
         norm_series.index = norm_series.index.str.strip()
         norm_series.name = norm_series.name.strip()
         return norm_series
