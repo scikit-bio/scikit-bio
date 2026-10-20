@@ -287,10 +287,58 @@ class PairwiseAlignmentTests(TestCase):
             Protein("HEAGAWGHEE"), Protein("PAWHEAE"), gap_open_penalty=10.,
             gap_extend_penalty=5., penalize_terminal_gaps=True)
 
+        # the alignment is one of several optimal alignments; the original
+        # test recorded a different tie with the same score of 1.0 (see the
+        # comment at the top of this class about tie-breaking differences)
         self.assertEqual(obs_msa, TabularMSA([Protein("HEAGAWGHEE"),
-                                              Protein("---PAWHEAE")]))
+                                              Protein("P---AWHEAE")]))
         self.assertEqual(obs_score, 1.0)
         self.assertEqual(obs_start_end, [(0, 9), (0, 6)])
+
+    def test_global_pairwise_align_nucleotide_affine_gap_optimal(self):
+        # regression test for
+        # https://github.com/scikit-bio/scikit-bio/issues/1722
+        # the former single-matrix DP returned a score of 39.0 although an
+        # alignment scoring 45.0 exists under these parameters
+        gap_open_penalty = 5
+        gap_extend_penalty = 1
+        match_score = 5
+        mismatch_score = -2
+        obs_msa, obs_score, obs_start_end = global_pairwise_align_nucleotide(
+            DNA("GCAAAAGCTGGTATTAAAGT"),
+            DNA("GCATATTACGTGGTGATTCAAGAGGCCTTCG"),
+            gap_open_penalty=gap_open_penalty,
+            gap_extend_penalty=gap_extend_penalty,
+            match_score=match_score,
+            mismatch_score=mismatch_score,
+            penalize_terminal_gaps=True)
+        self.assertEqual(obs_score, 45.0)
+        self.assertEqual(obs_start_end, [(0, 19), (0, 30)])
+
+        # Re-score the emitted alignment independently. This confirms the
+        # traceback reconstructs a path whose affine-gap score matches the
+        # dynamic-programming optimum, rather than only checking the score
+        # matrix's final cell.
+        a1, a2 = (str(s) for s in obs_msa)
+        self.assertEqual(len(a1), len(a2))
+        self.assertTrue(all(x != "-" or y != "-" for x, y in zip(a1, a2)))
+
+        observed_alignment_score = 0
+        gap_run = None
+        for char1, char2 in zip(a1, a2):
+            if char1 == "-" or char2 == "-":
+                gap_side = "aln1" if char1 == "-" else "aln2"
+                if gap_side == gap_run:
+                    observed_alignment_score -= gap_extend_penalty
+                else:
+                    observed_alignment_score -= gap_open_penalty
+                gap_run = gap_side
+            else:
+                observed_alignment_score += (
+                    match_score if char1 == char2 else mismatch_score
+                )
+                gap_run = None
+        self.assertEqual(observed_alignment_score, obs_score)
 
     def test_global_pairwise_align_nucleotide_penalize_terminal_gaps(self):
         # in these tests one sequence is about 3x the length of the other.
@@ -624,16 +672,20 @@ class PairwiseAlignmentTests(TestCase):
 
     def test_compute_score_and_traceback_matrices(self):
         # these results were computed manually
+        # note: traceback codes >= 8 encode affine-gap "extension" flags in
+        # bits 3 and 4 (see _traceback_e_extend_flag, _traceback_f_extend_flag
+        # in skbio.alignment._pairwise); masked with 0b111 they give the move
+        # (1 match, 2 vertical gap, 3 horizontal gap)
         expected_score_m = [[0, -5, -7, -9],
                             [-5, 2, -3, -5],
                             [-7, -3, 4, -1],
                             [-9, -5, -1, 6],
                             [-11, -7, -3, 1]]
         expected_tback_m = [[0, 3, 3, 3],
-                            [2, 1, 3, 3],
+                            [2, 1, 3, 11],
                             [2, 2, 1, 3],
-                            [2, 2, 2, 1],
-                            [2, 2, 2, 2]]
+                            [2, 18, 2, 1],
+                            [2, 18, 18, 2]]
         m = SubstitutionMatrix.identity("ACGTU", 2, -1).to_dict()
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
             TabularMSA([DNA('ACG', metadata={'id': 'id'})]),
@@ -649,10 +701,10 @@ class PairwiseAlignmentTests(TestCase):
                             [-9, -5, -1, 3],
                             [-11, -7, -3, -2]]
         expected_tback_m = [[0, 3, 3, 3],
-                            [2, 1, 3, 3],
+                            [2, 1, 3, 11],
                             [2, 2, 1, 3],
-                            [2, 2, 2, 1],
-                            [2, 2, 2, 1]]
+                            [2, 18, 2, 1],
+                            [2, 18, 18, 1]]
         m = SubstitutionMatrix.identity("ACGTU", 2, -1).to_dict()
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
             TabularMSA([DNA('ACC', metadata={'id': 'id'})]),
@@ -668,10 +720,10 @@ class PairwiseAlignmentTests(TestCase):
                             [-9, -5, -1, 3],
                             [-11, -7, -3, -2]]
         expected_tback_m = [[0, 3, 3, 3],
-                            [2, 1, 3, 3],
+                            [2, 1, 3, 11],
                             [2, 2, 1, 3],
-                            [2, 2, 2, 1],
-                            [2, 2, 2, 1]]
+                            [2, 18, 2, 1],
+                            [2, 18, 18, 1]]
         m = SubstitutionMatrix.identity("ACGTU", 2, -1).to_dict()
         actual_score_m, actual_tback_m = _compute_score_and_traceback_matrices(
             TabularMSA([DNA('ACC', metadata={'id': 's1'}),

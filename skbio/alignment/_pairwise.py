@@ -605,6 +605,21 @@ _traceback_encoding = {
     "alignment-end": 0,
 }
 
+# Bit flags stored in the traceback matrix for the affine gap penalty
+# (Gotoh 1981). The low three bits encode the move (values of
+# ``_traceback_encoding``); bit 3 marks that the horizontal (gap in aln1) gap
+# value of the cell is an *extension* of the gap in the cell to its left, and
+# bit 4 the same for the vertical (gap in aln2) gap and the cell above. During
+# traceback, when a gap is flagged as an extension, the gap run continues
+# through the neighbor cell regardless of that cell's own recorded move, and
+# the neighbor's flag decides whether the run continues again or ends there
+# (gap open). The flags make traceback-chains through cells whose own best
+# move is not a gap unambiguous, which is required to reconstruct scores
+# correctly with an affine gap penalty.
+_traceback_code_mask = 0b111
+_traceback_e_extend_flag = 0b1000
+_traceback_f_extend_flag = 0b10000
+
 
 def _init_matrices_sw(aln1, aln2, gap_open_penalty, gap_extend_penalty):
     shape = (aln2.shape.position + 1, aln1.shape.position + 1)
@@ -730,6 +745,15 @@ def _compute_score_and_traceback_matrices(
         aln1, aln2, gap_open_penalty, gap_extend_penalty
     )
 
+    # Gap-state matrices for the affine gap penalty (Gotoh 1981).
+    # ``e_matrix`` holds the best score of an alignment of the prefixes that
+    # ends with a gap in aln1 (horizontal move); ``f_matrix`` the same for a
+    # gap in aln2 (vertical move). A single score matrix cannot represent both
+    # gap states, which is required to charge gap opens and extensions
+    # correctly.
+    e_matrix = np.full(score_matrix.shape, -np.inf)
+    f_matrix = np.full(score_matrix.shape, -np.inf)
+
     # Iterate over the characters in aln2 (which corresponds to the vertical
     # sequence in the matrix)
     for aln2_pos, aln2_chars in enumerate(aln2.iter_positions(ignore_metadata=True), 1):
@@ -756,51 +780,64 @@ def _compute_score_and_traceback_matrices(
                 match,
             )
 
+            # compute the score for adding a gap in aln1 (horizontal).
+            # Follows Gotoh (1981): the candidate is the best of continuing a
+            # gap run that already ends at the cell to the left (gap extend,
+            # charged from the e state of that cell, which keeps track of runs
+            # that may be lower than that cell's best score), or opening a new
+            # gap run (gap open, charged from that cell's best score).
+            if not penalize_terminal_gaps and (aln2_pos == aln2_length):
+                # we've reached the end of aln2, so adding horizontal gaps
+                # (which become gaps in aln2) should no longer
+                # be penalized (if penalize_terminal_gaps == False)
+                e_score = score_matrix[aln2_pos, aln1_pos - 1]
+                e_extend = False
+            else:
+                e_candidate = e_matrix[aln2_pos, aln1_pos - 1] - gap_extend_penalty
+                e_open = score_matrix[aln2_pos, aln1_pos - 1] - gap_open_penalty
+                if e_candidate > -np.inf and e_candidate >= e_open:
+                    e_score = e_candidate
+                    e_extend = True
+                else:
+                    e_score = e_open
+                    e_extend = False
+            e_matrix[aln2_pos, aln1_pos] = e_score
+
             # compute the score for adding a gap in aln2 (vertical)
             if not penalize_terminal_gaps and (aln1_pos == aln1_length):
                 # we've reached the end of aln1, so adding vertical gaps
                 # (which become gaps in aln1) should no longer
                 # be penalized (if penalize_terminal_gaps == False)
-                up_score = (score_matrix[aln2_pos - 1, aln1_pos], vgap)
-            elif traceback_matrix[aln2_pos - 1, aln1_pos] == vgap:
-                # gap extend, because the cell above was also a gap
-                up_score = (
-                    score_matrix[aln2_pos - 1, aln1_pos] - gap_extend_penalty,
-                    vgap,
-                )
+                f_score = score_matrix[aln2_pos - 1, aln1_pos]
+                f_extend = False
             else:
-                # gap open, because the cell above was not a gap
-                up_score = (
-                    score_matrix[aln2_pos - 1, aln1_pos] - gap_open_penalty,
-                    vgap,
-                )
-
-            # compute the score for adding a gap in aln1 (horizontal)
-            if not penalize_terminal_gaps and (aln2_pos == aln2_length):
-                # we've reached the end of aln2, so adding horizontal gaps
-                # (which become gaps in aln2) should no longer
-                # be penalized (if penalize_terminal_gaps == False)
-                left_score = (score_matrix[aln2_pos, aln1_pos - 1], hgap)
-            elif traceback_matrix[aln2_pos, aln1_pos - 1] == hgap:
-                # gap extend, because the cell to the left was also a gap
-                left_score = (
-                    score_matrix[aln2_pos, aln1_pos - 1] - gap_extend_penalty,
-                    hgap,
-                )
-            else:
-                # gap open, because the cell to the left was not a gap
-                left_score = (
-                    score_matrix[aln2_pos, aln1_pos - 1] - gap_open_penalty,
-                    hgap,
-                )
+                f_candidate = f_matrix[aln2_pos - 1, aln1_pos] - gap_extend_penalty
+                f_open = score_matrix[aln2_pos - 1, aln1_pos] - gap_open_penalty
+                if f_candidate > -np.inf and f_candidate >= f_open:
+                    f_score = f_candidate
+                    f_extend = True
+                else:
+                    f_score = f_open
+                    f_extend = False
+            f_matrix[aln2_pos, aln1_pos] = f_score
 
             # identify the largest score, and use that information to populate
             # the score and traceback matrices
             best_score = _first_largest(
-                [new_alignment_score, left_score, diag_score, up_score]
+                [
+                    new_alignment_score,
+                    (e_score, hgap),
+                    diag_score,
+                    (f_score, vgap),
+                ]
             )
             score_matrix[aln2_pos, aln1_pos] = best_score[0]
-            traceback_matrix[aln2_pos, aln1_pos] = best_score[1]
+            traceback_code = best_score[1]
+            if e_extend:
+                traceback_code |= _traceback_e_extend_flag
+            if f_extend:
+                traceback_code |= _traceback_f_extend_flag
+            traceback_matrix[aln2_pos, aln1_pos] = traceback_code
 
     return score_matrix, traceback_matrix
 
@@ -826,8 +863,17 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row, start_col)
     best_score = score_matrix[current_row, current_col]
     current_value = None
 
+    gap_run = None  # hgap or vgap while tracing through an affine gap run
+
     while current_value != aend:
-        current_value = traceback_matrix[current_row, current_col]
+        raw_value = traceback_matrix[current_row, current_col]
+
+        if gap_run is None:
+            current_value = raw_value & _traceback_code_mask
+        else:
+            # within a gap run flagged as "extend": continue the run through
+            # this cell, regardless of its own recorded move
+            current_value = gap_run
 
         if current_value == match:
             for aligned_seq, input_seq in zip(aligned_seqs1, aln1):
@@ -836,6 +882,7 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row, start_col)
                 aligned_seq.append(str(input_seq[current_row - 1]))
             current_row -= 1
             current_col -= 1
+            gap_run = None
         elif current_value == vgap:
             if gap_character is None:
                 gap_character = aln1.dtype._check_default_gap_char()
@@ -844,6 +891,7 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row, start_col)
             for aligned_seq, input_seq in zip(aligned_seqs2, aln2):
                 aligned_seq.append(str(input_seq[current_row - 1]))
             current_row -= 1
+            gap_run = vgap if raw_value & _traceback_f_extend_flag else None
         elif current_value == hgap:
             if gap_character is None:
                 gap_character = aln1.dtype._check_default_gap_char()
@@ -852,6 +900,7 @@ def _traceback(traceback_matrix, score_matrix, aln1, aln2, start_row, start_col)
             for aligned_seq in aligned_seqs2:
                 aligned_seq.append(gap_character)
             current_col -= 1
+            gap_run = hgap if raw_value & _traceback_e_extend_flag else None
         elif current_value == aend:
             continue
         else:
