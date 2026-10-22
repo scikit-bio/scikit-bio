@@ -10,7 +10,7 @@ import numpy as np
 from scipy.linalg import svd
 
 from ._ordination_results import OrdinationResults
-from ._utils import svd_rank
+from ._utils import svd_rank, _drop_empty_features
 from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
 
 
@@ -68,6 +68,10 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
     The algorithm is based on [1]_, \S 9.4.1., and is expected to give the same
     results as ``cca(X)`` in R's package vegan.
 
+    Features (columns) without any observations (i.e., all values are zero) are
+    excluded from the analysis with a warning, and are absent from the returned
+    feature scores.
+
     In Scaling type 1, the euclidean distances between rows in the transformed
     space equal their :math:`\chi^2` distances in the original space.
     Rows (samples) near a column (features) indicate high contributions from
@@ -103,11 +107,13 @@ def ca(X, scaling=1, sample_ids=None, feature_ids=None, output_format=None):
         X, sample_ids=sample_ids, feature_ids=feature_ids
     )
 
-    # Correspondence Analysis
-    r, c = X.shape
-
     if X.min() < 0:
         raise ValueError("Input matrix elements must be non-negative.")
+
+    X, column_ids = _drop_empty_features(X, column_ids)
+
+    # Correspondence Analysis
+    r, c = X.shape
 
     # Step 1 (similar to Pearson chi-square statistic)
     grand_total = X.sum()

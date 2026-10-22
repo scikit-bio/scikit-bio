@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from warnings import warn
+
 import numpy as np
 
 from skbio._config import _resolve_engine
@@ -300,3 +302,24 @@ def _f_matrix_inplace(e_matrix):
         v += matrix_mean
         e_matrix[i] = v
     return e_matrix
+
+
+def _drop_empty_features(data, feature_ids):
+    """Exclude features (columns) without any observations.
+
+    Such features have zero weight, and their chi-square contributions are
+    undefined (0 / 0). A warning reports how many were excluded.
+
+    """
+    nonzero = data.sum(axis=0) > 0
+    if nonzero.all():
+        return data, feature_ids
+    warn(
+        f"{data.shape[1] - nonzero.sum()} feature(s) with only zero values "
+        "were excluded from the analysis.",
+        RuntimeWarning,
+    )
+    if feature_ids is None:
+        feature_ids = range(data.shape[1])
+    feature_ids = [x for x, keep in zip(feature_ids, nonzero) if keep]
+    return data[:, nonzero], feature_ids
