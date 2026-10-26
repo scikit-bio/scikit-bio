@@ -24,12 +24,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class SubstitutionMatrix(PairwiseMatrix):
-    r"""Scoring matrix between characters in biological sequences.
+    r"""Scoring matrix between symbols in biological sequences.
 
     Parameters
     ----------
-    alphabet : iterable
-        Characters that constitute the alphabet.
+    alphabet : iterable of hashable
+        Symbols that constitute the alphabet.
     scores : array_like of shape (n_alphabet, n_alphabet)
         Scores of substitutions from one character (row, or axis=0) to another
         character (column, or axis=1).
@@ -53,10 +53,11 @@ class SubstitutionMatrix(PairwiseMatrix):
 
     This class provides a generalized interface for substitution matrices. The
     alphabet usually consists of individual characters, such as nucleotides or
-    amino acids, but it can be generalized to any iterable of scalars (numbers,
-    strings, etc.). Therefore, you may use this class to construct substitution
-    matrices of complicated biological units (such as codons or non-canonical
-    amino acids). The score matrix may be symmetric, as many existing matrices
+    amino acids, but it may contain arbitrary hashable Python objects such as
+    words, tokens, numbers, tuples, or other discrete symbols. Therefore, you may use
+    this class to construct substitution matrices of complicated biological units (such
+    as codons or non-canonical amino acids). The score matrix may be symmetric, as many
+    existing matrices
     are, or asymmetric, where the score of one character substituted by another
     is unequal to the other way around. Only square matrices (i.e., numbers of
     rows and columns are equal) are supported.
@@ -153,9 +154,9 @@ class SubstitutionMatrix(PairwiseMatrix):
     >>> sm.alphabet
     ('ä', 'ë', 'ï', 'ö', 'ü')
 
-    Any iterables of scalars are valid alphabets, granting flexibility in working with
-    non-character data types. For example, one can include words or tokens in a
-    substitution matrix.
+    Any iterable of hashable objects is a valid alphabet, granting flexibility in
+    working with non-character data types. For example, one can include words or
+    tokens in a substitution matrix.
 
     >>> tokens = 'lorem ipsum dolor sit amet'.split()
     >>> sm = SubstitutionMatrix(tokens, np.array([
@@ -175,7 +176,7 @@ class SubstitutionMatrix(PairwiseMatrix):
     def alphabet(self):
         """Alphabet of the substitution matrix.
 
-        Each element (character) corresponds to one row/column in the matrix.
+        Each element (symbol) corresponds to one row/column in the matrix.
 
         Returns
         -------

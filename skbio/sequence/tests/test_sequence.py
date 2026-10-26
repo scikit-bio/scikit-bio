@@ -1458,6 +1458,26 @@ class TestSequence(TestSequenceBase, ReallyEqualMixin):
         self.assertEqual('AaAAaAAA',
                          self.lowercase_seq.lowercase([1, 4]))
 
+    def test_lowercase_non_letters(self):
+        # Only uppercase letters are converted. Characters that are not letters
+        # (such as gaps and stop codons) and lowercase letters are kept as is,
+        # rather than having their case bit flipped.
+        seq = Sequence('AC-GT.N*_[~]acgt')
+        obs = seq.lowercase([True] * len(seq))
+        self.assertEqual(obs, 'ac-gt.n*_[~]acgt')
+        obs = seq.lowercase([2, 3, 7, 12])
+        self.assertEqual(obs, 'AC-gT.N*_[~]acgt')
+
+    def test_init_lowercase_non_letters(self):
+        # Only lowercase letters are converted to uppercase and flagged.
+        seq = Sequence('ac_g[t]{n}~`^|\\', lowercase='lc')
+        self.assertEqual(str(seq), 'AC_G[T]{N}~`^|\\')
+        npt.assert_array_equal(
+            seq.positional_metadata['lc'].values,
+            [True, True, False, True, False, True, False, False, True, False,
+             False, False, False, False, False])
+        self.assertEqual(seq.lowercase('lc'), 'ac_g[t]{n}~`^|\\')
+
     def test_matches(self):
         tested = 0
         for constructor in self.sequence_kinds:

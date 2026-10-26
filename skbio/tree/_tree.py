@@ -157,18 +157,21 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        This method returns the name of the node and a count of tips and the
-        number of internal nodes in the tree.
+        This method returns the name of the node and the counts of tips and internal
+        nodes in the tree. Internal nodes are nodes with at least one child.
+
+        .. versionchanged:: 0.7.5
+            Internal node count now includes the current node, if it has any children.
 
         Examples
         --------
         >>> from skbio import TreeNode
         >>> tree = TreeNode.read(["((a,b)c, d)root;"])
         >>> repr(tree)
-        '<TreeNode, name: root, internal node count: 1, tips count: 3>'
+        '<TreeNode, name: root, internal node count: 2, tips count: 3>'
 
         """
-        nodes = [n for n in self.traverse(include_self=False)]
+        nodes = [n for n in self.traverse(include_self=True)]
         n_tips = sum([n.is_tip() for n in nodes])
         n_nontips = len(nodes) - n_tips
         classname = self.__class__.__name__
@@ -1267,7 +1270,7 @@ class TreeNode(SkbioObject):
                 yield node
 
     def non_tips(self, include_self: bool = False) -> Iterator[TreeNode]:
-        r"""Iterate over non-tip nodes descended from the current node.
+        r"""Iterate over non-tip (internal) nodes descended from the current node.
 
         Parameters
         ----------
@@ -1286,7 +1289,8 @@ class TreeNode(SkbioObject):
 
         Notes
         -----
-        Nodes are ordered by a postorder traversal of the tree. The order is
+        Non-tip nodes are internal nodes, defined as nodes that have at least one
+        child. Nodes are ordered by a postorder traversal of the tree. The order is
         consistent between calls.
 
         Examples
@@ -1955,6 +1959,10 @@ class TreeNode(SkbioObject):
         This method sequentially: 1) elongates child nodes by branch length
         of self (omit if there is no branch length), 2) removes self from
         parent node, and 3) grafts child nodes to parent node.
+
+        The current node must be an internal node with a parent. The root is an
+        internal node but cannot be unpacked because it has no parent to graft its
+        children onto.
 
         Raises
         ------
@@ -6443,3 +6451,46 @@ class TreeNode(SkbioObject):
             length_v = results["length"]
             length_v[np.isnan(length_v)] = nan_length_value
         return results
+
+    @classonlymethod
+    def from_bptree(cls, bp):
+        """Construct a tree from a balanced-parentheses ``BPTree``.
+
+        Parameters
+        ----------
+        bp : skbio.tree.BPTree
+            The balanced-parentheses tree to convert.
+
+        Returns
+        -------
+        TreeNode
+            The tree represented as a ``TreeNode``. The type matches the class
+            on which this method is called, so subclasses are preserved.
+
+        See Also
+        --------
+        skbio.tree.BPTree.from_treenode
+
+        """
+        # The balanced-parentheses traversal (a Python/C call per node) is done
+        # in one compiled pass; ``tolist()`` then yields native Python scalars so
+        # the per-node attribute assignment below matches the previous behaviour
+        # (and avoids numpy scalar boxing). Only TreeNode assembly stays here.
+        name, length, edge, parent = bp._to_node_arrays()
+
+        nodes = [cls() for _ in range(len(name))]
+
+        for node, node_name, node_length, node_edge, node_parent in zip(
+            nodes, name.tolist(), length.tolist(), edge.tolist(), parent.tolist()
+        ):
+            node.name = node_name
+            node.length = node_length
+            node.edge_num = node_edge
+
+            if node_parent != -1:
+                # uncache=False avoids repeated cache clearing during bulk construction
+                nodes[node_parent].append(node, uncache=False)
+
+        nodes[0].length = None
+
+        return nodes[0]

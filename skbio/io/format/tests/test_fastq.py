@@ -540,6 +540,16 @@ class TestWriters(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r'2nd.*quality scores'):
             _generator_to_fastq(gen(), io.StringIO(), variant='illumina1.8')
 
+    def test_lowercase_keeps_non_letters(self):
+        # Gaps and degenerate characters covered by the lowercase mask are
+        # written unchanged instead of becoming control characters.
+        seq = DNA('ACGT-NNAC', metadata={'id': 's1'},
+                  positional_metadata={'quality': [30] * 9})
+        fh = io.StringIO()
+        seq.write(fh, format='fastq', variant='illumina1.8', lowercase=[
+            False, False, True, True, True, True, False, False, False])
+        self.assertEqual(fh.getvalue(), '@s1\nACgt-nNAC\n+\n?????????\n')
+
 
 class TestConversions(unittest.TestCase):
     def setUp(self):
