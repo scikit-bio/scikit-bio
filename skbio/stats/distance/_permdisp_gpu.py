@@ -61,22 +61,25 @@ def _kernel_sizes(dims):
     """Shared-array size and median tile width to build the kernels with.
 
     Both are the next power of two of ``dims``. The shared size is at least 64,
-    the size used before. The tile is kept between 8 and 64, the widths that
-    were fastest from 5 to 64 dimensions on an RTX 4060 and an R9700.
+    the size used before. Each thread of the median kernel holds ``tile`` float64
+    accumulators, so the tile trades registers against repeated distance work.
+    It is kept between 8 and 64, the widths that were fastest from 5 to 64
+    dimensions on an NVIDIA RTX 4060 and an AMD Radeon AI PRO R9700.
     """
     p = 1 << max(0, dims - 1).bit_length()
     return max(64, p), min(64, max(8, p))
 
 
 # Memory cap on the per-permutation buffers held at once, not a tuned value. The
-# result does not depend on it.
+# result does not depend on it, because the permutations are drawn in the same
+# order whatever the chunk size.
 _PERM_CHUNK_BYTES = 64 * 1024 * 1024
 
 
 # Threads per block, one block per (permutation, group). It sizes the shared
 # reduction array and the reductions halve it, so it must be a compile-time power
-# of two. 32 to 128 ran about the same on an RTX 4060 and an R9700, so 64 sits
-# in the middle, and 256 was slower.
+# of two. 32 to 128 ran about the same on an NVIDIA RTX 4060 and an AMD Radeon
+# AI PRO R9700, so 64 sits in the middle, and 256 was slower.
 _TPB_BG = 64
 
 
