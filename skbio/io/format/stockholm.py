@@ -799,7 +799,13 @@ def _format_positional_metadata(df, data_type):
             "%s feature names must be unique. "
             "Found %d duplicate names." % (data_type, num_repeated_columns)
         )
-
+    for column in df.columns:
+        if df[column].dtype == bool:
+            raise StockholmFormatError(
+                "Boolean positional metadata is not supported when writing "
+                "%s. Convert column %s to single-character strings "
+                "first." % (data_type, column)
+            )
     str_df = df.astype(str)
 
     # Asserts positional metadata dataframe items are one character long
