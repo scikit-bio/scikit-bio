@@ -568,6 +568,8 @@ def hill(counts, order=2):
         return _perplexity(probs)
     elif np.isposinf(order):
         return 1 / probs.max()
+    elif order >= 2:
+        return np.exp(_renyi_entropy(probs, order))
     else:
         return (probs**order).sum() ** (1 / (1 - order))
 
@@ -1150,6 +1152,8 @@ def renyi(counts, order=2, base=None):
     # min-entropy
     elif np.isposinf(order):
         qH = -np.log(probs.max())
+    elif order >= 2:
+        qH = _renyi_entropy(probs, order)
     else:
         qH = np.log((probs**order).sum()) / (1 - order)
 
@@ -1200,6 +1204,17 @@ def robbins(counts):
 
     """
     return (counts == 1).sum() / counts.sum()
+
+
+def _renyi_entropy(probs, order):
+    """Calculate Renyi entropy at finite orders >= 2."""
+    # Scale by the largest probability so the power sum is at least one,
+    # even when each unscaled probability raised to this order underflows.
+    max_p = probs.max()
+    power_sum = ((probs / max_p) ** order).sum()
+    # Divide the order before multiplying the logarithm to avoid overflow
+    # at large finite orders.
+    return np.log(max_p) * (order / (1 - order)) + np.log(power_sum) / (1 - order)
 
 
 def _entropy(probs):
