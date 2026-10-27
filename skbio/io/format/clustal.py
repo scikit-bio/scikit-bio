@@ -131,7 +131,7 @@ sequence-2  A--GTCGAA-GTACCT
 References
 ----------
 .. [1] http://www.sciencedirect.com/science/article/pii/0378111988903307
-.. [2] http://web.mit.edu/meme_v4.9.0/doc/clustalw-format.html
+.. [2] https://meme-suite.org/meme/doc/clustalw-format.html
 
 
 """  # noqa: D205, D415
