@@ -299,7 +299,7 @@ References
 ----------
 .. [1] http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html
 .. [2] http://www.insdc.org/
-.. [3] http://www.insdc.org/files/feature_table.html
+.. [3] https://www.insdc.org/submitting-standards/feature-table/
 .. [4] http://www.ebi.ac.uk/ena/WebFeat/
 .. [5] http://www.ncbi.nlm.nih.gov/nuccore/3K1V_A
 
