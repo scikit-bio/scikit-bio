@@ -14,6 +14,10 @@
 * Numba GPU kernels now run through numba-cuda-mlir on NVIDIA GPUs when it is installed, and through numba-cuda otherwise. numba-cuda is deprecated and does not support NumPy 2.5 or later ([#2622](https://github.com/scikit-bio/scikit-bio/pull/2622)).
 * Added Numba GPU acceleration for `permdisp` on NVIDIA and AMD devices. With `engine="numba"` and a GPU-resident `DistanceMatrix`, a fused kernel evaluates the permutation loop on the device for both the centroid and median tests, falling back to the host Numba engine when the kernel is unavailable ([#2597](https://github.com/scikit-bio/scikit-bio/pull/2597)).
 
+### Performance enhancements
+
+* `BPTree.read` no longer builds an edge-number lookup for a Newick tree without edge numbers, which saves 16 bytes per node. `BPTree.edge_from_number` on a tree without edge numbers now raises `ValueError` ([#XXXX](https://github.com/scikit-bio/scikit-bio/pull/XXXX)).
+
 ### Bug Fixes
 
 * Fixed `checklist.py` raising `UnicodeDecodeError` on platforms whose preferred encoding is not UTF-8, by explicitly reading source files as UTF-8 as declared in `.editorconfig` ([#2607](https://github.com/scikit-bio/scikit-bio/issues/2607)).
