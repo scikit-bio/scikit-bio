@@ -15,6 +15,10 @@
 * Added Numba GPU acceleration for `permdisp` on NVIDIA and AMD devices. With `engine="numba"` and a GPU-resident `DistanceMatrix`, a fused kernel evaluates the permutation loop on the device for both the centroid and median tests, falling back to the host Numba engine when the kernel is unavailable ([#2597](https://github.com/scikit-bio/scikit-bio/pull/2597)).
 * The `permdisp` GPU kernel now reads only each group's samples instead of scanning all of them, so its time grows far less with the number of groups. The 64-group limit is gone and the dimension limit is raised from 64 to 1024 ([#2649](https://github.com/scikit-bio/scikit-bio/pull/2649)).
 
+### Performance enhancements
+
+* `BPTree.read` no longer builds an edge-number lookup for a Newick tree without edge numbers, which saves 16 bytes per node. `BPTree.edge_from_number` on a tree without edge numbers now raises `ValueError` ([#2655](https://github.com/scikit-bio/scikit-bio/pull/2655)).
+
 ### Bug Fixes
 
 * Fixed `checklist.py` raising `UnicodeDecodeError` on platforms whose preferred encoding is not UTF-8, by explicitly reading source files as UTF-8 as declared in `.editorconfig` ([#2607](https://github.com/scikit-bio/scikit-bio/issues/2607)).

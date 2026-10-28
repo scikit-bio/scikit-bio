@@ -751,6 +751,12 @@ class BPTree(SkbioObject):
         -------
         int
             Index of the node whose edge number is ``n``.
+
+        Raises
+        ------
+        ValueError
+            If the tree has no edge numbers: it was created without ``edges``,
+            e.g. read from Newick that has none.
         """
         return self._kernel.edge_from_number(n)
 
