@@ -159,17 +159,21 @@ cdef unicode _strip_comments(unicode data):
     return u''.join(out)
 
 
-cdef void _set_node_metadata(Py_ssize_t ptr, unicode token,
+cdef bint _set_node_metadata(Py_ssize_t ptr, unicode token,
                              cnp.ndarray[object, ndim=1] names,
                              cnp.ndarray[cnp.double_t, ndim=1] lengths,
                              cnp.ndarray[cnp.int32_t, ndim=1] edges,
-                             bint convert_underscores):
-    """Inplace update of names, lengths, and edges given token details."""
+                             bint convert_underscores) except -1:
+    """Inplace update of names, lengths, and edges given token details.
+
+    Returns whether the token gives an edge number (which may be 0).
+    """
     cdef:
         cnp.double_t length
         cnp.int32_t edge
         Py_ssize_t split_idx, curly
         unicode name, token_parsed
+        bint edge_given = False
 
     name = None
     length = 0.0
@@ -180,6 +184,7 @@ cdef void _set_node_metadata(Py_ssize_t ptr, unicode token,
         token_parsed = token[1:]
         length = length_from_edge(token_parsed)
         edge = number_from_edge(token_parsed)
+        edge_given = u'{' in token_parsed
     else:
         split_idx = _find_length_colon(token)
         if split_idx != -1:
@@ -188,6 +193,7 @@ cdef void _set_node_metadata(Py_ssize_t ptr, unicode token,
             token_parsed = token[split_idx + 1:]
             length = length_from_edge(token_parsed)
             edge = number_from_edge(token_parsed)
+            edge_given = u'{' in token_parsed
         else:
             curly = _find_edge_curly(token)
             if curly != -1:
@@ -197,6 +203,7 @@ cdef void _set_node_metadata(Py_ssize_t ptr, unicode token,
                 if curly > 0:
                     name = _unquote_name(token[:curly], convert_underscores)
                 edge = number_from_edge(token[curly:])
+                edge_given = True
             else:
                 name = _unquote_name(token, convert_underscores)
 
@@ -208,6 +215,7 @@ cdef void _set_node_metadata(Py_ssize_t ptr, unicode token,
     names[ptr] = name
     lengths[ptr] = length
     edges[ptr] = edge
+    return edge_given
 
 
 def _check_bptree(object tree):
@@ -321,8 +329,10 @@ cpdef parse_newick(unicode data, bint convert_underscores=True):
     Returns
     -------
     BPTree
-        The tree topology, with names, branch lengths, and edge numbers
-        attached.
+        The tree topology, with names and branch lengths attached, and edge
+        numbers if ``data`` gives any. A tree without them has no edge-number
+        lookup, as a tree constructed without ``edges``: :meth:`BPTree.edge`
+        is 0 for every node.
 
     Raises
     ------
@@ -334,7 +344,7 @@ cpdef parse_newick(unicode data, bint convert_underscores=True):
     """
     cdef:
         Py_ssize_t ptr, last, size, token_ptr, tmp, datalen
-        bint expect_child
+        bint expect_child, has_edges = False
         unicode token
         list stack
         cnp.ndarray[cnp.uint8_t, ndim=1] topology
@@ -405,13 +415,15 @@ cpdef parse_newick(unicode data, bint convert_underscores=True):
             ptr += 1
             last = stack.pop()
         elif not token.isspace():
-            _set_node_metadata(last, token, names, lengths, edges,
-                               convert_underscores)
+            if _set_node_metadata(last, token, names, lengths, edges,
+                                  convert_underscores):
+                has_edges = True
 
     if len(stack) != 0 or ptr != size:
         raise ValueError("Unbalanced parentheses in newick string")
 
-    return BPTree(topology, lengths, names, edges)
+    # without edge numbers in the string, the tree gets no edge-number lookup
+    return BPTree(topology, lengths, names, edges if has_edges else None)
 
 
 cdef Py_ssize_t _count_nodes(unicode data, Py_ssize_t datalen):
