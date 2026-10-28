@@ -35,6 +35,7 @@
 * On a GPU, `BPTree`'s batch operations are an order of magnitude faster than the multithreaded CPU engines on large batches, with the queries on the device: 8–21× on a million-tip tree, and `cophenet` about 24× on 20,000 tips when the matrix stays on the device. A GPU call has a fixed cost of a fraction of a millisecond, so batches of fewer than about 10<sup>4</sup>–10<sup>5</sup> queries remain faster on the CPU. A tree on a GPU uses about 40 bytes per node of device memory for its topology and navigation index, and no more host memory than a tree on the host ([#2628](https://github.com/scikit-bio/scikit-bio/pull/2628)).
 * `BPTree.cophenet` with `endpoints` checks the names for duplicates in linear rather than quadratic time ([#2629](https://github.com/scikit-bio/scikit-bio/pull/2629)).
 * `BPTree`'s batch operations and `cophenet` work out their compute engine once per call, and probe for the Numba GPU extension once per process, rather than on every call; for a small batch on a GPU tree, this was a large part of the call ([#2636](https://github.com/scikit-bio/scikit-bio/pull/2636)).
+* The `permdisp` GPU kernel now reads only each group's samples instead of scanning all of them, so its time grows far less with the number of groups. The 64-group limit is gone and the dimension limit is raised from 64 to 1024 ([#2649](https://github.com/scikit-bio/scikit-bio/pull/2649)).
 
 ### Bug Fixes
 

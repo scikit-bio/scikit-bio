@@ -114,7 +114,7 @@ def _mark_gpu_unavailable(arr):
 def _get_kernel(cache, builder, gpu, backend_name):
     """Return the compiled kernel for a Numba GPU module, building it once.
 
-    ``cache`` is a per-statistic dict (backend name -> compiled kernel); ``builder``
+    ``cache`` is a per-statistic dict (key -> compiled kernel); ``builder``
     compiles the kernel for a given Numba GPU module.
     """
     if backend_name not in cache:
