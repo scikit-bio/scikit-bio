@@ -16,7 +16,7 @@
 
 ### Performance enhancements
 
-* `BPTree.read` no longer builds an edge-number lookup for a Newick tree without edge numbers, which saves 16 bytes per node. `BPTree.edge_from_number` on a tree without edge numbers now raises `ValueError` ([#XXXX](https://github.com/scikit-bio/scikit-bio/pull/XXXX)).
+* `BPTree.read` no longer builds an edge-number lookup for a Newick tree without edge numbers, which saves 16 bytes per node. `BPTree.edge_from_number` on a tree without edge numbers now raises `ValueError` ([#2655](https://github.com/scikit-bio/scikit-bio/pull/2655)).
 
 ### Bug Fixes
 
