@@ -427,8 +427,8 @@ def permdisp(
     the kernel accumulates in a different order.
 
     The kernel falls back to the CPU Numba engine, with no change in behavior,
-    when the backend has no usable Numba GPU module, when the ordination retains
-    more than 64 dimensions, or when the grouping has more than 64 groups.
+    when the backend has no usable Numba GPU module or when the ordination
+    retains more than 1024 dimensions.
 
     The significance of the results from this function will be the same as the
     results found in vegan's betadisper, however due to floating point
@@ -664,11 +664,11 @@ def _try_permdisp_gpu(buf, sample_data, codes, num_groups, permutations, seed, t
     """
     _check_permdisp_inputs(sample_data, permutations, test)
 
-    # The kernel's shape limits are a property of this call, not of the machine,
+    # The kernel's dimension limit is a property of this call, not the machine,
     # so an ordination that is too wide declines quietly here. Routing it through
     # the failure path below would blame the backend and disable it for calls
     # that would have worked.
-    if not _kernel_supports_shape(sample_data.shape[1], num_groups):
+    if not _kernel_supports_shape(sample_data.shape[1]):
         return None
 
     gpu = _numba_gpu_module_for(buf)
