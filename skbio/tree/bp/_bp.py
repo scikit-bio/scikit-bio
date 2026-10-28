@@ -118,13 +118,13 @@ def _rmm_geometry(n):
     return b, height
 
 
-def _build_index(B):
+def _build_index(data):
     """Build the navigation index of a balanced-parentheses array.
 
     See ``_bp_cy.build_index``.
     """
-    b, height = _rmm_geometry(B.shape[0])
-    return _bp_cy.build_index(B, b, height)
+    b, height = _rmm_geometry(data.shape[0])
+    return _bp_cy.build_index(data, b, height)
 
 
 def _check_single_tree(index, size):
@@ -183,14 +183,21 @@ class BPTree(SkbioObject):
 
     A node in this data structure is represented by 2 bits, an open parenthesis
     and a close parenthesis. The implementation uses a NumPy uint8 type where
-    an open parenthesis is a 1 and a close is a 0. In general, operations on
-    this tree are best suited for passing in the opening parenthesis index, so
-    for instance, if you'd like to use BPTree.is_tip to determine if a node is a
-    leaf, the operation is defined only for using the opening parenthesis. At
-    this time, there is some ambiguity over what methods can handle a closing
-    parenthesis.
+    an open parenthesis is a 1 and a close is a 0.
 
-    Node attributes, such as names, are stored external to this data structure.
+    A node's **position** is the index of its opening parenthesis in
+    :attr:`data`. The root's position is 0, and the nodes in order of position
+    are the nodes in preorder. The methods take and return nodes as positions,
+    not node objects: e.g., :meth:`parent` takes the position of a node and
+    returns that of its parent. :meth:`tip_positions` and :meth:`positions`
+    give the positions of the tips and of named nodes, and :meth:`name` maps a
+    position back to a name. A node's closing parenthesis is not its position:
+    :meth:`close` finds it, and only :meth:`lca` and :meth:`is_ancestor` accept
+    it in place of the position.
+
+    Node attributes (:attr:`names`, :attr:`lengths` and :attr:`edges`) are
+    arrays stored alongside the topology, with an entry per parenthesis: a
+    node's attribute is the entry at its position.
 
     The motivator for this data structure is pure performance both in space and
     time. As such, there is minimal sanity checking. It is advised to use this
@@ -199,27 +206,25 @@ class BPTree(SkbioObject):
 
     Parameters
     ----------
-    B : array of uint8
+    data : array of uint8
         The parentheses bit array encoding the tree topology, where an open
         parenthesis is 1 and a close parenthesis is 0. A bool array is also
         accepted, and is viewed as uint8. It may belong to any array API
         backend (e.g., CuPy, PyTorch or JAX) and live on any device; see Notes.
     lengths : numpy.ndarray of float64, optional
-        Branch length per parenthesis (read at opening parentheses). Defaults
-        to 0.
+        Branch length per parenthesis (read at node positions). Defaults to 0.
     names : numpy.ndarray of object, optional
-        Node name per parenthesis (read at opening parentheses). Defaults to
-        None.
+        Node name per parenthesis (read at node positions). Defaults to None.
     edges : numpy.ndarray of int32, optional
-        Edge number per parenthesis (read at opening parentheses). Defaults to
-        0, without an edge-number lookup.
+        Edge number per parenthesis (read at node positions). Defaults to 0,
+        without an edge-number lookup.
 
     Attributes
     ----------
     data : array of uint8
         The parentheses bit array encoding the tree topology, where an open
         parenthesis is 1 and a close parenthesis is 0, in the array backend and
-        on the device of ``B``.
+        on the device of the array the tree was created from.
 
     Notes
     -----
@@ -235,15 +240,15 @@ class BPTree(SkbioObject):
     :meth:`is_ancestor` return False) rather than read outside the tree's
     arrays, so a -1 passed from one method to another gives -1 again.
 
-    A tree created from a non-NumPy ``B``, e.g. a CuPy array or a PyTorch
-    tensor on a GPU, keeps ``B`` as its ``data`` and a host copy of it, from
+    A tree created from a non-NumPy ``data``, e.g. a CuPy array or a PyTorch
+    tensor on a GPU, keeps it as its :attr:`data` and a host copy of it, from
     which it is built and navigated as any other tree. The node attributes
     (``lengths``, ``names``, ``edges``) are NumPy arrays on the host. A tree
     created otherwise, e.g. read from a file, is moved to a GPU (or any
     backend and device) with :meth:`to_device`, which rebuilds nothing.
 
     - The batch operations (e.g. :meth:`lca_batch`) and :meth:`cophenet` with
-      ``engine="numba"`` run on the GPU if ``B`` is on a CUDA or ROCm device
+      ``engine="numba"`` run on the GPU if ``data`` is on a CUDA or ROCm device
       and a Numba GPU extension for it is installed (numba-cuda-mlir, or the
       deprecated numba-cuda, on CUDA; numba-hip on ROCm). Otherwise, or if the GPU
       kernel cannot be built on the system (which is warned about once), they
@@ -286,29 +291,29 @@ class BPTree(SkbioObject):
     read = Read()
     write = Write()
 
-    def __init__(self, B, lengths=None, names=None, edges=None):
+    def __init__(self, data, lengths=None, names=None, edges=None):
         # a non-NumPy array (e.g. on a GPU) is kept as the tree's data, and the
         # tree is built from a host copy of it, as from a NumPy array
         array = None
-        if aac.is_array_api_obj(B) and not aac.is_numpy_array(B):
-            array = B
-            B = _to_numpy(B)
+        if aac.is_array_api_obj(data) and not aac.is_numpy_array(data):
+            array = data
+            data = _to_numpy(data)
         # a bool array has the same one-byte 0/1 layout, which the compiled
         # engine has always accepted: view it as uint8, without a copy
-        if isinstance(B, np.ndarray) and B.dtype == np.bool_:
-            B = B.view(np.uint8)
-        B = _check_array(B, np.uint8, "B")
-        size = B.shape[0]
+        if isinstance(data, np.ndarray) and data.dtype == np.bool_:
+            data = data.view(np.uint8)
+        data = _check_array(data, np.uint8, "data")
+        size = data.shape[0]
         if size == 0:
             raise ValueError("The topology array is empty.")
 
         # the tree is only valid if it is balanced (equal opens and closes)
-        if B.max() > 1:
+        if data.max() > 1:
             raise ValueError(
                 "The topology array must contain only opening (1) and closing (0) "
                 "parentheses."
             )
-        if int(B.sum()) * 2 != size:
+        if int(data.sum()) * 2 != size:
             raise ValueError(
                 "The topology array is unbalanced; it must contain an equal "
                 "number of opening (1) and closing (0) parentheses."
@@ -329,22 +334,22 @@ class BPTree(SkbioObject):
             edge_lookup = None
         else:
             edges = _check_array(edges, np.int32, "edges", size)
-            edge_lookup = self._edge_lookup_for(B, edges)
+            edge_lookup = self._edge_lookup_for(data, edges)
 
-        index = _build_index(B)
+        index = _build_index(data)
         _check_single_tree(index, size)
-        self._assemble(B, index, names, lengths, edges, edge_lookup, array)
+        self._assemble(data, index, names, lengths, edges, edge_lookup, array)
 
-    def _assemble(self, B, index, names, lengths, edges, edge_lookup, array):
+    def _assemble(self, data, index, names, lengths, edges, edge_lookup, array):
         """Set up the tree from its validated host arrays and navigation index.
 
         ``array`` is the non-NumPy array the tree's data lives in, or None for
         a NumPy tree.
         """
-        self._data = B
+        self._data = data
         self._xp = self._device = None
         if array is None:
-            self._array = B
+            self._array = data
         else:
             self._xp = aac.array_namespace(array)
             self._device = aac.device(array)
@@ -353,7 +358,7 @@ class BPTree(SkbioObject):
             self._array = array
         # the index arrays uploaded to a GPU, by Numba GPU module (_bp_gpu)
         self._gpu_arrays = {}
-        self._size = B.shape[0]
+        self._size = data.shape[0]
         self._names = names
         self._lengths = lengths
         self._edges = edges
@@ -370,7 +375,7 @@ class BPTree(SkbioObject):
         # each tree has a kernel of its own, as the node attribute setters
         # replace the kernel's arrays
         self._kernel = _BPKernel(
-            B,
+            data,
             self._e_index,
             self._k_index_0,
             self._k_index_1,
@@ -495,8 +500,17 @@ class BPTree(SkbioObject):
         return self._array
 
     @property
+    def names(self):
+        """Node name per parenthesis (read at node positions).
+
+        A read-only view: use :meth:`set_names` to change the names. It is a
+        NumPy array on the host, whatever the backend of :attr:`data`.
+        """
+        return _readonly_view(self._names)
+
+    @property
     def lengths(self):
-        """Branch length per parenthesis (read at opening parentheses).
+        """Branch length per parenthesis (read at node positions).
 
         A read-only view: use :meth:`set_lengths` to change the lengths. It is
         a NumPy array on the host, whatever the backend of :attr:`data`.
@@ -505,7 +519,7 @@ class BPTree(SkbioObject):
 
     @property
     def edges(self):
-        """Edge number per parenthesis (read at opening parentheses).
+        """Edge number per parenthesis (read at node positions).
 
         A read-only view: use :meth:`set_edges` to change the edge numbers. It
         is a NumPy array on the host, whatever the backend of :attr:`data`.
@@ -513,11 +527,11 @@ class BPTree(SkbioObject):
         return _readonly_view(self._edges)
 
     @staticmethod
-    def _edge_lookup_for(B, edges):
-        opens = edges[B == 1]
-        if opens.size and (opens.min() < 0 or opens.max() >= B.shape[0]):
-            raise ValueError("Edge numbers must be in [0, %d)." % B.shape[0])
-        return _bp_cy.edge_lookup(B, edges)
+    def _edge_lookup_for(data, edges):
+        opens = edges[data == 1]
+        if opens.size and (opens.min() < 0 or opens.max() >= data.shape[0]):
+            raise ValueError("Edge numbers must be in [0, %d)." % data.shape[0])
+        return _bp_cy.edge_lookup(data, edges)
 
     # ------------------------------------------------------------------
     # Construction, conversion and serialization
@@ -543,7 +557,7 @@ class BPTree(SkbioObject):
 
         """
         np.savez_compressed(
-            file, names=self._names, lengths=self._lengths, B=self._data
+            file, names=self._names, lengths=self._lengths, data=self._data
         )
 
     @classmethod
@@ -575,8 +589,8 @@ class BPTree(SkbioObject):
         """
         # names is an object array pickled by ``to_npz``, so unpickling must be
         # allowed to restore it
-        data = np.load(file, allow_pickle=True)
-        return cls(data["B"], names=data["names"], lengths=data["lengths"])
+        archive = np.load(file, allow_pickle=True)
+        return cls(archive["data"], names=archive["names"], lengths=archive["lengths"])
 
     @classmethod
     def from_treenode(cls, tree):
@@ -629,11 +643,12 @@ class BPTree(SkbioObject):
         Returns
         -------
         tuple of numpy.ndarray
-            ``(name, length, edge, parent)``, each indexed by preorder position.
+            ``(name, length, edge, parent)``, each in preorder: entry ``k`` is
+            the node of preorder rank ``k + 1``.
             ``name`` is dtype ``object``, ``length`` is ``float64`` and ``edge``
             is ``int32`` (mirroring :meth:`name`, :meth:`length`, :meth:`edge`).
-            ``parent`` (dtype ``intp``) holds the preorder index of each node's
-            parent, or ``-1`` for the root.
+            ``parent`` (dtype ``intp``) holds the entry of each node's parent
+            (its preorder rank minus 1), or ``-1`` for the root.
 
         See Also
         --------
@@ -662,7 +677,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         names : numpy.ndarray of object
-            Node name per parenthesis (read at opening parentheses).
+            Node name per parenthesis (read at node positions).
 
         """
         names = _check_array(names, object, "names", self._size)
@@ -674,7 +689,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         lengths : numpy.ndarray of float64
-            Branch length per parenthesis (read at opening parentheses).
+            Branch length per parenthesis (read at node positions).
 
         """
         lengths = _check_array(lengths, np.float64, "lengths", self._size)
@@ -686,7 +701,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         edges : numpy.ndarray of int32
-            Edge number per parenthesis (read at opening parentheses).
+            Edge number per parenthesis (read at node positions).
 
         """
         edges = _check_array(edges, np.int32, "edges", self._size)
@@ -700,7 +715,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
@@ -715,7 +730,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
@@ -730,7 +745,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
@@ -740,7 +755,7 @@ class BPTree(SkbioObject):
         return self._kernel.edge(i)
 
     def edge_from_number(self, n):
-        """Index of the node carrying an edge number.
+        """Position of the node carrying an edge number.
 
         Parameters
         ----------
@@ -750,7 +765,7 @@ class BPTree(SkbioObject):
         Returns
         -------
         int
-            Index of the node whose edge number is ``n``.
+            Position of the node whose edge number is ``n``.
         """
         return self._kernel.edge_from_number(n)
 
@@ -801,14 +816,14 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Start position (inclusive).
+            Start index in :attr:`data` (inclusive).
         j : int
-            End position (inclusive).
+            End index in :attr:`data` (inclusive).
 
         Returns
         -------
         int
-            The leftmost position in ``[i, j]`` with the minimum excess.
+            The leftmost index in ``[i, j]`` with the minimum excess.
         """
         return self._kernel.rmq(i, j)
 
@@ -818,29 +833,30 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Start position (inclusive).
+            Start index in :attr:`data` (inclusive).
         j : int
-            End position (inclusive).
+            End index in :attr:`data` (inclusive).
 
         Returns
         -------
         int
-            The leftmost position in ``[i, j]`` with the maximum excess.
+            The leftmost index in ``[i, j]`` with the maximum excess.
         """
         return self._kernel.rMq(i, j)
 
     def close(self, i):
-        """The position of the closing parenthesis that matches B[i].
+        """The closing parenthesis of a node.
 
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            Position of the matching closing parenthesis.
+            Index in :attr:`data` of the node's closing parenthesis. Given a
+            closing parenthesis, returns it unchanged.
         """
         return self._kernel.close(i)
 
@@ -850,7 +866,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
@@ -860,7 +876,7 @@ class BPTree(SkbioObject):
         return self._kernel.depth(i)
 
     def root(self):
-        """The index of the root node of the tree."""
+        """The position of the root node of the tree (always 0)."""
         return self._kernel.root()
 
     def parent(self, i):
@@ -869,12 +885,13 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Index of node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            Index of parent node. Returns -1 if node does not have a parent.
+            Position of the parent node, or -1 if the node has no parent (the
+            root).
         """
         return self._kernel.parent(i)
 
@@ -884,7 +901,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
@@ -894,17 +911,17 @@ class BPTree(SkbioObject):
         return self._kernel.is_tip(i)
 
     def first_child(self, i):
-        """Index of the first (leftmost) child of a node.
+        """Position of the first (leftmost) child of a node.
 
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            Index of the first child of node ``i``, or 0 if ``i`` is a tip
+            Position of the first child of node ``i``, or 0 if ``i`` is a tip
             (0 is the root, which can never be a child).
 
         See Also
@@ -914,24 +931,24 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        Returns an integer index into the parentheses bit array, not a node
-        object. Corresponds to accessing ``children[0]`` on a
+        Returns a position, not a node object. Corresponds to accessing
+        ``children[0]`` on a
         :class:`~skbio.tree.TreeNode`.
         """
         return self._kernel.first_child(i)
 
     def last_child(self, i):
-        """Index of the last (rightmost) child of a node.
+        """Position of the last (rightmost) child of a node.
 
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            Index of the last child of node ``i``, or 0 if ``i`` is a tip
+            Position of the last child of node ``i``, or 0 if ``i`` is a tip
             (0 is the root, which can never be a child).
 
         See Also
@@ -941,14 +958,14 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        Returns an integer index into the parentheses bit array, not a node
-        object. Corresponds to accessing ``children[-1]`` on a
+        Returns a position, not a node object. Corresponds to accessing
+        ``children[-1]`` on a
         :class:`~skbio.tree.TreeNode`.
         """
         return self._kernel.last_child(i)
 
     def _excess_range(self, i, j):
-        """Excess of the positions ``i`` to ``j``, or None if one is outside."""
+        """Excess at the indices ``i`` to ``j``, or None if one is outside."""
         n = self._e_index.size
         if not (0 <= i < n and 0 <= j < n):
             return None
@@ -968,19 +985,19 @@ class BPTree(SkbioObject):
         return int(np.count_nonzero(excess == excess.min()))
 
     def minselect(self, i, j, q):
-        """Position of the qth minimum in excess(i), ..., excess(j).
+        """Index of the qth minimum in excess(i), ..., excess(j).
 
         Parameters
         ----------
         i, j : int
-            The range of positions, ``i <= j``.
+            The range of indices in :attr:`data`, ``i <= j``.
         q : int
             Which occurrence of the minimum, counting from 1.
 
         Returns
         -------
         int
-            The position of the ``q``-th occurrence of the minimum excess in
+            The index of the ``q``-th occurrence of the minimum excess in
             the range, or -1 if there is no such occurrence (fewer than ``q`` of
             them, ``q < 1``, or an empty range), or if ``i`` or ``j`` is outside
             the tree.
@@ -995,17 +1012,17 @@ class BPTree(SkbioObject):
         return i + int(found[q - 1])
 
     def next_sibling(self, i):
-        """Index of the next (right) sibling of a node.
+        """Position of the next (right) sibling of a node.
 
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            Index of the next sibling of node ``i``, or 0 if ``i`` has no
+            Position of the next sibling of node ``i``, or 0 if ``i`` has no
             next sibling (0 is the root, which can never be a sibling).
 
         See Also
@@ -1015,24 +1032,24 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        Returns the integer index of a single sibling, unlike
+        Returns the position of a single sibling, unlike
         :meth:`~skbio.tree.TreeNode.siblings`, which returns a list of all
         sibling nodes.
         """
         return self._kernel.next_sibling(i)
 
     def previous_sibling(self, i):
-        """Index of the previous (left) sibling of a node.
+        """Position of the previous (left) sibling of a node.
 
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            Index of the previous sibling of node ``i``, or 0 if ``i`` has no
+            Position of the previous sibling of node ``i``, or 0 if ``i`` has no
             previous sibling (0 is the root, which can never be a sibling).
 
         See Also
@@ -1042,7 +1059,7 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        Returns the integer index of a single sibling, unlike
+        Returns the position of a single sibling, unlike
         :meth:`~skbio.tree.TreeNode.siblings`, which returns a list of all
         sibling nodes.
         """
@@ -1054,12 +1071,12 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            The position of node ``i`` in a preorder traversal of the tree,
+            The rank of node ``i`` in a preorder traversal of the tree,
             counting from 1: the root's rank is 1.
 
         See Also
@@ -1069,15 +1086,14 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        Returns the node's integer position in preorder, not a node object.
-        This differs from :meth:`~skbio.tree.TreeNode.preorder`, which yields
-        the nodes of the tree in preorder. The inverse of
-        :meth:`preorder_select`.
+        Returns the node's rank in preorder, an integer. This differs from
+        :meth:`~skbio.tree.TreeNode.preorder`, which yields the nodes of the
+        tree in preorder. The inverse of :meth:`preorder_select`.
         """
         return self._kernel.preorder_rank(i)
 
     def preorder_select(self, k):
-        """Index of the node with a given preorder rank.
+        """Position of the node with a given preorder rank.
 
         Parameters
         ----------
@@ -1087,7 +1103,7 @@ class BPTree(SkbioObject):
         Returns
         -------
         int
-            Index of the node whose preorder rank is ``k``, or -1 if ``k`` is
+            Position of the node whose preorder rank is ``k``, or -1 if ``k`` is
             not a rank of this tree.
 
         See Also
@@ -1097,8 +1113,8 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        The inverse of :meth:`preorder_rank`. Returns an integer index into
-        the parentheses bit array, not a node object.
+        The inverse of :meth:`preorder_rank`. Returns a position, not a node
+        object.
         :meth:`~skbio.tree.TreeNode.preorder` yields the nodes in this order.
 
         Examples
@@ -1121,12 +1137,12 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            The position of node ``i`` in a postorder traversal of the tree,
+            The rank of node ``i`` in a postorder traversal of the tree,
             counting from 1: the root's rank is the number of nodes.
 
         See Also
@@ -1136,15 +1152,14 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        Returns the node's integer position in postorder, not a node object.
-        This differs from :meth:`~skbio.tree.TreeNode.postorder`, which yields
-        the nodes of the tree in postorder. The inverse of
-        :meth:`postorder_select`.
+        Returns the node's rank in postorder, an integer. This differs from
+        :meth:`~skbio.tree.TreeNode.postorder`, which yields the nodes of the
+        tree in postorder. The inverse of :meth:`postorder_select`.
         """
         return self._kernel.postorder_rank(i)
 
     def postorder_select(self, k):
-        """Index of the node with a given postorder rank.
+        """Position of the node with a given postorder rank.
 
         Parameters
         ----------
@@ -1155,7 +1170,7 @@ class BPTree(SkbioObject):
         Returns
         -------
         int
-            Index of the node whose postorder rank is ``k``, or -1 if ``k`` is
+            Position of the node whose postorder rank is ``k``, or -1 if ``k`` is
             not a rank of this tree.
 
         See Also
@@ -1165,8 +1180,8 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        The inverse of :meth:`postorder_rank`. Returns an integer index into
-        the parentheses bit array, not a node object.
+        The inverse of :meth:`postorder_rank`. Returns a position, not a node
+        object.
         :meth:`~skbio.tree.TreeNode.postorder` yields the nodes in this order.
 
         Examples
@@ -1189,18 +1204,21 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            A node index
+            Position of the possible ancestor. Either parenthesis of a node
+            names it.
         j : int
-            A node index
-
-        Note
-        ----
-        False is returned if i == j. A node cannot be an ancestor of itself.
+            Position of the possible descendant. Either parenthesis of a node
+            names it.
 
         Returns
         -------
         bool
-            True if i is an ancestor of j, False otherwise.
+            True if node ``i`` is an ancestor of node ``j``, False otherwise.
+
+        Notes
+        -----
+        False is returned if ``i`` and ``j`` are the same node. A node cannot
+        be an ancestor of itself.
         """
         return self._kernel.is_ancestor(i, j)
 
@@ -1210,7 +1228,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int, optional
-            Index of the node whose subtree is evaluated. Defaults to the root
+            Position of the node whose subtree is evaluated. Defaults to the root
             (``0``), i.e., the whole tree.
         tips : bool, optional
             If True, only count the tips (leaves) in the subtree (default:
@@ -1234,19 +1252,19 @@ class BPTree(SkbioObject):
         return self._kernel.count(i, tips)
 
     def level_ancestor(self, i, d):
-        """Index of the ancestor a given number of levels above a node.
+        """Position of the ancestor a given number of levels above a node.
 
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
         d : int
             Number of levels to ascend toward the root.
 
         Returns
         -------
         int
-            Index of the ancestor ``d`` levels above node ``i``, or -1 if
+            Position of the ancestor ``d`` levels above node ``i``, or -1 if
             ``d`` is not positive.
 
         See Also
@@ -1256,24 +1274,24 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        Returns an integer index into the parentheses bit array, not a node
-        object. :meth:`~skbio.tree.TreeNode.ancestors` returns the full list
+        Returns a position, not a node object.
+        :meth:`~skbio.tree.TreeNode.ancestors` returns the full list
         of ancestor nodes from a node toward the root.
         """
         return self._kernel.level_ancestor(i, d)
 
     def level_next(self, i):
-        """Index of the next node at the same depth.
+        """Position of the next node at the same depth.
 
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            Index of the next node at the same depth as node ``i``, or -1 if
+            Position of the next node at the same depth as node ``i``, or -1 if
             there is no such node.
 
         See Also
@@ -1283,8 +1301,8 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        Returns an integer index into the parentheses bit array, not a node
-        object. :meth:`~skbio.tree.TreeNode.levelorder` traverses all nodes
+        Returns a position, not a node object.
+        :meth:`~skbio.tree.TreeNode.levelorder` traverses all nodes
         depth by depth.
         """
         return self._kernel.level_next(i)
@@ -1295,31 +1313,33 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            A node index to evaluate. Either parenthesis of a node names it.
+            Position of a node to evaluate. Either parenthesis of a node names
+            it.
         j : int
-            A node index to evaluate. Either parenthesis of a node names it.
+            Position of a node to evaluate. Either parenthesis of a node names
+            it.
 
         Returns
         -------
         int
-           The index (opening parenthesis) of the lowest common ancestor. A
-           node is its own lowest common ancestor, and the order of ``i`` and
-           ``j`` does not matter.
+            The position of the lowest common ancestor. A node is its own lowest
+            common ancestor, and the order of ``i`` and ``j`` does not matter.
         """
         return self._kernel.lca(i, j)
 
     def deepest_node(self, i):
-        """Index of the deepest node descending from a node.
+        """Position of the deepest node descending from a node.
 
         Parameters
         ----------
         i : int
-            Index of the node to evaluate.
+            Position of the node to evaluate.
 
         Returns
         -------
         int
-            Index of the deepest (most distant) tip descending from node ``i``.
+            Position of the deepest (most distant) tip descending from node
+            ``i``.
 
         See Also
         --------
@@ -1328,9 +1348,9 @@ class BPTree(SkbioObject):
 
         Notes
         -----
-        Returns an integer index into the parentheses bit array, not a node
-        object. This is the tip that :meth:`~skbio.tree.TreeNode.height`
-        returns as the second element of its ``(height, tip)`` result.
+        Returns a position, not a node object. This is the tip that
+        :meth:`~skbio.tree.TreeNode.height` returns as the second element of
+        its ``(height, tip)`` result.
         """
         return self._kernel.deepest_node(i)
 
@@ -1340,7 +1360,7 @@ class BPTree(SkbioObject):
         Parameters
         ----------
         i : int
-            The node to evaluate
+            Position of the node to evaluate.
 
         Notes
         -----
@@ -1689,7 +1709,7 @@ class BPTree(SkbioObject):
          [ 15.  16.   9.   0.]]
 
         """
-        B = self._data
+        data = self._data
         is_tip = self._tip_mask()
         tips = np.flatnonzero(is_tip)
 
@@ -1734,7 +1754,7 @@ class BPTree(SkbioObject):
 
         # per node: its parent, and the end of its tips among the sorted tips
         # (the number of them before its closing parenthesis)
-        opens = np.flatnonzero(B)
+        opens = np.flatnonzero(data)
         parent = np.full(self._size, -1, dtype=np.intp)
         parent[opens] = self._run("parent_batch", engine, opens)
         selected = np.zeros(self._size, dtype=np.intp)
@@ -1812,9 +1832,9 @@ class BPTree(SkbioObject):
 
     def _tip_mask(self):
         """Whether each position is a tip's opening parenthesis."""
-        B = self._data
+        data = self._data
         is_tip = np.zeros(self._size, dtype=bool)
-        is_tip[:-1] = (B[:-1] == 1) & (B[1:] == 0)
+        is_tip[:-1] = (data[:-1] == 1) & (data[1:] == 0)
         return is_tip
 
     def _name_lookup(self, is_tip):

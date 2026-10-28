@@ -135,7 +135,7 @@ cdef class _BPKernel:
         return self._edges[i]
 
     cpdef Py_ssize_t edge_from_number(self, INT32_t n):
-        """Node index of edge number ``n``."""
+        """Position of the node of edge number ``n``."""
         return self._edge_lookup[n]
 
     cdef inline Py_ssize_t rank(self, Py_ssize_t t, Py_ssize_t i) noexcept nogil:
@@ -201,7 +201,7 @@ cdef class _BPKernel:
         return self._e_index[i]
 
     cpdef inline Py_ssize_t close(self, Py_ssize_t i) noexcept nogil:
-        """The position of the closing parenthesis that matches B[i]"""
+        """The closing parenthesis of node ``i``."""
         if _outside(i, self.size):
             return -1
         if not self._b_ptr[i]:
@@ -374,7 +374,7 @@ cdef class _BPKernel:
         return self._e_index[i]
 
     cpdef Py_ssize_t root(self) noexcept nogil:
-        """The index of the root node of the tree."""
+        """The position of the root node of the tree."""
         return 0
 
     cpdef Py_ssize_t parent(self, Py_ssize_t i) noexcept nogil:
@@ -393,7 +393,7 @@ cdef class _BPKernel:
         return self._b_ptr[i] and (not self._b_ptr[i + 1])
 
     cpdef Py_ssize_t first_child(self, Py_ssize_t i) noexcept nogil:
-        """Index of the first child of node ``i``, or 0 for a tip."""
+        """Position of the first child of node ``i``, or 0 for a tip."""
         if _outside(i, self.size):
             return -1
         if self._b_ptr[i]:
@@ -405,7 +405,7 @@ cdef class _BPKernel:
             return self.first_child(self.open(i))
 
     cpdef Py_ssize_t last_child(self, Py_ssize_t i) noexcept nogil:
-        """Index of the last child of node ``i``, or 0 for a tip."""
+        """Position of the last child of node ``i``, or 0 for a tip."""
         if _outside(i, self.size):
             return -1
         if self._b_ptr[i]:
@@ -417,7 +417,7 @@ cdef class _BPKernel:
             return self.last_child(self.open(i))
 
     cpdef Py_ssize_t next_sibling(self, Py_ssize_t i) noexcept nogil:
-        """Index of the next sibling of node ``i``, or 0 if none."""
+        """Position of the next sibling of node ``i``, or 0 if none."""
         cdef Py_ssize_t pos
 
         if _outside(i, self.size):
@@ -435,7 +435,7 @@ cdef class _BPKernel:
             return 0
 
     cpdef Py_ssize_t previous_sibling(self, Py_ssize_t i) noexcept nogil:
-        """Index of the previous sibling of node ``i``, or 0 if none."""
+        """Position of the previous sibling of node ``i``, or 0 if none."""
         cdef Py_ssize_t pos
 
         if _outside(i, self.size):
@@ -465,7 +465,7 @@ cdef class _BPKernel:
             return self.preorder_rank(self.open(i))
 
     cpdef Py_ssize_t preorder_select(self, Py_ssize_t k) noexcept nogil:
-        """Index of the node with preorder rank ``k``, or -1 for no such rank."""
+        """Position of the node with preorder rank ``k``, or -1 for no such rank."""
         if k < 1 or k > self.size // 2:
             return -1
         return self.select(1, k)
@@ -480,7 +480,7 @@ cdef class _BPKernel:
             return self.rank(0, i)
 
     cpdef Py_ssize_t postorder_select(self, Py_ssize_t k) noexcept nogil:
-        """Index of the node with postorder rank ``k``, or -1 for no such rank."""
+        """Position of the node with postorder rank ``k``, or -1 for no such rank."""
         if k < 1 or k > self.size // 2:
             return -1
         return self.open(self.select(0, k))
@@ -526,7 +526,7 @@ cdef class _BPKernel:
         return c
 
     cpdef Py_ssize_t level_ancestor(self, Py_ssize_t i, Py_ssize_t d) noexcept nogil:
-        """Index of the ancestor ``d`` levels above node ``i``."""
+        """Position of the ancestor ``d`` levels above node ``i``."""
         if _outside(i, self.size):
             return -1
         if d <= 0:
@@ -538,7 +538,7 @@ cdef class _BPKernel:
         return self.bwdsearch(i, -d - 1) + 1
 
     cpdef Py_ssize_t level_next(self, Py_ssize_t i) noexcept nogil:
-        """Index of the next node at the same depth as node ``i``."""
+        """Position of the next node at the same depth as node ``i``."""
         if _outside(i, self.size):
             return -1
         return self.fwdsearch(self.close(i), 1)
@@ -573,7 +573,7 @@ cdef class _BPKernel:
         return self.parent(self.rmq(i, j) + 1)
 
     cpdef Py_ssize_t deepest_node(self, Py_ssize_t i) noexcept nogil:
-        """Index of the deepest node descending from node ``i``."""
+        """Position of the deepest node descending from node ``i``."""
         if _outside(i, self.size):
             return -1
         return self.rMq(self.open(i), self.close(i))
