@@ -21,6 +21,7 @@ jobs:
       - name: Check AMD GPU
         run: |
           amd-smi
+          rocminfo
       - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
@@ -37,5 +38,27 @@ jobs:
         run: |
           pip install anndata polars
           conda list
+      - name: Install ROCm PyTorch
+        run: pip install torch==2.15.0+rocm10.0 --index-url https://download.pytorch.org/whl/rocm10.0
+      - name: Verify PyTorch can use the AMD GPU
+        run: |
+          python - <<'PY'
+          import torch
+
+          assert torch.version.hip is not None, "PyTorch is not a ROCm build"
+          assert torch.cuda.is_available(), "PyTorch cannot access the GPU"
+          print("torch:", torch.__version__, "ROCm:", torch.version.hip,
+                "device:", torch.cuda.get_device_name(0))
+          result = torch.tensor([1.0, 2.0], device="cuda") * 2
+          assert result.cpu().tolist() == [2.0, 4.0]
+          PY
       - name: Run unit tests
         run: make test
+      - name: Run GPU array API smoke tests
+        env:
+          SKBIO_ARRAY_BACKEND: torch
+          SKBIO_DEVICE: cuda
+        run: |
+          cd ci && pytest -q --pyargs \
+            skbio.stats.composition.tests.test_base::CompositionTests::test_closure_backends \
+            skbio.stats.composition.tests.test_base::CompositionTests::test_clr_backends
