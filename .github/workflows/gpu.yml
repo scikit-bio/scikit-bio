@@ -170,7 +170,10 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        backend: [torch, jax]
+        # JAX 0.11.0's jaxlib cannot discover the ROCm 10 solver plugin.
+        # Restore jax with a matching JAX/plugin stack and ROCm runtime, e.g.
+        # JAX 0.11.1 with ROCm 10.1 once the Azure runner supports it.
+        backend: [torch]
     defaults:
       run:
         shell: bash -l {0}
