@@ -1,4 +1,4 @@
-name: CI
+name: AMD
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  test-latest:
+  test-amd:
     name: Test on AMD GPU
     runs-on: [self-hosted, linux, x64, azure-gpu-v710]
     defaults:
@@ -17,9 +17,10 @@ jobs:
         shell: bash -l {0}
     strategy:
       fail-fast: true
-      matrix:
-        os: ubuntu-latest
     steps:
+      - name: Check AMD GPU
+        run: |
+          amd-smi
       - uses: actions/checkout@v7
       - uses: conda-incubator/setup-miniconda@v4
         with:
