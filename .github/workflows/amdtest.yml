@@ -1,9 +1,10 @@
 name: AMD
 
 on:
-  pull_request:
-    branches: [ main ]
-    paths-ignore: ["web/**", "**.md", "README.rst"]
+  workflow_dispatch:
+  # pull_request:
+  #   branches: [ main ]
+  #   paths-ignore: ["web/**", "**.md", "README.rst"]
 
 permissions:
   contents: read
