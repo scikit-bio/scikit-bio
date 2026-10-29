@@ -1,6 +1,6 @@
 name: Azure VM Start
 
-# This workflow starts the Azure GPU VM used for GPU testing. It is typically triggered
+# This workflow starts the Azure GPU VMs used for GPU testing. It is typically triggered
 # by a "gpu-ci" label added to a pull request. It listens to the `pull_request_target`
 # event instead of `pull_request`, because it needs to access the Azure credentials
 # stored in the repo.
@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   start-gpu-vm:
-    name: Start Azure GPU VM
+    name: Start Azure GPU VMs
 
     # A maintainer must add this exact label. New commits do not satisfy this
     # condition; remove and re-add the label after reviewing updated commits.
@@ -36,7 +36,7 @@ jobs:
        github.event.label.name == 'gpu-ci')
 
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     permissions:
       contents: read
@@ -52,11 +52,15 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Start VM
+      - name: Start VMs
         env:
           RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
-          VM_NAME: ${{ vars.AZURE_VM_NAME }}
+          NVIDIA_VM: ${{ vars.AZURE_NVIDIA_VM }}
+          AMD_VM: ${{ vars.AZURE_AMD_VM }}
         run: |
-          az vm start \
-            --resource-group "$RESOURCE_GROUP" \
-            --name "$VM_NAME"
+          : "${RESOURCE_GROUP:?}" "${NVIDIA_VM:?}" "${AMD_VM:?}"
+          status=0
+          for vm in "$NVIDIA_VM" "$AMD_VM"; do
+            az vm start --resource-group "$RESOURCE_GROUP" --name "$vm" || status=1
+          done
+          exit "$status"

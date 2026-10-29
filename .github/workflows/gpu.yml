@@ -1,9 +1,7 @@
 name: GPU CI
 
-# This workflow runs the GPU tests on the Azure GPU VM. A separate workflow, "Azure VM
-# Start", launches the VM at the same time, while the current workflow is queued and
-# will run when the VM is launched. Upon completion, another workflow, "Azure VM Stop"
-# will be triggered to shut down the VM.
+# This workflow runs GPU tests on Azure VMs. "Azure VM Start" launches them while
+# this workflow is queued, and "Azure VM Stop" shuts them down after completion.
 
 on:
   pull_request:
@@ -14,7 +12,7 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
 
-# Ensure that only one GPU workflow runs at a time, because we have only one GPU VM.
+# Ensure that only one GPU workflow uses the VMs at a time.
 concurrency:
   group: azure-gpu
   queue: max
@@ -162,7 +160,8 @@ jobs:
     name: Array API (${{ matrix.backend }}, ROCm)
     if: |
       (github.event_name == 'pull_request' &&
-       github.event.action == 'labeled') ||
+       github.event.action == 'labeled' &&
+       github.event.label.name == 'gpu-ci') ||
       (github.event_name != 'pull_request' &&
        github.ref == 'refs/heads/main')
     runs-on: [self-hosted, linux, x64, azure-gpu-v710]

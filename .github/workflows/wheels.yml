@@ -1,8 +1,8 @@
 name: Build Wheels
 
 on:
-  # pull_request:
-  #   branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
   workflow_call:
   schedule:

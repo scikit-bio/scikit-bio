@@ -4,9 +4,9 @@ on:
   push:
     branches: [ main ]
     paths-ignore: ["web/**", "**.md", "README.rst"]
-  # pull_request:
-  #   branches: [ main ]
-  #   paths-ignore: ["web/**", "**.md", "README.rst"]
+  pull_request:
+    branches: [ main ]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
 
 env:
   latest_python: "3.14"
