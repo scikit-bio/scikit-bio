@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths-ignore: ["web/**", "**.md", "README.rst"]
+
+permissions:
+  contents: read
+
+jobs:
+  test-latest:
+    name: Test on AMD GPU
+    runs-on: [self-hosted, linux, x64, azure-gpu-v710]
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: conda-incubator/setup-miniconda@v4
+        with:
+          auto-update-conda: true
+          python-version: 3.14
+          environment-file: ci/conda_host_env.yml
+      - name: Install dependencies
+        run: |
+          conda install -q --yes -c conda-forge --file ci/requirements.txt --file ci/requirements.test.txt
+          python -m ensurepip
+          pip install --no-deps .
+          conda list
+      - name: Install optional dependencies
+        run: |
+          pip install anndata polars
+          conda list
+      - name: Run unit tests
+        run: make test
