@@ -1,9 +1,7 @@
 name: GPU CI
 
-# This workflow runs the GPU tests on the Azure GPU VM. A separate workflow, "Azure VM
-# Start", launches the VM at the same time, while the current workflow is queued and
-# will run when the VM is launched. Upon completion, another workflow, "Azure VM Stop"
-# will be triggered to shut down the VM.
+# This workflow runs GPU tests on Azure VMs. "Azure VM Start" launches them while
+# this workflow is queued, and "Azure VM Stop" shuts them down after completion.
 
 on:
   pull_request:
@@ -14,7 +12,7 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
 
-# Ensure that only one GPU workflow runs at a time, because we have only one GPU VM.
+# Ensure that only one GPU workflow uses the VMs at a time.
 concurrency:
   group: azure-gpu
   queue: max
@@ -26,7 +24,7 @@ permissions:
   contents: read
 
 jobs:
-  test-gpu:
+  test-cuda:
     name: Array API (${{ matrix.backend }}, cuda, ${{ matrix.numba }})
     if: |
       (github.event_name == 'pull_request' &&
@@ -150,6 +148,91 @@ jobs:
           cd ci && coverage run --rcfile ../pyproject.toml -m pytest -m array_api --pyargs skbio \
             -W "error:The Numba GPU kernel could not be used:UserWarning"
 
+      - name: Generate coverage reports
+        run: cd ci && coverage lcov --rcfile ../pyproject.toml
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: scikit-bio/scikit-bio
+
+  test-rocm:
+    name: Array API (${{ matrix.backend }}, ROCm)
+    if: |
+      (github.event_name == 'pull_request' &&
+       github.event.action == 'labeled' &&
+       github.event.label.name == 'gpu-ci') ||
+      (github.event_name != 'pull_request' &&
+       github.ref == 'refs/heads/main')
+    runs-on: [self-hosted, linux, x64, azure-gpu-v710]
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        # JAX 0.11.0's jaxlib cannot discover the ROCm 10 solver plugin.
+        # Restore jax with a matching JAX/plugin stack and ROCm runtime, e.g.
+        # JAX 0.11.1 with ROCm 10.1 once the Azure runner supports it.
+        backend: [torch]
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: conda-incubator/setup-miniconda@v4
+        with:
+          auto-update-conda: true
+          python-version: ${{ env.latest_python }}
+          environment-file: ci/conda_host_env.yml
+      - name: Install scikit-bio + ROCm backend
+        run: |
+          amd-smi
+          rocminfo
+          conda install -q --yes -c conda-forge --file ci/requirements.txt --file ci/requirements.test.txt
+          python -m ensurepip
+          pip install --no-deps .
+          case "${{ matrix.backend }}" in
+            torch)
+              pip install torch --index-url https://download.pytorch.org/whl/rocm10.0
+              pip install numba-hip
+              ;;
+            jax)
+              pip install --index-url https://stable.repo.amd.com/rocm/whl-next/ \
+                'jax_rocm10_plugin==0.11.0+rocm10.0.0' 'jax_rocm10_pjrt==0.11.0+rocm10.0.0'
+              pip install 'jax==0.11.0' 'jaxlib==0.11.0' numba
+              ;;
+          esac
+      - name: Verify GPU backends
+        env:
+          BACKEND: ${{ matrix.backend }}
+        run: |
+          python - <<'PY'
+          import os
+
+          if os.environ["BACKEND"] == "torch":
+              import torch
+              from numba import hip
+
+              assert torch.version.hip is not None, "PyTorch is not a ROCm build"
+              assert torch.cuda.is_available(), "PyTorch cannot access the GPU"
+              assert hip.is_available(), "Numba cannot access the GPU"
+              print("torch:", torch.__version__, "ROCm:", torch.version.hip,
+                    "device:", torch.cuda.get_device_name(0))
+              result = torch.tensor([1.0, 2.0], device="cuda") * 2
+              assert result.cpu().tolist() == [2.0, 4.0]
+          else:
+              import jax
+
+              devices = jax.devices("gpu")
+              assert devices, "JAX cannot access the GPU"
+              print("jax:", jax.__version__, "devices:", devices)
+          PY
+      - name: Run tests
+        env:
+          SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
+          SKBIO_DEVICE: cuda
+        run: |
+          cd ci && coverage run --rcfile ../pyproject.toml -m pytest -m array_api --pyargs skbio \
+            -W "error:The Numba GPU kernel could not be used:UserWarning"
       - name: Generate coverage reports
         run: cd ci && coverage lcov --rcfile ../pyproject.toml
       - name: Upload coverage reports to Codecov
