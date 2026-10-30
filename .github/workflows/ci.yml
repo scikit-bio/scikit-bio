@@ -165,7 +165,8 @@ jobs:
         if: ${{ matrix.use_conda }}
         uses: conda-incubator/setup-miniconda@v4
         with:
-          auto-update-conda: true
+          miniforge-version: latest
+          conda-remove-defaults: true
           python-version: ${{ matrix.python_version }}
           environment-file: ci/conda_host_env.yml
       # set up CPython environment (pip)
