@@ -24,7 +24,7 @@ jobs:
       github.event_name == 'workflow_run'
 
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     permissions:
       contents: read
@@ -68,12 +68,9 @@ jobs:
           NVIDIA_VM: ${{ vars.AZURE_NVIDIA_VM }}
           AMD_VM: ${{ vars.AZURE_AMD_VM }}
         run: |
-          : "${RESOURCE_GROUP:?}" "${NVIDIA_VM:?}" "${AMD_VM:?}"
-          status=0
           for vm in "$NVIDIA_VM" "$AMD_VM"; do
-            az vm deallocate --resource-group "$RESOURCE_GROUP" --name "$vm" || status=1
+            az vm deallocate --resource-group "$RESOURCE_GROUP" --name "$vm"
           done
-          exit "$status"
 
       - name: Keep VMs running for remaining tests
         if: steps.active-runs.outputs.count != '0'
