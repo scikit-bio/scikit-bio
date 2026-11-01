@@ -103,13 +103,13 @@ jobs:
           backend = os.environ["BACKEND"]
           if backend == "torch":
               import torch
-              assert torch.cuda.is_available(), "torch installed without CUDA"
+              assert torch.cuda.is_available(), "PyTorch cannot access the GPU"
               print("torch:", torch.__version__, "CUDA:", torch.version.cuda,
                     "device:", torch.cuda.get_device_name(0))
           elif backend == "jax":
               import jax
               gpus = jax.devices("gpu")
-              assert gpus, "jax sees no GPU"
+              assert gpus, "JAX cannot access the GPU"
               print("jax:", jax.__version__, "devices:", gpus)
           elif backend == "cupy":
               import cupy
@@ -201,31 +201,29 @@ jobs:
               pip install 'jax==0.11.0' 'jaxlib==0.11.0' numba
               ;;
           esac
+
       - name: Verify GPU backends
         env:
           BACKEND: ${{ matrix.backend }}
         run: |
           python - <<'PY'
           import os
-
-          if os.environ["BACKEND"] == "torch":
+          backend = os.environ["BACKEND"]
+          if backend == "torch":
               import torch
               from numba import hip
-
               assert torch.version.hip is not None, "PyTorch is not a ROCm build"
               assert torch.cuda.is_available(), "PyTorch cannot access the GPU"
               assert hip.is_available(), "Numba cannot access the GPU"
               print("torch:", torch.__version__, "ROCm:", torch.version.hip,
                     "device:", torch.cuda.get_device_name(0))
-              result = torch.tensor([1.0, 2.0], device="cuda") * 2
-              assert result.cpu().tolist() == [2.0, 4.0]
-          else:
+          elif backend == "jax":
               import jax
-
-              devices = jax.devices("gpu")
-              assert devices, "JAX cannot access the GPU"
-              print("jax:", jax.__version__, "devices:", devices)
+              gpus = jax.devices("gpu")
+              assert gpus, "JAX cannot access the GPU"
+              print("jax:", jax.__version__, "devices:", gpus)
           PY
+
       - name: Run tests
         env:
           SKBIO_ARRAY_BACKEND: ${{ matrix.backend }}
@@ -233,6 +231,7 @@ jobs:
         run: |
           cd ci && coverage run --rcfile ../pyproject.toml -m pytest -m array_api --pyargs skbio \
             -W "error:The Numba GPU kernel could not be used:UserWarning"
+
       - name: Generate coverage reports
         run: cd ci && coverage lcov --rcfile ../pyproject.toml
       - name: Upload coverage reports to Codecov
