@@ -1000,19 +1000,17 @@ class TestRead(RegistryTest):
             warnings.simplefilter("error")
             with self.assertRaises(FormatIdentificationWarning):
                 self.was_verified = False
-                instance = self.registry.read(fh, format='format1',
-                                              into=MockClass, verify=True)
-                self.assertEqual(MockClass([1, 2, 3, 4]), instance)
-                self.assertTrue(self.was_verified)
+                self.registry.read(fh, format='format1',
+                                   into=MockClass, verify=True)
+            self.assertTrue(self.was_verified)
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error")
             with self.assertRaises(FormatIdentificationWarning):
                 self.was_verified = False
-                instance = self.registry.read(fh, format='format1',
-                                              into=MockClass)
-                self.assertEqual(MockClass([1, 2, 3, 4]), instance)
-                self.assertTrue(self.was_verified)
+                self.registry.read(fh, format='format1',
+                                   into=MockClass)
+            self.assertTrue(self.was_verified)
 
         fh.close()
 
