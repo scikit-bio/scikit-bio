@@ -2,6 +2,13 @@
 
 ## Version 0.7.3-dev
 
+### Bug Fixes
+
+* Fixed `multi_replace` to return a `pandas.Series` when the input is a `pandas.Series`,
+  so that `DataFrame.apply(multi_replace, axis=1)` works correctly on pandas 3. Also
+  refactored the function to use `ingest_array` like other composition functions, and added
+  a `validate` parameter. See issue [#2375](https://github.com/scikit-bio/scikit-bio/issues/2375).
+
 ### Features
 
 * Added support to `TreeNode.from_taxonomy` for parsing taxonomic lineage strings into trees with an optional `extract_rank` parameter. ([#2406](https://github.com/scikit-bio/scikit-bio/pull/2406))

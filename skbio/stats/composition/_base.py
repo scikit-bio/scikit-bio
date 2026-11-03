@@ -122,7 +122,9 @@ def _closure(xp: ModuleType, mat: StdArray, axis: int = -1) -> StdArray:
 
 
 @aliased("multiplicative_replacement", "0.6.0", True)
-def multi_replace(mat, delta=None):
+def multi_replace(
+    mat: ArrayLike, delta: float | None = None, validate: bool = True
+) -> StdArray:
     r"""Replace all zeros with small non-zero values.
 
     It uses the multiplicative replacement strategy [1]_, replacing zeros with
@@ -137,12 +139,17 @@ def multi_replace(mat, delta=None):
         A small number to be used to replace zeros. If not specified, the
         default value is :math:`\delta = \frac{1}{N^2}` where :math:`N` is the
         number of components.
+    validate : bool, default True
+        Check if the compositions are legitimate.
+
+        .. versionadded:: 0.7.3
 
     Returns
     -------
-    ndarray of shape (n_compositions, n_components)
+    ndarray or Series of shape (n_compositions, n_components)
         The matrix where all of the values are non-zero and each composition
-        (row) adds up to 1.
+        (row) adds up to 1. Returns a :class:`pandas.Series` if the input is
+        a :class:`pandas.Series`.
 
     Raises
     ------
@@ -168,23 +175,34 @@ def multi_replace(mat, delta=None):
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
 
     """
-    mat = closure(mat)
-    z_mat = mat == 0
+    _idx = _name = None
+    if hasattr(mat, 'index') and hasattr(mat, 'name') and not hasattr(mat, 'columns'):
+        _idx, _name = mat.index, mat.name
 
+    xp, mat = ingest_array(mat)
+    if validate:
+        _check_composition(xp, mat)
+    mat = _closure(xp, mat)
+
+    z_mat = mat == 0
     num_feats = mat.shape[-1]
-    tot = z_mat.sum(axis=-1, keepdims=True)
+    tot = xp.sum(z_mat, axis=-1, keepdims=True)
 
     if delta is None:
         delta = (1.0 / num_feats) ** 2
 
     zcnts = 1 - tot * delta
-    if (zcnts < 0).any():
+    if xp.any(zcnts < 0):
         raise ValueError(
             "Multiplicative replacement created negative proportions. Consider "
             "using a smaller `delta`."
         )
-    mat = np.where(z_mat, delta, zcnts * mat)
-    return mat.squeeze()
+    result = xp.where(z_mat, delta, zcnts * mat).squeeze()
+
+    if _idx is not None:
+        import pandas as pd
+        return pd.Series(np.asarray(result), index=_idx, name=_name)
+    return result
 
 
 def _closure_two(x, y, validate):
