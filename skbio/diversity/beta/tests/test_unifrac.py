@@ -1310,6 +1310,7 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
             taxa=self.oids1, tree=self.t1)
         np.testing.assert_allclose(obs.data, expected.data, atol=1e-10)
 
+    @numba_code
     def test_beta_diversity_generalized_unifrac_gpu_engine_falls_back_without_gpu(
         self,
     ):

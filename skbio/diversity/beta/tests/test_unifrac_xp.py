@@ -13,6 +13,7 @@ from unittest.mock import patch
 import numpy as np
 
 from skbio.tree import DuplicateNodeError
+from skbio.util import numba_code
 from skbio.diversity.beta._unifrac import (
     _weighted_unifrac_pdist_numba,
     _unweighted_unifrac_pdist_numba,
@@ -131,6 +132,7 @@ XP_FIXTURE_TOLERANCE = 1.5e-6
 
 class WeightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
+    @numba_code
     def test_weighted_unifrac_xp_matches_cpu_unnormalized(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         xp_res = _weighted_unifrac_xp(
@@ -139,6 +141,7 @@ class WeightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
             table, taxa, tree, normalized=False, validate=True)
         np.testing.assert_allclose(xp_res, cpu, rtol=0, atol=XP_CPU_TOLERANCE)
 
+    @numba_code
     def test_weighted_unifrac_xp_matches_cpu_normalized(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         xp_res = _weighted_unifrac_xp(
@@ -208,6 +211,7 @@ class UnweightedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
 class GeneralizedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
+    @numba_code
     def test_generalized_unifrac_xp_matches_cpu_alpha_half(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         xp_res = _generalized_unifrac_xp(
@@ -216,6 +220,7 @@ class GeneralizedUnifracXpTests(QiimeTinyTestMixin, TestCase):
             table, taxa, tree, alpha=0.5, variance_adjust=False, validate=True)
         np.testing.assert_allclose(xp_res, cpu, rtol=0, atol=XP_CPU_TOLERANCE)
 
+    @numba_code
     def test_generalized_unifrac_xp_matches_cpu_alpha_one(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         xp_res = _generalized_unifrac_xp(
@@ -224,6 +229,7 @@ class GeneralizedUnifracXpTests(QiimeTinyTestMixin, TestCase):
             table, taxa, tree, alpha=1.0, variance_adjust=False, validate=True)
         np.testing.assert_allclose(xp_res, cpu, rtol=0, atol=XP_CPU_TOLERANCE)
 
+    @numba_code
     def test_generalized_unifrac_xp_matches_cpu_variance_adjusted(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         xp_res = _generalized_unifrac_xp(
@@ -232,6 +238,7 @@ class GeneralizedUnifracXpTests(QiimeTinyTestMixin, TestCase):
             table, taxa, tree, alpha=0.5, variance_adjust=True, validate=True)
         np.testing.assert_allclose(xp_res, cpu, rtol=0, atol=XP_CPU_TOLERANCE)
 
+    @numba_code
     def test_generalized_unifrac_xp_matches_cpu_variance_adjusted_alpha_one(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         xp_res = _generalized_unifrac_xp(
@@ -252,6 +259,7 @@ class GpuOrXpDispatchTests(QiimeTinyTestMixin, TestCase):
     beta_diversity) lives in test_unifrac.py.
     """
 
+    @numba_code
     def test_weighted_unifrac_gpu_or_xp_falls_back_without_gpu(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         with patch_gpu_backend(None):
@@ -269,6 +277,7 @@ class GpuOrXpDispatchTests(QiimeTinyTestMixin, TestCase):
         cpu = _unweighted_unifrac_pdist_numba(table, taxa, tree, validate=True)
         np.testing.assert_allclose(obs, cpu, rtol=0, atol=XP_CPU_TOLERANCE)
 
+    @numba_code
     def test_generalized_unifrac_gpu_or_xp_falls_back_without_gpu(self):
         # generalized_unifrac has no CPU implementation reachable from the
         # public API, so this does not raise when no GPU backend is usable
@@ -339,6 +348,7 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
         self.assertEqual(obs, "xp result")
         self.assertIn("hip", _unavailable_backends)
 
+    @numba_code
     def test_invalid_taxa_under_engine_gpu_raises_and_keeps_backend_usable(self):
         # End-to-end version through the real `_weighted_unifrac_gpu` driver:
         # `_setup_multiple_unifrac` (called inside `_weighted_unifrac_gpu`,
@@ -388,6 +398,7 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
             )
             np.testing.assert_allclose(obs, cpu, rtol=0, atol=XP_CPU_TOLERANCE)
 
+    @numba_code
     def test_invalid_taxa_under_engine_gpu_validate_false_raises_and_keeps_usable(
         self,
     ):
@@ -562,6 +573,7 @@ class PrepareArrayApiGpuWiringTests(
     fails.
     """
 
+    @numba_code
     def test_prepare_moves_data_onto_a_detected_gpu_module(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         fake_cupy = _make_fake_cupy()
@@ -604,6 +616,7 @@ class PrepareArrayApiGpuWiringTests(
         self.assertEqual(fake_cupy.asarray_calls, 3)
         self.assertIsNotNone(proportions)
 
+    @numba_code
     def test_falls_back_to_numpy_when_moving_the_data_fails(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         fake_cupy = _make_fake_cupy(fail_asarray=True)
@@ -649,6 +662,7 @@ class ThreeTierDispatchTests(_ArrayApiGpuStateMixin, QiimeTinyTestMixin, TestCas
     `_prepare`, which is where the new detection+transfer lives.
     """
 
+    @numba_code
     def test_fallback_path_uses_the_detected_gpu_module_without_gpu_py_changes(self):
         table, taxa, tree, _ = self._load_qiime_191_tt()
         fake_cupy = _make_fake_cupy()

@@ -29,6 +29,7 @@ from skbio.diversity.beta._unifrac_gpu import (
     _weighted_unifrac_gpu,
 )
 from skbio.diversity.beta.tests._fixtures import QiimeTinyTestMixin
+from skbio.util import numba_code
 
 
 def _cleanup_kernel_cache(fake_cuda):
@@ -246,6 +247,7 @@ class ProbeTileConfigCandidateTests(TestCase):
     actual kernel against tiny dummy data (no GPU required, via
     `_ProbingFakeCuda`)."""
 
+    @numba_code
     def test_succeeds_silently_when_launch_does_not_raise(self):
         fake = _ProbingFakeCuda(launch_outcomes=[None])
         self.addCleanup(_cleanup_kernel_cache, fake)
@@ -253,12 +255,14 @@ class ProbeTileConfigCandidateTests(TestCase):
         _probe_tile_config_candidate(fake, 16, 32, True)
         self.assertEqual(fake.jit_call_count, 1)
 
+    @numba_code
     def test_succeeds_silently_for_the_variance_adjust_false_variant_too(self):
         fake = _ProbingFakeCuda(launch_outcomes=[None])
         self.addCleanup(_cleanup_kernel_cache, fake)
         _probe_tile_config_candidate(fake, 16, 32, False)
         self.assertEqual(fake.jit_call_count, 1)
 
+    @numba_code
     def test_propagates_the_launch_exception(self):
         fake = _ProbingFakeCuda(launch_outcomes=[RuntimeError("boom")])
         self.addCleanup(_cleanup_kernel_cache, fake)
@@ -276,6 +280,7 @@ class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
     that entry before re-raising.
     """
 
+    @numba_code
     def test_failed_launch_does_not_linger_in_kernel_cache(self):
         fake = _ProbingFakeCuda(launch_outcomes=[RuntimeError("boom")])
         self.addCleanup(_cleanup_kernel_cache, fake)
@@ -284,6 +289,7 @@ class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
             _probe_tile_config_candidate(fake, 16, 32, True)
         self.assertNotIn(cache_key, _KERNEL_CACHE)
 
+    @numba_code
     def test_failed_launch_does_not_linger_in_kernel_cache_variance_adjust_false(self):
         # Same as above, for the variance_adjust=False variant -- the key
         # shape behind the real A10 regression (see `_probe_tile_config`'s
@@ -295,6 +301,7 @@ class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
             _probe_tile_config_candidate(fake, 16, 32, False)
         self.assertNotIn(cache_key, _KERNEL_CACHE)
 
+    @numba_code
     def test_successful_launch_still_caches_the_kernel(self):
         # Sanity check for the other side of the fix: a candidate that
         # actually works must still end up cached (eviction must only
@@ -305,6 +312,7 @@ class LaunchUnifracKernelEvictsFailedCacheEntryTests(TestCase):
         _probe_tile_config_candidate(fake, 16, 32, True)
         self.assertIn(cache_key, _KERNEL_CACHE)
 
+    @numba_code
     def test_later_retry_after_a_failed_launch_recompiles_rather_than_reusing(self):
         # With the dead entry evicted, a later attempt at the same
         # (tile, node_chunk) must recompile (a fresh `.jit()` call) instead
@@ -326,6 +334,7 @@ class ProbeTileConfigTests(TestCase):
     controlled probes against synthetic data, not user input.
     """
 
+    @numba_code
     def test_first_candidate_succeeding_is_used_without_trying_others(self):
         # Both the variance_adjust=True and =False probes of the first
         # candidate must succeed -- 2 jit() calls, not 1 (see
@@ -336,6 +345,7 @@ class ProbeTileConfigTests(TestCase):
         self.assertEqual(result, _TILE_CANDIDATES[0])
         self.assertEqual(fake.jit_call_count, 2)
 
+    @numba_code
     def test_nvidia_style_launch_error_falls_through_to_next_candidate(self):
         # Simulates the real NVIDIA failure mode: the most aggressive
         # candidate(s) raise a launch-time resource error on their
@@ -350,6 +360,7 @@ class ProbeTileConfigTests(TestCase):
         self.assertEqual(result, _TILE_CANDIDATES[2])
         self.assertEqual(fake.jit_call_count, 4)
 
+    @numba_code
     def test_amd_style_compile_error_falls_through_to_next_candidate(self):
         # Simulates the real AMD failure mode: a compile-time RuntimeError
         # from rocm.amd_comgr (numba.hip compiles lazily, on first
@@ -365,6 +376,7 @@ class ProbeTileConfigTests(TestCase):
         self.assertEqual(result, _TILE_CANDIDATES[1])
         self.assertEqual(fake.jit_call_count, 3)
 
+    @numba_code
     def test_mixed_failure_types_are_all_caught(self):
         # A third, unanticipated exception type should also be caught by
         # the deliberately-broad probe, not just the two known shapes.
@@ -381,6 +393,7 @@ class ProbeTileConfigTests(TestCase):
         self.assertEqual(result, _TILE_CANDIDATES[3])
         self.assertEqual(fake.jit_call_count, 5)
 
+    @numba_code
     def test_raises_clear_error_when_every_candidate_fails(self):
         fail = RuntimeError("nope")
         fake = _ProbingFakeCuda(launch_outcomes=[fail] * len(_TILE_CANDIDATES))
@@ -389,6 +402,7 @@ class ProbeTileConfigTests(TestCase):
             _probe_tile_config(fake, "cuda")
         self.assertEqual(fake.jit_call_count, len(_TILE_CANDIDATES))
 
+    @numba_code
     def test_variance_adjust_false_failing_rejects_a_candidate_whose_true_variant_passed(
         self,
     ):
@@ -485,6 +499,7 @@ class MakeUnifracKernelTests(TestCase):
 
         return FakeCuda()
 
+    @numba_code
     def test_kernel_is_compiled_once_per_backend(self):
         fake = self._fake_cuda_module()
         cache_key = (id(fake), 32, 32, True)
@@ -493,6 +508,7 @@ class MakeUnifracKernelTests(TestCase):
         second = _make_unifrac_kernel(fake, 32, 32, True)
         self.assertIs(first, second)
 
+    @numba_code
     def test_distinct_backends_get_distinct_kernels(self):
         fake1 = self._fake_cuda_module()
         fake2 = self._fake_cuda_module()
@@ -503,6 +519,7 @@ class MakeUnifracKernelTests(TestCase):
             _make_unifrac_kernel(fake2, 32, 32, True),
         )
 
+    @numba_code
     def test_distinct_tile_configs_get_distinct_kernels(self):
         fake = self._fake_cuda_module()
         self.addCleanup(_KERNEL_CACHE.pop, (id(fake), 32, 32, True), None)
@@ -512,6 +529,7 @@ class MakeUnifracKernelTests(TestCase):
             _make_unifrac_kernel(fake, 16, 32, True),
         )
 
+    @numba_code
     def test_distinct_variance_adjust_values_get_distinct_kernels(self):
         # A2: variance_adjust is now closed over as a compile-time constant
         # (2 shared tiles declared instead of 4 when False) rather than
@@ -525,6 +543,7 @@ class MakeUnifracKernelTests(TestCase):
             _make_unifrac_kernel(fake, 32, 32, False),
         )
 
+    @numba_code
     def test_same_variance_adjust_value_is_memoized(self):
         fake = self._fake_cuda_module()
         self.addCleanup(_KERNEL_CACHE.pop, (id(fake), 32, 32, False), None)
