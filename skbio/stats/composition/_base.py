@@ -175,8 +175,9 @@ def multi_replace(
            [ 0.0625,  0.4375,  0.4375,  0.0625]])
 
     """
-    _idx = _name = None
-    if hasattr(mat, 'index') and hasattr(mat, 'name') and not hasattr(mat, 'columns'):
+    import pandas as pd
+    _is_series = isinstance(mat, pd.Series)
+    if _is_series:
         _idx, _name = mat.index, mat.name
 
     xp, mat = ingest_array(mat)
@@ -199,8 +200,7 @@ def multi_replace(
         )
     result = xp.where(z_mat, delta, zcnts * mat).squeeze()
 
-    if _idx is not None:
-        import pandas as pd
+    if _is_series:
         return pd.Series(np.asarray(result), index=_idx, name=_name)
     return result
 

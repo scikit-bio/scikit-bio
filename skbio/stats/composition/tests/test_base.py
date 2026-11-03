@@ -438,6 +438,12 @@ class CompositionTests(TestCase):
         self.assertIsInstance(obs, pd.DataFrame)
         npt.assert_allclose(obs.to_numpy(), exp_2d, rtol=1e-5, atol=1e-5)
 
+        # namedtuple with index/name attributes is not mistaken for a Series
+        from collections import namedtuple
+        Counts = namedtuple('Counts', ['a', 'b', 'c', 'd', 'e'])
+        obs = multi_replace(Counts(1, 2, 3, 0, 5))
+        self.assertIsInstance(obs, np.ndarray)
+
     def test_clr(self):
         # 2-D matrix
         mat = self.cdata1
