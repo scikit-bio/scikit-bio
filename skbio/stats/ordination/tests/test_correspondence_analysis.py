@@ -236,6 +236,21 @@ class TestCAResults(TestCase):
         euclidean_distances = pdist(transformed_species, "euclidean")
         npt.assert_almost_equal(chi2_distances, euclidean_distances)
 
+    def test_all_zero_column(self):
+        # A feature without any observations is excluded with a warning, and
+        # the results equal those obtained without it.
+        X = np.insert(self.X, 1, 0, axis=1)
+        feature_ids = ["Species1", "Zero", "Species2", "Species3"]
+        for scaling in (1, 2):
+            msg = "1 feature\\(s\\) with only zero values were excluded"
+            with self.assertWarnsRegex(RuntimeWarning, msg):
+                obs = ca(
+                    X, scaling, sample_ids=self.sample_ids, feature_ids=feature_ids
+                )
+            exp = ca(self.contingency, scaling)
+            self.assertNotIn("Zero", obs.features.index)
+            assert_ordination_results_equal(obs, exp, decimal=6)
+
 
 class TestCAResults_NumPy(TestCase):
     def setUp(self):

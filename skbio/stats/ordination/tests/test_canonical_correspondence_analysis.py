@@ -172,6 +172,28 @@ class TestCCAResults1(TestCase):
         assert_ordination_results_equal(scores, exp,
                                         decimal=6)
 
+    def test_all_zero_column(self):
+        # A feature without any observations is excluded with a warning, and
+        # the results equal those obtained without it.
+        Y = self.Y.copy()
+        Y.insert(4, 'Zero', 0.0)
+        for scaling in (1, 2):
+            msg = r'1 feature\(s\) with only zero values were excluded'
+            with self.assertWarnsRegex(RuntimeWarning, msg):
+                obs = cca(Y, self.X, scaling=scaling)
+            exp = cca(self.Y, self.X, scaling=scaling)
+            self.assertNotIn('Zero', obs.features.index)
+            assert_ordination_results_equal(obs, exp, decimal=6)
+
+    def test_all_zero_column_default_ids(self):
+        # Without feature IDs, the remaining features keep their positions.
+        Y = np.insert(self.Y.values, 4, 0, axis=1)
+        with self.assertWarns(RuntimeWarning):
+            obs = cca(Y, self.X.values)
+        self.assertListEqual(list(obs.features.index), [0, 1, 2, 3, 5, 6, 7, 8, 9])
+        exp = cca(self.Y.values, self.X.values)
+        npt.assert_almost_equal(obs.features.values, exp.features.values)
+
 
 if __name__ == '__main__':
     main()

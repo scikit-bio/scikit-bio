@@ -11,7 +11,7 @@ import pandas as pd
 from scipy.linalg import svd, lstsq
 
 from ._ordination_results import OrdinationResults
-from ._utils import corr, svd_rank, scale
+from ._utils import corr, svd_rank, scale, _drop_empty_features
 from skbio.table._tabular import _create_table, _create_table_1d, _ingest_table
 
 
@@ -88,6 +88,10 @@ def cca(
     perfect collinearity: the user needs to choose which ones to
     input.
 
+    Features (columns of `y`) without any observations (i.e., all values are
+    zero) are excluded from the analysis with a warning, and are absent from the
+    returned feature scores.
+
     Canonical *correspondence* analysis shouldn't be confused with
     canonical *correlation* analysis (CCorA, but sometimes called
     CCA), a different technique to search for multivariate
@@ -136,6 +140,8 @@ def cca(
         )
     if scaling not in {1, 2}:
         raise NotImplementedError("Scaling {0} not implemented.".format(scaling))
+
+    Y, feature_ids = _drop_empty_features(Y, feature_ids)
 
     # Step 1 (similar to Pearson chi-square statistic)
     grand_total = Y.sum()
