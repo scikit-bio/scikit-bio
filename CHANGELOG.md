@@ -31,6 +31,7 @@
 
 ### Miscellaneous
 
+* Dropped support for Python 3.10 as it has reached end-of-life (EOL). scikit-bio now supports Python 3.11 through 3.14 ([#2601](https://github.com/scikit-bio/scikit-bio/pull/2601)).
 * `GrammaredSequence` subclasses may define only `definite_chars`, without defining gap or degenerate characters. When a subclass defines `gap_chars` but not `default_gap_char`, its first sorted gap character is used as the default.
 * Clarified the notion of "internal node" in `TreeNode`, which are nodes with at least one child. The root of a tree is an internal node as long as it has any children. Fixed `TreeNode.__repr__` internal node count to match this definition.
 
