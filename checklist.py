@@ -224,7 +224,7 @@ class CopyrightHeadersValidator(RepoValidator):
 
             pos = 0
             filepath = os.path.join(root, _file)
-            f = open(filepath)
+            f = open(filepath, encoding="utf-8")
 
             first_line = f.readline().rstrip("\n")
             if first_line == "# checklist.py:CopyrightHeadersValidator IGNORE":
@@ -470,7 +470,7 @@ class APIRegressionValidator(RepoValidator):
     def _parse_file(self, fp, root):
         """Parse a file and return all normalized skbio imports."""
         imports = []
-        with open(fp) as f:
+        with open(fp, encoding="utf-8") as f:
             # Read the file and run it through AST
             source = ast.parse(f.read())
             # Get each top-level element, this is where API imports should be.

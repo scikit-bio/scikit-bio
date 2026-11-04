@@ -516,6 +516,16 @@ class TestStockholmReader(unittest.TestCase):
                                     r'`constructor`.*`GrammaredSequence`.'):
             _stockholm_to_tabular_msa(fp, constructor=TabularMSA)
 
+    def test_lowercase_kwarg_forwarded_to_constructor(self):
+        fh = io.StringIO('# STOCKHOLM 1.0\nseq1 acdksv\nseq2 acdksv\n//\n')
+        obs = TabularMSA.read(fh, constructor=Protein, lowercase=True)
+        self.assertEqual([str(seq) for seq in obs], ['ACDKSV', 'ACDKSV'])
+
+    def test_lowercase_without_kwarg_error(self):
+        fh = io.StringIO('# STOCKHOLM 1.0\nseq1 acdksv\nseq2 acdksv\n//\n')
+        with self.assertRaisesRegex(ValueError, r'Invalid characters'):
+            TabularMSA.read(fh, constructor=Protein)
+
 
 class TestStockholmWriter(unittest.TestCase):
     def test_msa_to_stockholm_extensive(self):

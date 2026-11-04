@@ -1183,6 +1183,28 @@ class CoreTests(TestCase):
                         [-0.1981 , -0.19314,  0.00187]])
         npt.assert_array_equal(obs.round(5), exp)
 
+    def test_estimate_bias_em_underflow(self):
+        # Regression test for #2631. Tiny coefficient variances can make all
+        # three Gaussian densities underflow to zero for a feature. ANCOMBC
+        # treats the resulting undefined responsibilities as zero.
+        table = pd.DataFrame(
+            [[154, 188, 68], [143, 63, 177], [30, 154, 96], [131, 167, 150]],
+            index=list("abcd"),
+            columns=["f0", "f1", "f2"],
+        )
+        metadata = pd.DataFrame(
+            {"g": pd.Categorical(["a", "a", "b", "b"])},
+            index=list("abcd"),
+        )
+
+        result = ancombc2(table, metadata, "g", p_adjust=None).result
+        observed = result.xs("g[T.b]", level="Covariate")
+
+        expected_lfc = [-1.08292235, 0.16646377, -0.13155807]
+        expected_pvalue = [0.25770796, 0.85244671, 0.87755871]
+        npt.assert_allclose(observed["Log(FC)"], expected_lfc, atol=1e-6)
+        npt.assert_allclose(observed["pvalue"], expected_pvalue, atol=1e-6)
+
     def test_sample_bias(self):
         data = np.log1p(self.table2.to_numpy())
         dmat = dmatrix("group", self.meta2)

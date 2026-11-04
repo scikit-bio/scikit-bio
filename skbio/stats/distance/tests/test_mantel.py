@@ -23,12 +23,15 @@ from skbio.stats.distance import _mantel as mantel_mod
 from skbio.stats.distance._mantel import _order_dms
 from skbio.stats.distance._mantel import _mantel_stats_pearson
 from skbio.stats.distance._mantel import _mantel_stats_spearman
+from skbio.stats.distance import _gpu as gpu_mod
+from skbio.stats.distance import _mantel_gpu as mantel_gpu
 from skbio.stats.distance._mantel_gpu import _perm_order, _run_mantel_gpu
 from skbio.stats.distance._cutils import (mantel_perm_pearsonr_cy,
                                           mantel_perm_pearsonr_condensed_cy)
 from skbio.stats.distance._utils import distmat_reorder_condensed
 from skbio.util import (get_data_path, assert_data_frame_almost_equal, numba_code,
                         get_rng)
+from skbio.util._array import _get_backend_name
 from skbio.util._testing import _data_frame_to_default_int_type
 from skbio.util._testing import ArrayAPITestMixin, array_backends
 
@@ -1295,6 +1298,23 @@ class MantelArrayAPITests(TestCase, ArrayAPITestMixin):
             )
             self.assertAlmostEqual(r, r_ref)
             self.assertAlmostEqual(p, p_ref)
+
+    @numba_code
+    @array_backends("jax", "torch", "cupy")
+    def test_gpu_kernel_is_used_on_device_input(self, xp, device):
+        # Result values cannot tell the GPU and array-API paths apart, so this asks
+        # the kernel cache, which only a dispatch to the kernel populates, and checks
+        # the backend was not marked unavailable, as a kernel that fails to compile
+        # or launch would be. JAX has no Numba GPU path and is skipped; it is listed
+        # because the harness errors on a GPU lane that runs no backend.
+        if device == "cpu" or _get_backend_name(xp) == "jax":
+            self.skipTest("needs a device-resident CuPy or PyTorch matrix")
+        mantel_gpu._kernels.clear()
+        mx = DistanceMatrix(self.make_array(xp, device, self.x))
+        my = DistanceMatrix(self.make_array(xp, device, self.y))
+        mantel(mx, my, permutations=9, seed=0, engine="numba")
+        self.assertTrue(mantel_gpu._kernels, "dispatch never reached the GPU kernel")
+        self.assertNotIn(_get_backend_name(xp), gpu_mod._unavailable)
 
     @numba_code
     @array_backends("numpy", "jax", "torch", "cupy")

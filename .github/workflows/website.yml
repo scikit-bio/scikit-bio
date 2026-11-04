@@ -32,7 +32,8 @@ jobs:
       - name: Set up conda
         uses: conda-incubator/setup-miniconda@v4
         with:
-          auto-update-conda: true
+          miniforge-version: latest
+          conda-remove-defaults: true
           python-version: ${{ env.latest_python }}
 
       - name: Install dependencies

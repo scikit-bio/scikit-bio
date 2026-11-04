@@ -107,22 +107,12 @@ class TestMetricSpecs(TestCase):
             @classproperty
             @overrides(GrammaredSequence)
             def gap_chars(cls):
-                return set('^$')
-
-            @classproperty
-            @overrides(GrammaredSequence)
-            def default_gap_char(cls):
-                return '^'
+                return set('^')
 
             @classproperty
             @overrides(GrammaredSequence)
             def definite_chars(cls):
                 return set('WXYZ')
-
-            @classproperty
-            @overrides(GrammaredSequence)
-            def degenerate_map(cls):
-                return {}
 
         self.assertEqual(metric3(DNA("GGC"), DNA("CAT")), 1)
         self.assertEqual(metric3(RNA("AUCG"), RNA("UAAC")), 1)
@@ -997,22 +987,12 @@ class TestLogDet(TestCase):
             @classproperty
             @overrides(GrammaredSequence)
             def gap_chars(cls):
-                return set('^$')
-
-            @classproperty
-            @overrides(GrammaredSequence)
-            def default_gap_char(cls):
-                return '^'
+                return set('^')
 
             @classproperty
             @overrides(GrammaredSequence)
             def definite_chars(cls):
                 return set('aeiou')
-
-            @classproperty
-            @overrides(GrammaredSequence)
-            def degenerate_map(cls):
-                return {}
 
         seq1 = CustomSequence("euooeuauaueia^^ioaoaiaioae^eiaoeiaooeueuiua")
         seq2 = CustomSequence("eioaeiaeeoiiuaeioaeuiuueeeaaiaooiuoee^^uuua")
@@ -1062,22 +1042,12 @@ class TestParalin(TestCase):
             @classproperty
             @overrides(GrammaredSequence)
             def gap_chars(cls):
-                return set('^$')
-
-            @classproperty
-            @overrides(GrammaredSequence)
-            def default_gap_char(cls):
-                return '^'
+                return set('^')
 
             @classproperty
             @overrides(GrammaredSequence)
             def definite_chars(cls):
                 return set('aeiou')
-
-            @classproperty
-            @overrides(GrammaredSequence)
-            def degenerate_map(cls):
-                return {}
 
         seq1 = CustomSequence("euooeuauaueia^^ioaoaiaioae^eiaoeiaooeueuiua")
         seq2 = CustomSequence("eioaeiaeeoiiuaeioaeuiuueeeaaiaooiuoee^^uuua")

@@ -24,7 +24,7 @@ from ._cutils import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from skbio.sequence import SubstitutionMatrix
-    from ._utils import SequenceLike
+    from skbio.sequence._typing import SequenceLike
 
 
 class PairAlignResult(NamedTuple):
@@ -63,10 +63,10 @@ def pair_align(
 
     Parameters
     ----------
-    seq1 : Sequence, str, or sequence of scalar
+    seq1 : sequence_like
         The first sequence to be aligned.
 
-    seq2 : Sequence, str, or sequence of scalar
+    seq2 : sequence_like
         The second sequence to be aligned.
 
     mode : {'global', 'local'}, optional

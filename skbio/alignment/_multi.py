@@ -39,7 +39,7 @@ from ._cutils import (
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Iterable
     from skbio.sequence import SubstitutionMatrix
-    from ._utils import SequenceLike
+    from skbio.sequence._typing import SequenceLike
 
 
 class MultiAlignResult(NamedTuple):
@@ -70,7 +70,7 @@ def multi_align(
 
     Parameters
     ----------
-    sequences : iterable of Sequence, str, or sequence of scalar
+    sequences : iterable of sequence_like
         Sequences to be aligned. Must be non-empty and ungapped. At least two
         sequences must be provided.
     sub_score : tuple of (float, float), SubstitutionMatrix, or str, optional

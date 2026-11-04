@@ -94,6 +94,25 @@ Slow, pure Python algorithms (deprecated)
    local_pairwise_align
 
 
+.. _alignment_like:
+
+Alignment-like formats
+----------------------
+
+Some scikit-bio functions accept **alignment-like** inputs. An alignment-like object
+represents two or more aligned sequences. It may be:
+
+- a :class:`TabularMSA`, or
+- an ordered collection (e.g., list or tuple) of equal-length :ref:`sequence-like
+  <sequence_like>` that are already aligned (i.e., with gaps inserted), or
+- a tuple of an :class:`AlignPath` together with the corresponding ordered collection
+  of original, unaligned sequence-like objects.
+
+The latter path-based form separates alignment structure from sequence content and can
+avoid constructing gapped sequence copies. Use ``TabularMSA`` when labels, metadata, or
+MSA-specific operations are needed.
+
+
 .. |alignment_tutorial| replace:: **Tutorial**
 .. _alignment_tutorial:
 

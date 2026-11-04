@@ -1,0 +1,2014 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Derived from improved-octo-waddle (https://github.com/biocore/improved-octo-waddle)
+# originally authored by Daniel McDonald, distributed under the Modified BSD License.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
+### NOTE: some doctext strings are copied and pasted from manuscript
+### http://www.dcc.uchile.cl/~gnavarro/ps/tcs16.2.pdf
+
+import math
+from operator import attrgetter
+
+import numpy as np
+import array_api_compat as aac
+
+from skbio._base import SkbioObject
+from skbio._config import _resolve_engine, get_config
+from skbio.io.descriptors import Read, Write
+from skbio.stats.distance import DistanceMatrix
+from skbio.tree._exception import DuplicateNodeError, MissingNodeError
+from skbio.util._array import _get_backend_name, _to_numpy
+
+from . import _bp_cy, _bp_gpu, _bp_numba
+from ._gpu import (
+    _device_index,
+    _mark_gpu_unavailable,
+    _numba_gpu_module_for,
+    _out_of_memory,
+    _use_device,
+    _warn_out_of_memory,
+)
+from ._bp_cy import _BPKernel
+from ._bp_numba import NUMBA_AVAILABLE
+
+
+# Navigation methods implemented by the compiled kernel. ``BPTree`` binds each
+# of these onto the instance at construction, so ``bp.close(i)`` resolves in the
+# instance ``__dict__`` straight to the kernel's compiled method instead of
+# running the class-level forwarding method. The class-level methods remain the
+# documented API and serve unbound calls.
+_KERNEL_METHODS = (
+    "name",
+    "length",
+    "edge",
+    "edge_from_number",
+    "close",
+    "rmq",
+    "rMq",
+    "depth",
+    "root",
+    "parent",
+    "is_tip",
+    "first_child",
+    "last_child",
+    "next_sibling",
+    "previous_sibling",
+    "preorder_rank",
+    "preorder_select",
+    "postorder_rank",
+    "postorder_select",
+    "is_ancestor",
+    "count",
+    "level_ancestor",
+    "level_next",
+    "lca",
+    "deepest_node",
+    "height",
+)
+_get_kernel_methods = attrgetter(*_KERNEL_METHODS)
+
+# Compute engines of the batch operations. What ``engine="fast"`` resolves to
+# depends on the tree and the build: see ``BPTree._fast_engine``.
+_ENGINES = ("cython", "numba")
+
+
+def _non_integer(is_position, dtype):
+    what = "Node positions" if is_position else "Levels"
+    raise TypeError(f"{what} must be integers, not {dtype}.")
+
+
+def _out_of_range(size):
+    raise IndexError("Node positions must be in [0, %d)." % size)
+
+
+def _query_namespace(*arrays):
+    """Namespace and device of a batch's queries.
+
+    Those of its non-NumPy arrays (e.g. on a GPU), or ``(None, None)`` if every
+    query is a NumPy array, a list or a scalar.
+    """
+    foreign = [
+        a for a in arrays if aac.is_array_api_obj(a) and not aac.is_numpy_array(a)
+    ]
+    if not foreign:
+        return None, None
+    return aac.array_namespace(*foreign), aac.device(foreign[0])
+
+
+def _rmm_geometry(n):
+    """Block size and height of the range min-max tree for ``n`` parentheses.
+
+    The block size is ``ceil(ln(n) * ln(ln(n)))``, but at least 2. The formula
+    gives less than that for ``n = 2`` (it is not even positive) and for
+    ``n = 4``, where it gives 1, and the backward search does not work with
+    one parenthesis per block: in ``(())`` it missed position 0, so
+    ``open(2)``, and every ``lca`` through it, answered 0 instead of 1. The
+    ``ceil(n / b)`` blocks are the leaves of a complete binary tree of height
+    ``ceil(log2(n / b))``.
+    """
+    b = max(2, math.ceil(math.log(n) * math.log(math.log(n))))
+    n_tip = -(-n // b)
+    height = (n_tip - 1).bit_length()  # exact ceil(log2(n_tip))
+    return b, height
+
+
+def _build_index(B):
+    """Build the navigation index of a balanced-parentheses array.
+
+    See ``_bp_cy.build_index``.
+    """
+    b, height = _rmm_geometry(B.shape[0])
+    return _bp_cy.build_index(B, b, height)
+
+
+def _check_single_tree(index, size):
+    """Check that balanced parentheses describe a single tree.
+
+    The excess (opening minus closing parentheses up to each position) of a
+    single tree is at least 1 until the root closes, at the last position. The
+    navigation relies on it: it reads outside the tree's arrays otherwise.
+    """
+    i = index["root_close"]
+    if i == size - 1:
+        return
+    if index["e_index"][i] < 0:
+        raise ValueError(
+            "The topology array is unbalanced: the closing parenthesis at "
+            "position %d closes no node." % i
+        )
+    raise ValueError(
+        "The topology array describes more than one tree: the root closes at "
+        "position %d, before the end." % i
+    )
+
+
+def _check_array(arr, dtype, name, size=None):
+    """Validate a 1-D NumPy array of an exact dtype, made C-contiguous."""
+    if not isinstance(arr, np.ndarray):
+        raise TypeError(f"{name} must be a numpy.ndarray, not {type(arr).__name__}.")
+    if arr.ndim != 1:
+        raise ValueError(f"{name} must be 1-D, not {arr.ndim}-D.")
+    if arr.dtype != dtype:
+        raise ValueError(f"{name} must have dtype {np.dtype(dtype)}, not {arr.dtype}.")
+    if size is not None and arr.shape[0] != size:
+        raise ValueError(
+            f"{name} must have one entry per parenthesis ({size}), not {arr.shape[0]}."
+        )
+    return np.ascontiguousarray(arr)
+
+
+def _readonly(arr):
+    arr.flags.writeable = False
+    return arr
+
+
+def _readonly_view(arr):
+    """A read-only view of an array, leaving the array itself as it is."""
+    return _readonly(arr.view())
+
+
+class BPTree(SkbioObject):
+    """A balanced parentheses succinct data structure tree representation.
+
+    The basis for this implementation is the data structure described by
+    Cordova and Navarro [1]. In some instances, some docstring text was copied
+    verbatim from the manuscript. This does not implement the bucket-based
+    trees.
+
+    A node in this data structure is represented by 2 bits, an open parenthesis
+    and a close parenthesis. The implementation uses a NumPy uint8 type where
+    an open parenthesis is a 1 and a close is a 0. In general, operations on
+    this tree are best suited for passing in the opening parenthesis index, so
+    for instance, if you'd like to use BPTree.is_tip to determine if a node is a
+    leaf, the operation is defined only for using the opening parenthesis. At
+    this time, there is some ambiguity over what methods can handle a closing
+    parenthesis.
+
+    Node attributes, such as names, are stored external to this data structure.
+
+    The motivator for this data structure is pure performance both in space and
+    time. As such, there is minimal sanity checking. It is advised to use this
+    structure with care, and ideally within a framework which can assure
+    sanity.
+
+    Parameters
+    ----------
+    B : array of uint8
+        The parentheses bit array encoding the tree topology, where an open
+        parenthesis is 1 and a close parenthesis is 0. A bool array is also
+        accepted, and is viewed as uint8. It may belong to any array API
+        backend (e.g., CuPy, PyTorch or JAX) and live on any device; see Notes.
+    lengths : numpy.ndarray of float64, optional
+        Branch length per parenthesis (read at opening parentheses). Defaults
+        to 0.
+    names : numpy.ndarray of object, optional
+        Node name per parenthesis (read at opening parentheses). Defaults to
+        None.
+    edges : numpy.ndarray of int32, optional
+        Edge number per parenthesis (read at opening parentheses). Defaults to
+        0, without an edge-number lookup.
+
+    Attributes
+    ----------
+    data : array of uint8
+        The parentheses bit array encoding the tree topology, where an open
+        parenthesis is 1 and a close parenthesis is 0, in the array backend and
+        on the device of ``B``.
+
+    Notes
+    -----
+    The tree's arrays, including the navigation index built from ``data``, are
+    held by this Python object. Operations on them are computed by a compiled
+    (Cython) engine: per-node navigation methods (e.g., :meth:`parent`,
+    :meth:`lca`) are bound directly to the engine when the tree is created, so
+    they run at compiled speed.
+
+    The navigation methods take positions in ``data``, from 0 to
+    ``data.size - 1``. For any other position, e.g. the -1 that :meth:`parent`
+    returns for the root, they return -1 (:meth:`is_tip` and
+    :meth:`is_ancestor` return False) rather than read outside the tree's
+    arrays, so a -1 passed from one method to another gives -1 again.
+
+    A tree created from a non-NumPy ``B``, e.g. a CuPy array or a PyTorch
+    tensor on a GPU, keeps ``B`` as its ``data`` and a host copy of it, from
+    which it is built and navigated as any other tree. The node attributes
+    (``lengths``, ``names``, ``edges``) are NumPy arrays on the host. A tree
+    created otherwise, e.g. read from a file, is moved to a GPU (or any
+    backend and device) with :meth:`to_device`, which rebuilds nothing.
+
+    - The batch operations (e.g. :meth:`lca_batch`) and :meth:`cophenet` with
+      ``engine="numba"`` run on the GPU if ``B`` is on a CUDA or ROCm device
+      and a Numba GPU extension for it is installed (numba-cuda-mlir, or the
+      deprecated numba-cuda, on CUDA; numba-hip on ROCm). Otherwise, or if the GPU
+      kernel cannot be built on the system (which is warned about once), they
+      run on the host. A call that runs out of device memory runs on the host,
+      with a warning, and later calls still run on the GPU.
+    - On a GPU, they run on the device of ``data``, whichever device is current;
+      queries on another GPU raise a :class:`ValueError`.
+    - The batch operations return their result in the array backend and on
+      the device of their queries, and :meth:`cophenet` a distance matrix in
+      those of ``data``.
+    - Operations creating a new tree (:meth:`shear`, :meth:`collapse`,
+      pickling) and those exporting it (:meth:`to_array`, :meth:`to_npz`)
+      work on the host copy, and create NumPy trees and arrays.
+
+    **The** ``fast`` **engine.** The batch operations and :meth:`cophenet`
+    run the same algorithm, with bit-identical results, on either engine, so
+    ``engine="fast"`` is chosen from where the tree is and how scikit-bio was
+    built, rather than fixed:
+
+    1. ``"numba"`` if the tree's ``data`` is on a GPU the Numba kernels can
+       use (see above).
+    2. Otherwise ``"cython"`` if scikit-bio was built with OpenMP, as it is
+       with GCC on Linux: its kernels are multithreaded, and compile nothing
+       at the first call, where Numba compiles each kernel.
+    3. Otherwise ``"numba"`` if Numba is installed, as the Cython kernels
+       then run on a single thread.
+    4. Otherwise ``"cython"``.
+
+    After a GPU kernel has failed on the system, ``"fast"`` follows rules 2-4.
+
+    References
+    ----------
+    [1] http://www.dcc.uchile.cl/~gnavarro/ps/tcs16.2.pdf
+    """
+
+    default_write_format = "newick"
+
+    # ``read`` and ``write`` are provided by the ``skbio.io`` registry via the
+    # descriptor protocol, as for ``TreeNode`` and other SkbioObjects.
+    read = Read()
+    write = Write()
+
+    def __init__(self, B, lengths=None, names=None, edges=None):
+        # a non-NumPy array (e.g. on a GPU) is kept as the tree's data, and the
+        # tree is built from a host copy of it, as from a NumPy array
+        array = None
+        if aac.is_array_api_obj(B) and not aac.is_numpy_array(B):
+            array = B
+            B = _to_numpy(B)
+        # a bool array has the same one-byte 0/1 layout, which the compiled
+        # engine has always accepted: view it as uint8, without a copy
+        if isinstance(B, np.ndarray) and B.dtype == np.bool_:
+            B = B.view(np.uint8)
+        B = _check_array(B, np.uint8, "B")
+        size = B.shape[0]
+        if size == 0:
+            raise ValueError("The topology array is empty.")
+
+        # the tree is only valid if it is balanced (equal opens and closes)
+        if B.max() > 1:
+            raise ValueError(
+                "The topology array must contain only opening (1) and closing (0) "
+                "parentheses."
+            )
+        if int(B.sum()) * 2 != size:
+            raise ValueError(
+                "The topology array is unbalanced; it must contain an equal "
+                "number of opening (1) and closing (0) parentheses."
+            )
+
+        if names is None:
+            names = np.full(size, None, dtype=object)
+        else:
+            names = _check_array(names, object, "names", size)
+
+        if lengths is None:
+            lengths = np.zeros(size, dtype=np.float64)
+        else:
+            lengths = _check_array(lengths, np.float64, "lengths", size)
+
+        if edges is None:
+            edges = np.full(size, 0, dtype=np.int32)
+            edge_lookup = None
+        else:
+            edges = _check_array(edges, np.int32, "edges", size)
+            edge_lookup = self._edge_lookup_for(B, edges)
+
+        index = _build_index(B)
+        _check_single_tree(index, size)
+        self._assemble(B, index, names, lengths, edges, edge_lookup, array)
+
+    def _assemble(self, B, index, names, lengths, edges, edge_lookup, array):
+        """Set up the tree from its validated host arrays and navigation index.
+
+        ``array`` is the non-NumPy array the tree's data lives in, or None for
+        a NumPy tree.
+        """
+        self._data = B
+        self._xp = self._device = None
+        if array is None:
+            self._array = B
+        else:
+            self._xp = aac.array_namespace(array)
+            self._device = aac.device(array)
+            if array.dtype != self._xp.uint8:
+                array = self._xp.astype(array, self._xp.uint8)
+            self._array = array
+        # the index arrays uploaded to a GPU, by Numba GPU module (_bp_gpu)
+        self._gpu_arrays = {}
+        self._size = B.shape[0]
+        self._names = names
+        self._lengths = lengths
+        self._edges = edges
+        self._edge_lookup = edge_lookup
+        self._e_index = _readonly(index["e_index"])
+        self._k_index_0 = _readonly(index["k_index_0"])
+        self._k_index_1 = _readonly(index["k_index_1"])
+        self._m = _readonly(index["m"])
+        self._M = _readonly(index["M"])
+        self._r = _readonly(index["r"])
+        self._b = index["b"]
+        self._height = index["height"]
+
+        # each tree has a kernel of its own, as the node attribute setters
+        # replace the kernel's arrays
+        self._kernel = _BPKernel(
+            B,
+            self._e_index,
+            self._k_index_0,
+            self._k_index_1,
+            self._m,
+            self._M,
+            self._r,
+            self._b,
+            self._height,
+            names,
+            lengths,
+            edges,
+            edge_lookup,
+        )
+        self.__dict__.update(zip(_KERNEL_METHODS, _get_kernel_methods(self._kernel)))
+
+    def to_device(self, xp, device=None):
+        """Return this tree with its data in an array backend and on a device.
+
+        This is how a tree is moved to a GPU, e.g. after it was read from a
+        file, so that its batch operations and :meth:`cophenet` can run there
+        (see Notes of :class:`BPTree`). It is also how a tree is moved back to
+        NumPy, or between devices.
+
+        Parameters
+        ----------
+        xp : module
+            The array backend, e.g. ``cupy``, ``torch``, ``jax.numpy`` or
+            ``numpy``, or its array API namespace.
+        device : device, optional
+            The device, in the terms of ``xp``: e.g. ``"cuda"`` or ``"cuda:1"``
+            for PyTorch, a device number or a ``cupy.cuda.Device`` for CuPy, or
+            the ``device`` of an existing array of ``xp``. Defaults to the
+            default device of ``xp``: the current GPU for CuPy, and the CPU for
+            PyTorch and NumPy.
+
+        Returns
+        -------
+        BPTree
+            A new tree whose :attr:`data` is a copy of the topology in ``xp``
+            on ``device``. It shares this tree's navigation index and node
+            attributes (``lengths``, ``names``, ``edges``), which stay on the
+            host, so nothing is rebuilt. Setting an attribute of either tree
+            (e.g. with :meth:`set_names`) does not change the other.
+
+        Raises
+        ------
+        TypeError
+            If ``xp`` is not a supported array backend.
+
+        See Also
+        --------
+        data
+
+        Notes
+        -----
+        The topology is copied from the host, one byte per parenthesis. On a
+        GPU, the navigation index follows at the first operation that needs it
+        there, and is then kept on the device with the tree.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+
+        On a GPU with CuPy, for example, ``tree.to_device(cupy)`` returns the
+        tree with its data there, and ``tree.to_device(torch, "cuda")`` does
+        the same with PyTorch. Moved to NumPy, the tree is on the host:
+
+        >>> host = tree.to_device(np)
+        >>> type(host.data).__name__
+        'ndarray'
+        >>> host.lca_batch([2], [4])  # the lowest common ancestor of a and b: c
+        array([1])
+
+        """
+        # the backend's array API namespace takes the device as its own type
+        try:
+            namespace = aac.array_namespace(xp.asarray([]))
+        except (AttributeError, TypeError):
+            raise TypeError(f"{xp!r} is not a supported array backend.") from None
+        if aac.is_numpy_namespace(namespace):
+            array = None  # a NumPy tree holds the host array itself
+        else:
+            # a copy, also on the CPU: the host array may be read-only (PyTorch
+            # warns), and the index must not change with the new tree's data
+            array = namespace.asarray(self._data, device=device, copy=True)
+        index = {
+            "e_index": self._e_index,
+            "k_index_0": self._k_index_0,
+            "k_index_1": self._k_index_1,
+            "m": self._m,
+            "M": self._M,
+            "r": self._r,
+            "b": self._b,
+            "height": self._height,
+        }
+        tree = type(self).__new__(type(self))
+        tree._assemble(
+            self._data,
+            index,
+            self._names,
+            self._lengths,
+            self._edges,
+            self._edge_lookup,
+            array,
+        )
+        return tree
+
+    @property
+    def data(self):
+        """The parentheses bit array (1 = open, 0 = close).
+
+        It is in the array backend and on the device of the array the tree was
+        created from. For a NumPy array, it is a read-only view: the topology
+        cannot change once the tree exists, as the navigation index is built
+        from it. The tree keeps the array it was created from, without a copy,
+        so that array must not be changed either.
+        """
+        if self._xp is None:
+            return _readonly_view(self._array)
+        return self._array
+
+    @property
+    def lengths(self):
+        """Branch length per parenthesis (read at opening parentheses).
+
+        A read-only view: use :meth:`set_lengths` to change the lengths. It is
+        a NumPy array on the host, whatever the backend of :attr:`data`.
+        """
+        return _readonly_view(self._lengths)
+
+    @property
+    def edges(self):
+        """Edge number per parenthesis (read at opening parentheses).
+
+        A read-only view: use :meth:`set_edges` to change the edge numbers. It
+        is a NumPy array on the host, whatever the backend of :attr:`data`.
+        """
+        return _readonly_view(self._edges)
+
+    @staticmethod
+    def _edge_lookup_for(B, edges):
+        opens = edges[B == 1]
+        if opens.size and (opens.min() < 0 or opens.max() >= B.shape[0]):
+            raise ValueError("Edge numbers must be in [0, %d)." % B.shape[0])
+        return _bp_cy.edge_lookup(B, edges)
+
+    # ------------------------------------------------------------------
+    # Construction, conversion and serialization
+    # ------------------------------------------------------------------
+
+    def to_npz(self, file):
+        """Save the tree to a compressed NumPy ``.npz`` archive.
+
+        The parentheses bit array, node names, and branch lengths are stored;
+        edge numbers are not. This is a lightweight binary dump, distinct from
+        the registry-based :meth:`write` (which defaults to the ``newick``
+        format).
+
+        Parameters
+        ----------
+        file : str or file-like object
+            Path or open file handle to write to.
+
+        See Also
+        --------
+        from_npz
+        write
+
+        """
+        np.savez_compressed(
+            file, names=self._names, lengths=self._lengths, B=self._data
+        )
+
+    @classmethod
+    def from_npz(cls, file):
+        """Load a tree from a NumPy ``.npz`` archive written by ``to_npz``.
+
+        Parameters
+        ----------
+        file : str or file-like object
+            Path or open file handle to read from.
+
+        Returns
+        -------
+        BPTree
+            The reconstructed tree, with node names and branch lengths.
+
+        Warnings
+        --------
+        This method calls :func:`numpy.load` with ``allow_pickle=True`` in
+        order to restore the object-dtype ``names`` array. Loading a pickled
+        array can execute arbitrary code, so only read ``.npz`` archives from
+        trusted sources.
+
+        See Also
+        --------
+        to_npz
+        read
+
+        """
+        # names is an object array pickled by ``to_npz``, so unpickling must be
+        # allowed to restore it
+        data = np.load(file, allow_pickle=True)
+        return cls(data["B"], names=data["names"], lengths=data["lengths"])
+
+    @classmethod
+    def from_treenode(cls, tree):
+        """Construct a BPTree from a :class:`~skbio.tree.TreeNode`.
+
+        Parameters
+        ----------
+        tree : skbio.tree.TreeNode
+            The tree to convert.
+
+        Returns
+        -------
+        BPTree
+            The tree represented in balanced-parentheses form.
+
+        See Also
+        --------
+        skbio.tree.TreeNode.from_bptree
+
+        """
+        topo, names, lengths, edges = _bp_cy.from_treenode_arrays(tree)
+        return cls(topo, names=names, lengths=lengths, edges=edges)
+
+    def to_array(self):
+        """Return an array representation of the tree.
+
+        This mirrors :meth:`skbio.tree.TreeNode.to_array`.
+
+        Returns
+        -------
+        dict
+            Dictionary with keys ``'child_index'``, ``'length'``,
+            ``'id_index'`` and ``'name'``.
+
+        See Also
+        --------
+        skbio.tree.TreeNode.to_array
+
+        """
+        return _bp_cy.to_array(self._kernel)
+
+    def _to_node_arrays(self):
+        """Return preorder per-node arrays for :meth:`TreeNode.from_bptree`.
+
+        The balanced-parentheses traversal is performed in a single compiled
+        pass so that :meth:`skbio.tree.TreeNode.from_bptree` pays no per-node
+        Python/C call overhead; the pure-Python side is then left with only the
+        ``TreeNode`` object assembly.
+
+        Returns
+        -------
+        tuple of numpy.ndarray
+            ``(name, length, edge, parent)``, each indexed by preorder position.
+            ``name`` is dtype ``object``, ``length`` is ``float64`` and ``edge``
+            is ``int32`` (mirroring :meth:`name`, :meth:`length`, :meth:`edge`).
+            ``parent`` (dtype ``intp``) holds the preorder index of each node's
+            parent, or ``-1`` for the root.
+
+        See Also
+        --------
+        skbio.tree.TreeNode.from_bptree
+
+        """
+        return _bp_cy.to_node_arrays(self._kernel)
+
+    def __reduce__(self):
+        """Return the constructor and arguments that rebuild the tree.
+
+        Used by :mod:`pickle` and :mod:`copy`. The topology, lengths, names and
+        edge numbers are passed to the constructor, which builds the index
+        again. A tree on a GPU is rebuilt on the host.
+        """
+        edges = None if self._edge_lookup is None else self._edges
+        return (BPTree, (self._data, self._lengths, self._names, edges))
+
+    # ------------------------------------------------------------------
+    # Node attributes
+    # ------------------------------------------------------------------
+
+    def set_names(self, names):
+        """Replace the node names.
+
+        Parameters
+        ----------
+        names : numpy.ndarray of object
+            Node name per parenthesis (read at opening parentheses).
+
+        """
+        names = _check_array(names, object, "names", self._size)
+        self._names = self._kernel._names = names
+
+    def set_lengths(self, lengths):
+        """Replace the branch lengths.
+
+        Parameters
+        ----------
+        lengths : numpy.ndarray of float64
+            Branch length per parenthesis (read at opening parentheses).
+
+        """
+        lengths = _check_array(lengths, np.float64, "lengths", self._size)
+        self._lengths = self._kernel._lengths = lengths
+
+    def set_edges(self, edges):
+        """Replace the edge numbers and rebuild the edge-number lookup.
+
+        Parameters
+        ----------
+        edges : numpy.ndarray of int32
+            Edge number per parenthesis (read at opening parentheses).
+
+        """
+        edges = _check_array(edges, np.int32, "edges", self._size)
+        edge_lookup = self._edge_lookup_for(self._data, edges)
+        self._edges = self._kernel._edges = edges
+        self._edge_lookup = self._kernel._edge_lookup = edge_lookup
+
+    def name(self, i):
+        """Name of a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        str or None
+            The name of node ``i``.
+        """
+        return self._kernel.name(i)
+
+    def length(self, i):
+        """Branch length of a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        float
+            The length of the branch leading to node ``i``.
+        """
+        return self._kernel.length(i)
+
+    def edge(self, i):
+        """Edge number of a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            The edge number of the branch leading to node ``i``.
+        """
+        return self._kernel.edge(i)
+
+    def edge_from_number(self, n):
+        """Index of the node carrying an edge number.
+
+        Parameters
+        ----------
+        n : int
+            The edge number to look up.
+
+        Returns
+        -------
+        int
+            Index of the node whose edge number is ``n``.
+        """
+        return self._kernel.edge_from_number(n)
+
+    # ------------------------------------------------------------------
+    # Summary
+    # ------------------------------------------------------------------
+
+    def __len__(self):
+        """The number of nodes in the tree."""
+        return self._size // 2
+
+    def __str__(self):
+        """Return a concise summary of the tree.
+
+        Implements the abstract ``__str__`` required of scikit-bio objects.
+        """
+        return self.__repr__()
+
+    def __repr__(self):
+        """Returns summary of the tree.
+
+        Returns
+        -------
+        str
+            A summary of this tree
+
+        Notes
+        -----
+        This method returns the name of the node and a count of tips and the
+        number of internal nodes in the tree.
+        """
+        total_nodes = len(self)
+        tip_count = self.count(tips=True)
+
+        return "<BPTree, name: %s, internal node count: %d, tips count: %d>" % (
+            self.name(0),
+            total_nodes - tip_count,
+            tip_count,
+        )
+
+    # ------------------------------------------------------------------
+    # Navigation (computed by the compiled kernel)
+    # ------------------------------------------------------------------
+
+    def rmq(self, i, j):
+        """The leftmost minimum excess in i -> j.
+
+        Parameters
+        ----------
+        i : int
+            Start position (inclusive).
+        j : int
+            End position (inclusive).
+
+        Returns
+        -------
+        int
+            The leftmost position in ``[i, j]`` with the minimum excess.
+        """
+        return self._kernel.rmq(i, j)
+
+    def rMq(self, i, j):
+        """The leftmost maximum excess in i -> j.
+
+        Parameters
+        ----------
+        i : int
+            Start position (inclusive).
+        j : int
+            End position (inclusive).
+
+        Returns
+        -------
+        int
+            The leftmost position in ``[i, j]`` with the maximum excess.
+        """
+        return self._kernel.rMq(i, j)
+
+    def close(self, i):
+        """The position of the closing parenthesis that matches B[i].
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            Position of the matching closing parenthesis.
+        """
+        return self._kernel.close(i)
+
+    def depth(self, i):
+        """The depth of given node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            Depth of node relative to the root of tree.
+        """
+        return self._kernel.depth(i)
+
+    def root(self):
+        """The index of the root node of the tree."""
+        return self._kernel.root()
+
+    def parent(self, i):
+        """The parent of node.
+
+        Parameters
+        ----------
+        i : int
+            Index of node to evaluate.
+
+        Returns
+        -------
+        int
+            Index of parent node. Returns -1 if node does not have a parent.
+        """
+        return self._kernel.parent(i)
+
+    def is_tip(self, i):
+        """Whether the node is a tip of a tree.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        bool
+            Whether the node is a tip of a tree or not.
+        """
+        return self._kernel.is_tip(i)
+
+    def first_child(self, i):
+        """Index of the first (leftmost) child of a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            Index of the first child of node ``i``, or 0 if ``i`` is a tip
+            (0 is the root, which can never be a child).
+
+        See Also
+        --------
+        last_child
+        skbio.tree.TreeNode
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. Corresponds to accessing ``children[0]`` on a
+        :class:`~skbio.tree.TreeNode`.
+        """
+        return self._kernel.first_child(i)
+
+    def last_child(self, i):
+        """Index of the last (rightmost) child of a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            Index of the last child of node ``i``, or 0 if ``i`` is a tip
+            (0 is the root, which can never be a child).
+
+        See Also
+        --------
+        first_child
+        skbio.tree.TreeNode
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. Corresponds to accessing ``children[-1]`` on a
+        :class:`~skbio.tree.TreeNode`.
+        """
+        return self._kernel.last_child(i)
+
+    def _excess_range(self, i, j):
+        """Excess of the positions ``i`` to ``j``, or None if one is outside."""
+        n = self._e_index.size
+        if not (0 <= i < n and 0 <= j < n):
+            return None
+        return self._e_index[i : j + 1]
+
+    def mincount(self, i, j):
+        """Number of occurrences of the minimum in excess(i), ..., excess(j).
+
+        Returns 0 for an empty range (``i > j``), and -1 if ``i`` or ``j`` is
+        outside the tree.
+        """
+        excess = self._excess_range(i, j)
+        if excess is None:
+            return -1
+        if excess.size == 0:
+            return 0
+        return int(np.count_nonzero(excess == excess.min()))
+
+    def minselect(self, i, j, q):
+        """Position of the qth minimum in excess(i), ..., excess(j).
+
+        Parameters
+        ----------
+        i, j : int
+            The range of positions, ``i <= j``.
+        q : int
+            Which occurrence of the minimum, counting from 1.
+
+        Returns
+        -------
+        int
+            The position of the ``q``-th occurrence of the minimum excess in
+            the range, or -1 if there is no such occurrence (fewer than ``q`` of
+            them, ``q < 1``, or an empty range), or if ``i`` or ``j`` is outside
+            the tree.
+        """
+        excess = self._excess_range(i, j)
+        # ranks count from 1; a lower q would index from the end
+        if excess is None or excess.size == 0 or q < 1:
+            return -1
+        found = np.flatnonzero(excess == excess.min())
+        if found.size < q:
+            return -1
+        return i + int(found[q - 1])
+
+    def next_sibling(self, i):
+        """Index of the next (right) sibling of a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            Index of the next sibling of node ``i``, or 0 if ``i`` has no
+            next sibling (0 is the root, which can never be a sibling).
+
+        See Also
+        --------
+        previous_sibling
+        skbio.tree.TreeNode.siblings
+
+        Notes
+        -----
+        Returns the integer index of a single sibling, unlike
+        :meth:`~skbio.tree.TreeNode.siblings`, which returns a list of all
+        sibling nodes.
+        """
+        return self._kernel.next_sibling(i)
+
+    def previous_sibling(self, i):
+        """Index of the previous (left) sibling of a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            Index of the previous sibling of node ``i``, or 0 if ``i`` has no
+            previous sibling (0 is the root, which can never be a sibling).
+
+        See Also
+        --------
+        next_sibling
+        skbio.tree.TreeNode.siblings
+
+        Notes
+        -----
+        Returns the integer index of a single sibling, unlike
+        :meth:`~skbio.tree.TreeNode.siblings`, which returns a list of all
+        sibling nodes.
+        """
+        return self._kernel.previous_sibling(i)
+
+    def preorder_rank(self, i):
+        """Preorder rank of a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            The position of node ``i`` in a preorder traversal of the tree,
+            counting from 1: the root's rank is 1.
+
+        See Also
+        --------
+        preorder_select
+        skbio.tree.TreeNode.preorder
+
+        Notes
+        -----
+        Returns the node's integer position in preorder, not a node object.
+        This differs from :meth:`~skbio.tree.TreeNode.preorder`, which yields
+        the nodes of the tree in preorder. The inverse of
+        :meth:`preorder_select`.
+        """
+        return self._kernel.preorder_rank(i)
+
+    def preorder_select(self, k):
+        """Index of the node with a given preorder rank.
+
+        Parameters
+        ----------
+        k : int
+            Preorder rank to look up, from 1 (the root) to the number of nodes.
+
+        Returns
+        -------
+        int
+            Index of the node whose preorder rank is ``k``, or -1 if ``k`` is
+            not a rank of this tree.
+
+        See Also
+        --------
+        preorder_rank
+        skbio.tree.TreeNode.preorder
+
+        Notes
+        -----
+        The inverse of :meth:`preorder_rank`. Returns an integer index into
+        the parentheses bit array, not a node object.
+        :meth:`~skbio.tree.TreeNode.preorder` yields the nodes in this order.
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a,b)c,(d,e)f)r;"])
+        >>> [tree.name(tree.preorder_select(k)) for k in range(1, len(tree) + 1)]
+        ['r', 'c', 'a', 'b', 'f', 'd', 'e']
+        >>> tree.preorder_rank(tree.preorder_select(4))
+        4
+        >>> tree.preorder_select(0)
+        -1
+
+        """
+        return self._kernel.preorder_select(k)
+
+    def postorder_rank(self, i):
+        """Postorder rank of a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            The position of node ``i`` in a postorder traversal of the tree,
+            counting from 1: the root's rank is the number of nodes.
+
+        See Also
+        --------
+        postorder_select
+        skbio.tree.TreeNode.postorder
+
+        Notes
+        -----
+        Returns the node's integer position in postorder, not a node object.
+        This differs from :meth:`~skbio.tree.TreeNode.postorder`, which yields
+        the nodes of the tree in postorder. The inverse of
+        :meth:`postorder_select`.
+        """
+        return self._kernel.postorder_rank(i)
+
+    def postorder_select(self, k):
+        """Index of the node with a given postorder rank.
+
+        Parameters
+        ----------
+        k : int
+            Postorder rank to look up, from 1 to the number of nodes (the
+            root).
+
+        Returns
+        -------
+        int
+            Index of the node whose postorder rank is ``k``, or -1 if ``k`` is
+            not a rank of this tree.
+
+        See Also
+        --------
+        postorder_rank
+        skbio.tree.TreeNode.postorder
+
+        Notes
+        -----
+        The inverse of :meth:`postorder_rank`. Returns an integer index into
+        the parentheses bit array, not a node object.
+        :meth:`~skbio.tree.TreeNode.postorder` yields the nodes in this order.
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a,b)c,(d,e)f)r;"])
+        >>> [tree.name(tree.postorder_select(k)) for k in range(1, len(tree) + 1)]
+        ['a', 'b', 'c', 'd', 'e', 'f', 'r']
+        >>> tree.postorder_rank(tree.postorder_select(4))
+        4
+        >>> tree.postorder_select(len(tree) + 1)
+        -1
+
+        """
+        return self._kernel.postorder_select(k)
+
+    def is_ancestor(self, i, j):
+        """Whether a node is an ancestor of another node.
+
+        Parameters
+        ----------
+        i : int
+            A node index
+        j : int
+            A node index
+
+        Note
+        ----
+        False is returned if i == j. A node cannot be an ancestor of itself.
+
+        Returns
+        -------
+        bool
+            True if i is an ancestor of j, False otherwise.
+        """
+        return self._kernel.is_ancestor(i, j)
+
+    def count(self, i=0, tips=False):
+        """Get the count of nodes in the subtree rooted at a node.
+
+        Parameters
+        ----------
+        i : int, optional
+            Index of the node whose subtree is evaluated. Defaults to the root
+            (``0``), i.e., the whole tree.
+        tips : bool, optional
+            If True, only count the tips (leaves) in the subtree (default:
+            False).
+
+        Returns
+        -------
+        int
+            The number of nodes (or tips, if ``tips`` is True) in the subtree
+            rooted at node ``i``, including ``i`` itself.
+
+        See Also
+        --------
+        skbio.tree.TreeNode.count
+
+        Notes
+        -----
+        Returns a node count, not a subtree.
+
+        """
+        return self._kernel.count(i, tips)
+
+    def level_ancestor(self, i, d):
+        """Index of the ancestor a given number of levels above a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+        d : int
+            Number of levels to ascend toward the root.
+
+        Returns
+        -------
+        int
+            Index of the ancestor ``d`` levels above node ``i``, or -1 if
+            ``d`` is not positive.
+
+        See Also
+        --------
+        level_next
+        skbio.tree.TreeNode.ancestors
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. :meth:`~skbio.tree.TreeNode.ancestors` returns the full list
+        of ancestor nodes from a node toward the root.
+        """
+        return self._kernel.level_ancestor(i, d)
+
+    def level_next(self, i):
+        """Index of the next node at the same depth.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            Index of the next node at the same depth as node ``i``, or -1 if
+            there is no such node.
+
+        See Also
+        --------
+        level_ancestor
+        skbio.tree.TreeNode.levelorder
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. :meth:`~skbio.tree.TreeNode.levelorder` traverses all nodes
+        depth by depth.
+        """
+        return self._kernel.level_next(i)
+
+    def lca(self, i, j):
+        """The lowest common ancestor of two nodes.
+
+        Parameters
+        ----------
+        i : int
+            A node index to evaluate. Either parenthesis of a node names it.
+        j : int
+            A node index to evaluate. Either parenthesis of a node names it.
+
+        Returns
+        -------
+        int
+           The index (opening parenthesis) of the lowest common ancestor. A
+           node is its own lowest common ancestor, and the order of ``i`` and
+           ``j`` does not matter.
+        """
+        return self._kernel.lca(i, j)
+
+    def deepest_node(self, i):
+        """Index of the deepest node descending from a node.
+
+        Parameters
+        ----------
+        i : int
+            Index of the node to evaluate.
+
+        Returns
+        -------
+        int
+            Index of the deepest (most distant) tip descending from node ``i``.
+
+        See Also
+        --------
+        height
+        skbio.tree.TreeNode.height
+
+        Notes
+        -----
+        Returns an integer index into the parentheses bit array, not a node
+        object. This is the tip that :meth:`~skbio.tree.TreeNode.height`
+        returns as the second element of its ``(height, tip)`` result.
+        """
+        return self._kernel.deepest_node(i)
+
+    def height(self, i):
+        """The height of node i with respect to its deepest descendent
+
+        Parameters
+        ----------
+        i : int
+            The node to evaluate
+
+        Notes
+        -----
+        Height is in terms of number of edges, not in terms of branch length
+
+        Returns
+        -------
+        int
+            The number of edges between node i and its deepest node
+        """
+        return self._kernel.height(i)
+
+    # ------------------------------------------------------------------
+    # Batch operations (computed by the selected engine)
+    # ------------------------------------------------------------------
+
+    def _engine(self, engine):
+        """The compute engine to run on: ``engine`` resolved, as by its callers.
+
+        What ``"fast"`` resolves to is worked out only when it is asked for.
+        """
+        if engine is None:
+            engine = get_config("compute_engine")
+        fast = self._fast_engine() if engine == "fast" else None
+        return _resolve_engine(engine, _ENGINES, fast=fast)
+
+    def _run(self, kernel, engine, *args):
+        """Run a batch kernel of a resolved compute engine on this tree."""
+        if engine == "numba":
+            return getattr(_bp_numba, kernel)(_bp_numba.bp_arrays(self), *args)
+        return getattr(_bp_cy, kernel)(self._kernel, *args)
+
+    def _fast_engine(self):
+        """What ``engine="fast"`` resolves to for this tree.
+
+        See the Notes of :class:`BPTree` for the rules and their measurements.
+        """
+        if self._gpu_module("numba") is not None:
+            return "numba"  # the tree is on a GPU the Numba kernels can use
+        if _bp_cy.OPENMP or not NUMBA_AVAILABLE:
+            return "cython"  # multithreaded Cython, or nothing else installed
+        return "numba"  # Cython runs serially here; Numba runs in parallel
+
+    def _gpu_module(self, engine):
+        """The Numba GPU module to compute on, or None for the CPU engines.
+
+        A GPU computes only for ``engine="numba"`` on a tree whose data is on a
+        CUDA or ROCm device, as the permutation tests of
+        :mod:`skbio.stats.distance` do.
+        """
+        if engine != "numba" or not hasattr(self._array, "__cuda_array_interface__"):
+            return None
+        return _numba_gpu_module_for(self._array)
+
+    def _queries(self, positions, levels=None):
+        """Validate a batch of queries: broadcast, check, flatten.
+
+        The queries are validated where they are: on the host, or on the device
+        of their (non-NumPy) arrays.
+
+        Returns
+        -------
+        shape : tuple
+            The broadcast shape of the queries.
+        arrays : list of array of int64
+            The flat node positions, followed by the flat levels if given.
+        xp, device
+            The namespace and device of the queries, or None for the host.
+        """
+        arrays = list(positions) if levels is None else [*positions, levels]
+        n_positions = len(positions)
+        xp, device = _query_namespace(*arrays)
+        if xp is None:
+            # plain NumPy: the array API wrappers would cost more than a small
+            # batch itself
+            arrays = np.broadcast_arrays(*(np.asarray(a) for a in arrays))
+            shape = arrays[0].shape
+            out = []
+            for k, arr in enumerate(arrays):
+                # an empty list is float64 but holds no queries to check
+                if arr.size and arr.dtype.kind not in "iu":
+                    _non_integer(k < n_positions, arr.dtype)
+                arr = np.ascontiguousarray(arr.ravel(), dtype=np.intp)
+                if k < n_positions and arr.size:
+                    if arr.min() < 0 or arr.max() >= self._size:
+                        _out_of_range(self._size)
+                out.append(arr)
+            return shape, out, None, None
+
+        arrays = xp.broadcast_arrays(*(xp.asarray(a, device=device) for a in arrays))
+        shape = tuple(arrays[0].shape)
+        empty = math.prod(shape) == 0
+        out = []
+        for k, arr in enumerate(arrays):
+            if not empty and not xp.isdtype(arr.dtype, "integral"):
+                _non_integer(k < n_positions, arr.dtype)
+            arr = xp.reshape(xp.astype(arr, xp.int64, copy=False), (-1,))
+            if k < n_positions and not empty:
+                if bool(xp.any((arr < 0) | (arr >= self._size))):
+                    _out_of_range(self._size)
+            out.append(arr)
+        return shape, out, xp, device
+
+    def _batch(self, kernel, engine, positions, levels=None):
+        """Run a batch navigation operation on the selected engine.
+
+        The result is in the array backend and on the device of the queries.
+        On a GPU (see :meth:`_gpu_module`), queries on the device are read in
+        place and host queries are uploaded; otherwise the queries are computed
+        on the host, from a copy if they are on a device.
+        """
+        engine = self._engine(engine)
+        shape, args, xp, device = self._queries(positions, levels)
+        gpu = self._gpu_module(engine)
+        if gpu is not None:
+            # the kernel runs on the GPU of the tree, where queries on a GPU
+            # must be too
+            index = _device_index(self._array)
+            if xp is not None and _device_index(args[0]) not in (None, index):
+                raise ValueError(
+                    "The queries are on GPU %d, but the tree is on GPU %d."
+                    % (_device_index(args[0]), index)
+                )
+            # the result goes straight into an array of the queries' backend if
+            # that is on the device too
+            out = None
+            if xp is not None:
+                out = xp.empty(args[0].shape, dtype=xp.int64, device=device)
+                if not hasattr(out, "__cuda_array_interface__"):
+                    out = None
+            try:
+                with _use_device(gpu, index):
+                    res = _bp_gpu.run_batch(
+                        gpu,
+                        _get_backend_name(aac.array_namespace(self._array)),
+                        _bp_gpu.tree_arrays(gpu, self),
+                        kernel,
+                        args,
+                        out,
+                    )
+            except Exception as exc:
+                if _out_of_memory(exc):
+                    # this call does not fit on the device: compute it on the
+                    # CPU, and later calls still on the GPU
+                    _warn_out_of_memory(self._array)
+                else:
+                    # the kernel could not build or run on this stack: warn
+                    # once and compute this and later calls on the CPU
+                    _mark_gpu_unavailable(self._array)
+            else:
+                if xp is None:
+                    return res.reshape(shape)
+                if out is None:
+                    res = xp.asarray(res, device=device)
+                return xp.reshape(res, shape)
+        if xp is None:
+            return self._run(kernel, engine, *args).reshape(shape)
+        args = [np.ascontiguousarray(_to_numpy(a), dtype=np.intp) for a in args]
+        res = self._run(kernel, engine, *args).reshape(shape)
+        return xp.asarray(res, device=device)
+
+    def close_batch(self, i, engine=None):
+        """Matching closing parenthesis of each position in a batch.
+
+        The batch counterpart of :meth:`close`: one independent query per
+        element of ``i``, computed by the selected engine.
+
+        Parameters
+        ----------
+        i : array_like of int
+            Positions to evaluate.
+        engine : {'cython', 'numba', 'fast'}, optional
+            The :ref:`compute engine <compute_engines>`. Defaults to the global
+            ``compute_engine`` option. ``'fast'`` is chosen per tree: see the
+            Notes of :class:`BPTree`.
+
+        Returns
+        -------
+        array of intp
+            ``close(i)`` for each position, in the shape of ``i``. It is a
+            NumPy array unless ``i`` is an array of another backend, whose
+            backend and device it then has (see :class:`BPTree`).
+
+        See Also
+        --------
+        close
+
+        """
+        return self._batch("close_batch", engine, (i,))
+
+    def parent_batch(self, i, engine=None):
+        """Parent of each node in a batch.
+
+        The batch counterpart of :meth:`parent`: one independent query per
+        element of ``i``, computed by the selected engine.
+
+        Parameters
+        ----------
+        i : array_like of int
+            Node positions to evaluate.
+        engine : {'cython', 'numba', 'fast'}, optional
+            The :ref:`compute engine <compute_engines>`. Defaults to the global
+            ``compute_engine`` option. ``'fast'`` is chosen per tree: see the
+            Notes of :class:`BPTree`.
+
+        Returns
+        -------
+        array of intp
+            ``parent(i)`` for each position (-1 for the root), in the shape of
+            ``i``. Its array backend and device are those of ``i`` (see
+            :meth:`close_batch`).
+
+        See Also
+        --------
+        parent
+
+        """
+        return self._batch("parent_batch", engine, (i,))
+
+    def lca_batch(self, i, j, engine=None):
+        """Lowest common ancestor of each pair of nodes in a batch.
+
+        The batch counterpart of :meth:`lca`: one independent query per pair
+        ``(i[k], j[k])``, computed by the selected engine. This is not the
+        lowest common ancestor of a set of nodes (as
+        :meth:`skbio.tree.TreeNode.lca` computes).
+
+        Parameters
+        ----------
+        i, j : array_like of int
+            Node positions of each pair, broadcast against each other. As for
+            :meth:`lca`, either parenthesis of a node names it and the order
+            within a pair does not matter.
+        engine : {'cython', 'numba', 'fast'}, optional
+            The :ref:`compute engine <compute_engines>`. Defaults to the global
+            ``compute_engine`` option. ``'fast'`` is chosen per tree: see the
+            Notes of :class:`BPTree`.
+
+        Returns
+        -------
+        array of intp
+            The position of the lowest common ancestor of each pair, in the
+            broadcast shape of ``i`` and ``j``. Its array backend and device
+            are those of ``i`` and ``j`` (see :meth:`close_batch`).
+
+        See Also
+        --------
+        lca
+
+        """
+        return self._batch("lca_batch", engine, (i, j))
+
+    def level_ancestor_batch(self, i, d, engine=None):
+        """Ancestor a given number of levels above each node in a batch.
+
+        The batch counterpart of :meth:`level_ancestor`: one independent query
+        per element of ``i`` (and ``d``), computed by the selected engine.
+
+        Parameters
+        ----------
+        i : array_like of int
+            Node positions to evaluate.
+        d : int or array_like of int
+            Number of levels to ascend, broadcast against ``i``.
+        engine : {'cython', 'numba', 'fast'}, optional
+            The :ref:`compute engine <compute_engines>`. Defaults to the global
+            ``compute_engine`` option. ``'fast'`` is chosen per tree: see the
+            Notes of :class:`BPTree`.
+
+        Returns
+        -------
+        array of intp
+            ``level_ancestor(i, d)`` for each pair, in the broadcast shape of
+            ``i`` and ``d``. Its array backend and device are those of ``i``
+            and ``d`` (see :meth:`close_batch`).
+
+        See Also
+        --------
+        level_ancestor
+
+        """
+        return self._batch("level_ancestor_batch", engine, (i,), levels=d)
+
+    def cophenet(self, endpoints=None, use_length=True, engine=None):
+        r"""Return a distance matrix between each pair of tips in the tree.
+
+        The balanced-parentheses counterpart of
+        :meth:`skbio.tree.TreeNode.cophenet`.
+
+        Parameters
+        ----------
+        endpoints : iterable of str, optional
+            Names of the tips to be included in the calculation. The returned
+            distance matrix will use this order. If not specified, all named
+            tips will be included, in the order they appear in the tree.
+        use_length : bool, optional
+            Whether to return the sum of branch lengths (True, default) or the
+            number of branches (False) connecting each pair of tips.
+        engine : {'cython', 'numba', 'fast'}, optional
+            The :ref:`compute engine <compute_engines>`. Defaults to the global
+            ``compute_engine`` option. ``'fast'`` is chosen per tree: see the
+            Notes of :class:`BPTree`.
+
+        Returns
+        -------
+        DistanceMatrix
+            The cophenetic distance matrix. Its data is in the array backend
+            and on the device of the tree's ``data``.
+
+        Raises
+        ------
+        MissingNodeError
+            If any of the specified ``endpoints`` are not found in the tree.
+        DuplicateNodeError
+            If the specified ``endpoints`` have duplicates, or if the tree has
+            duplicate tip names when ``endpoints`` is not specified.
+        ValueError
+            If any of the specified ``endpoints`` are not tips.
+
+        See Also
+        --------
+        lca_batch
+        skbio.tree.TreeNode.cophenet
+
+        Notes
+        -----
+        The distance between tips :math:`a` and :math:`b` with lowest common
+        ancestor :math:`c` is :math:`d(a) + d(b) - 2d(c)`, where :math:`d` is
+        the sum of branch lengths (or the number of branches) from the root.
+        The tip pairs are independent and are computed in parallel by the
+        selected engine, on a GPU for a tree on one (see :class:`BPTree`).
+        Missing branch lengths are 0.
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> print(tree.cophenet())
+        4x4 distance matrix
+        IDs:
+        'a', 'b', 'd', 'e'
+        Data:
+        [[  0.   3.  14.  15.]
+         [  3.   0.  15.  16.]
+         [ 14.  15.   0.   9.]
+         [ 15.  16.   9.   0.]]
+
+        """
+        B = self._data
+        is_tip = self._tip_mask()
+        tips = np.flatnonzero(is_tip)
+
+        if not endpoints:
+            names = self._names[tips]
+            named = np.array([name is not None for name in names], dtype=bool)
+            tips = tips[named]
+            taxa = names[named].tolist()
+            if len(set(taxa)) < len(taxa):
+                raise DuplicateNodeError("Tree contains duplicate tip names.")
+        else:
+            lookup = self._name_lookup(is_tip)
+            taxa, positions, seen = [], [], set()
+            for name in endpoints:
+                if name in seen:
+                    raise DuplicateNodeError(f"Duplicate tip name '{name}' found.")
+                pos = self._find(lookup, name)
+                if not is_tip[pos]:
+                    raise ValueError(f"Node with name '{name}' is not a tip.")
+                seen.add(name)
+                taxa.append(name)
+                positions.append(pos)
+            tips = np.array(positions, dtype=np.intp)
+
+        tips = np.ascontiguousarray(tips, dtype=np.intp)
+        xp, device = self._xp, self._device
+        # resolved before the early return below, so an unsupported or
+        # unavailable engine is rejected whatever the number of tips
+        engine = self._engine(engine)
+        if tips.size < 2:
+            # no pairs; an empty condensed vector would expand to 1 x 1
+            matrix = np.zeros((tips.size, tips.size))
+            if xp is not None:
+                matrix = xp.asarray(matrix, device=device)
+            return DistanceMatrix(matrix, taxa, validate=False)
+
+        # the kernel takes the tips in tree order, and the output row (slot) of
+        # each: its place in the requested order
+        order = np.argsort(tips, kind="stable")
+        sorted_tips = tips[order]
+        slot = np.ascontiguousarray(order, dtype=np.intp)
+
+        # per node: its parent, and the end of its tips among the sorted tips
+        # (the number of them before its closing parenthesis)
+        opens = np.flatnonzero(B)
+        parent = np.full(self._size, -1, dtype=np.intp)
+        parent[opens] = self._run("parent_batch", engine, opens)
+        selected = np.zeros(self._size, dtype=np.intp)
+        selected[sorted_tips] = 1
+        end = np.zeros(self._size, dtype=np.intp)
+        end[opens] = np.cumsum(selected)[self._run("close_batch", engine, opens)]
+        del selected
+
+        if use_length:
+            dist = self._run("root_distances", engine, self._lengths)
+        else:
+            dist = self._e_index.astype(np.float64)
+
+        gpu = self._gpu_module(engine)
+        if gpu is not None:
+            matrix = self._tip_distances_gpu(gpu, sorted_tips, slot, parent, end, dist)
+            if matrix is not None:
+                return DistanceMatrix(matrix, taxa, validate=False)
+        kernels = _bp_numba if engine == "numba" else _bp_cy
+        matrix = kernels.tip_distances(sorted_tips, slot, parent, end, dist)
+        if xp is not None:
+            matrix = xp.asarray(matrix, device=device)
+        return DistanceMatrix(matrix, taxa, validate=False)
+
+    def _tip_distances_gpu(self, gpu, tips, slot, parent, end, dist):
+        """The cophenetic matrix computed on the tree's device, or None.
+
+        None if the kernel cannot build or run, after which the caller (and
+        every later call) computes on the CPU, or if the call runs out of
+        device memory, after which only this call does. The matrix is
+        allocated by the tree's array backend; failing that (e.g. out of
+        device memory) raises a :class:`MemoryError` rather than falling back.
+        """
+        n = tips.shape[0]
+        xp, device = self._xp, self._device
+        out = None
+        if hasattr(self._array, "__cuda_array_interface__"):
+            try:
+                out = xp.empty((n, n), dtype=xp.float64, device=device)
+            except Exception as exc:
+                raise MemoryError(
+                    "Cannot allocate the %d x %d cophenetic matrix (%.2f GB) on %s."
+                    % (n, n, 8 * n * n / 1e9, device)
+                ) from exc
+        # the number of the sorted tips before each node's opening parenthesis
+        selected = np.zeros(self._size, dtype=np.intp)
+        selected[tips] = 1
+        begin = np.cumsum(selected) - selected
+        try:
+            with _use_device(gpu, _device_index(self._array)):
+                matrix = _bp_gpu.tip_distances(
+                    gpu,
+                    _get_backend_name(aac.array_namespace(self._array)),
+                    tips,
+                    slot,
+                    parent,
+                    begin,
+                    end,
+                    dist,
+                    out,
+                )
+        except Exception as exc:
+            if _out_of_memory(exc):
+                _warn_out_of_memory(self._array)
+            else:
+                _mark_gpu_unavailable(self._array)
+            return None
+        if out is None and xp is not None:
+            matrix = xp.asarray(matrix, device=device)
+        return matrix
+
+    # ------------------------------------------------------------------
+    # Positions of nodes, and arrays for compiled kernels
+    # ------------------------------------------------------------------
+
+    def _tip_mask(self):
+        """Whether each position is a tip's opening parenthesis."""
+        B = self._data
+        is_tip = np.zeros(self._size, dtype=bool)
+        is_tip[:-1] = (B[:-1] == 1) & (B[1:] == 0)
+        return is_tip
+
+    def _name_lookup(self, is_tip):
+        """Position by name, as :meth:`TreeNode.find` resolves a name.
+
+        A tip first, then the first internal node in preorder with the name.
+        """
+        lookup = {}
+        for pos in np.flatnonzero(is_tip).tolist():
+            lookup.setdefault(self._names[pos], pos)
+        for pos in np.flatnonzero(self._data & ~is_tip).tolist():
+            lookup.setdefault(self._names[pos], pos)
+        lookup.pop(None, None)
+        return lookup
+
+    @staticmethod
+    def _find(lookup, name):
+        if name is None:
+            raise MissingNodeError("Cannot find a node without a name.")
+        pos = lookup.get(name)
+        if pos is None:
+            raise MissingNodeError(f"Node '{name}' is not found in the tree.")
+        return pos
+
+    def tip_positions(self):
+        """Positions of the tips, in tree order.
+
+        Returns
+        -------
+        numpy.ndarray of intp
+            The opening parenthesis of each tip, in the order the tips appear
+            in the tree (left to right).
+
+        See Also
+        --------
+        positions
+        is_tip
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> tree.tip_positions()
+        array([ 2,  4,  8, 10])
+        >>> [tree.name(i) for i in tree.tip_positions()]
+        ['a', 'b', 'd', 'e']
+
+        """
+        return np.flatnonzero(self._tip_mask())
+
+    def positions(self, names):
+        """Positions of named nodes.
+
+        A name is resolved as :meth:`skbio.tree.TreeNode.find` resolves it: to
+        the tip of that name if there is one, else to the first internal node
+        of that name in preorder.
+
+        Parameters
+        ----------
+        names : str or iterable of str
+            A name, or names, of nodes.
+
+        Returns
+        -------
+        int or numpy.ndarray of intp
+            The position (opening parenthesis) of the node of each name: an int
+            for a single name, else an array in the order of ``names``.
+
+        Raises
+        ------
+        MissingNodeError
+            If a name is not found in the tree, or is None.
+
+        See Also
+        --------
+        tip_positions
+        name
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> tree.positions(["e", "c", "root"])
+        array([10,  1,  0])
+        >>> tree.positions("f")
+        7
+
+        """
+        lookup = self._name_lookup(self._tip_mask())
+        if isinstance(names, str):
+            return self._find(lookup, names)
+        return np.array([self._find(lookup, name) for name in names], dtype=np.intp)
+
+    def numba_arrays(self, gpu=None):
+        """The tree's arrays, for the Numba navigation functions.
+
+        Parameters
+        ----------
+        gpu : module, optional
+            A Numba GPU module (``numba_cuda_mlir.cuda`` or ``numba.cuda`` on
+            NVIDIA, ``numba.hip`` on AMD) to place the arrays on a GPU: that of
+            the tree's data if it is on one, else the module's current device.
+            By default they stay on the host, for CPU code.
+
+        Returns
+        -------
+        tuple
+            An opaque bundle ``T`` of the tree's topology and navigation index,
+            passed to the functions of :mod:`skbio.tree.bp.numba` as their
+            first argument, e.g. ``nav.parent(T, i)``. ``T.size`` is the number
+            of parentheses.
+
+        See Also
+        --------
+        skbio.tree.bp.numba
+        lengths
+        edges
+
+        Notes
+        -----
+        On the host, ``T`` holds read-only views of the tree's own arrays: no
+        copy is made. On a GPU, they are uploaded on the first call and cached
+        on the tree, so later calls (and the batch operations with
+        ``engine="numba"``) reuse them. This is so whether or not the tree was
+        created from an array on the device.
+
+        The topology cannot change once the tree exists, so ``T`` stays valid
+        as long as the tree. Node attributes can be replaced (e.g. with
+        :meth:`set_lengths`), which is why they are not part of ``T``: pass
+        :attr:`lengths` or :attr:`edges` to a kernel as arguments of their own.
+
+        Examples
+        --------
+        >>> from skbio.tree import BPTree
+        >>> tree = BPTree.read(["((a:1,b:2)c:3,(d:4,e:5)f:6)root;"])
+        >>> T = tree.numba_arrays()
+        >>> T.size
+        14
+
+        """
+        if gpu is None:
+            return _bp_numba.bp_arrays(self, asarray=_readonly_view)
+        return _bp_gpu.tree_arrays(gpu, self)
+
+    # ------------------------------------------------------------------
+    # Whole-tree operations
+    # ------------------------------------------------------------------
+
+    def shear(self, tips):
+        """Remove all nodes from the tree except tips and ancestors of tips.
+
+        Parameters
+        ----------
+        tips : set of str
+            The set of tip names to retain
+
+        Returns
+        -------
+        BPTree
+            A new BPTree corresponding to only the described tips and their
+            ancestors.
+        """
+        if not isinstance(tips, set):
+            raise TypeError("tips must be a set, not %s." % type(tips).__name__)
+        mask, count = _bp_cy.shear_mask(self._kernel, tips)
+        if count == 0:
+            raise ValueError("No requested tips found")
+        return self._from_mask(mask, self._lengths)
+
+    def collapse(self):
+        """Collapse single-child internal nodes.
+
+        Every internal node with exactly one child is removed from the tree,
+        and the removed node's branch length is added to that of its single
+        child so that root-to-tip path lengths are preserved. The root and all
+        tips are always retained, as are internal nodes with two or more
+        children.
+
+        Returns
+        -------
+        BPTree
+            A new tree with all single-child internal nodes removed. Node names
+            and the merged branch lengths are carried over; edge numbers are
+            not retained.
+
+        Notes
+        -----
+        A new ``BPTree`` is returned; the original tree is not modified.
+
+        """
+        mask, lengths = _bp_cy.collapse_mask(self._kernel)
+        return self._from_mask(mask, lengths)
+
+    def _from_mask(self, mask, lengths):
+        """A new tree of the positions set in ``mask``."""
+        keep = mask.view(bool)
+        return BPTree(self._data[keep], names=self._names[keep], lengths=lengths[keep])

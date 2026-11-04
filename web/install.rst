@@ -121,8 +121,11 @@ See the `compute engine guide <https://scikit.bio/docs/latest/performance.html#c
 
 Some functions' Numba engines support GPU computing if available. To enable GPU computing via Numba, you need to install an architecture-specific Numba extension that matches your GPU device::
 
-    pip install numba-cuda  # for NVIDIA CUDA GPUs
-    pip install numba-hip   # for AMD ROCm GPUs
+    # numba-cuda-mlir also needs the CUDA toolkit to be installed
+    pip install numba-cuda-mlir  # for NVIDIA CUDA GPUs
+    pip install numba-hip        # for AMD ROCm GPUs
+
+The older NVIDIA extension, numba-cuda, is still supported but is deprecated and requires NumPy 2.4 or earlier.
 
 see the `GPU computing guide <https://scikit.bio/docs/latest/performance.html#gpu-computing>`_. for details.
 

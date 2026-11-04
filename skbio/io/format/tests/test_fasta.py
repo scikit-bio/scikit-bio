@@ -35,18 +35,8 @@ class CustomSequence(GrammaredSequence):
 
     @classproperty
     @overrides(GrammaredSequence)
-    def default_gap_char(cls):
-        return '-'
-
-    @classproperty
-    @overrides(GrammaredSequence)
     def definite_chars(cls):
         return set(string.ascii_letters)
-
-    @classproperty
-    @overrides(GrammaredSequence)
-    def degenerate_map(cls):
-        return {}
 
 
 class SnifferTests(TestCase):
@@ -1018,6 +1008,20 @@ class WriterTests(TestCase):
 
         self.assertEqual(obs_fasta, exp_fasta)
         self.assertEqual(obs_qual, exp_qual)
+
+    def test_lowercase_keeps_non_letters(self):
+        # Gaps, degenerate characters and stop codons covered by the lowercase
+        # mask are written unchanged instead of becoming control characters.
+        seq = DNA('ACGT-NNAC', metadata={'id': 's1'})
+        fh = io.StringIO()
+        seq.write(fh, format='fasta', lowercase=[
+            False, False, True, True, True, True, False, False, False])
+        self.assertEqual(fh.getvalue(), '>s1\nACgt-nNAC\n')
+
+        seq = Protein('MKV*', metadata={'id': 'p1'})
+        fh = io.StringIO()
+        seq.write(fh, format='fasta', lowercase=[False, True, True, True])
+        self.assertEqual(fh.getvalue(), '>p1\nMkv*\n')
 
 
 class RoundtripTests(TestCase):

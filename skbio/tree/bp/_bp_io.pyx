@@ -1,0 +1,710 @@
+# encoding: utf-8
+# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
+# ----------------------------------------------------------------------------
+# Copyright (c) 2013--, scikit-bio development team.
+#
+# Derived from improved-octo-waddle (https://github.com/biocore/improved-octo-waddle)
+# originally authored by Daniel McDonald, distributed under the Modified BSD License.
+#
+# Distributed under the terms of the Modified BSD License.
+#
+# The full license is in the file LICENSE.txt, distributed with this software.
+# ----------------------------------------------------------------------------
+
+from ._bp_cy cimport _BPKernel
+from ._bp import BPTree
+import numpy as np
+import pandas as pd
+import json
+cimport numpy as cnp
+cimport cython
+
+cnp.import_array()
+
+
+cdef inline cnp.double_t length_from_edge(unicode token):
+    cdef:
+        Py_ssize_t split_idx
+
+    # 0.12345{0123} -> 0.12345
+    split_idx = token.find('{')
+    if split_idx == -1:
+        return np.double(token)
+    else:
+        return np.double(token[:split_idx])
+
+
+cdef inline cnp.int32_t number_from_edge(unicode token):
+    cdef:
+        Py_ssize_t split_idx
+        Py_ssize_t end
+
+    # 0.12345{0123} -> 0123
+    split_idx = token.find('{')
+    if split_idx == -1:
+        return 0
+    end = token.find('}')
+    if end == -1:
+        end = len(token)
+    return np.int32(token[split_idx + 1:end])
+
+
+cdef inline unicode _unquote_name(unicode token, bint convert_underscores):
+    """Recover a node name from a raw token, as the TreeNode reader does.
+
+    Each single quote opens or closes a quoted part and is dropped, and a quote
+    right after a dropped one is kept, so ``''`` is an apostrophe anywhere in
+    the label. Underscores are converted to spaces (the classic Newick convention)
+    if ``convert_underscores``, unless the label ends with a quote that closes a
+    quoted part.
+    """
+    cdef:
+        list out
+        bint dropped = False
+        Py_UCS4 c
+
+    token = token.strip()
+    if u"'" not in token:
+        return token.replace(u'_', u' ') if convert_underscores else token
+
+    out = []
+    for c in token:
+        if c == u"'" and not dropped:
+            dropped = True
+        else:
+            out.append(c)
+            dropped = False
+    name = u''.join(out)
+    # ``dropped``: the last character is a quote that closes a quoted part
+    if convert_underscores and not dropped:
+        name = name.replace(u'_', u' ')
+    return name
+
+
+cdef inline Py_ssize_t _find_length_colon(unicode token):
+    """Index of the branch-length ``:`` (the first ``:`` outside single quotes)."""
+    cdef:
+        Py_ssize_t i, n = len(token)
+        bint in_quote = False
+        Py_UCS4 c
+
+    for i in range(n):
+        c = token[i]
+        if c == u"'":
+            in_quote = not in_quote
+        elif c == u':' and not in_quote:
+            return i
+    return -1
+
+
+cdef inline Py_ssize_t _find_edge_curly(unicode token):
+    """Index of the edge-number ``{`` (the first ``{`` outside single quotes).
+
+    A ``{`` inside a single-quoted label is literal label content (like a colon
+    handled by :func:`_find_length_colon`), not an edge annotation.
+    """
+    cdef:
+        Py_ssize_t i, n = len(token)
+        bint in_quote = False
+        Py_UCS4 c
+
+    for i in range(n):
+        c = token[i]
+        if c == u"'":
+            in_quote = not in_quote
+        elif c == u'{' and not in_quote:
+            return i
+    return -1
+
+
+cdef unicode _strip_comments(unicode data):
+    """Remove Newick ``[comment]`` regions.
+
+    Comments may nest and are skipped entirely (their content is discarded, as
+    in the TreeNode reader). A ``[`` inside a single-quoted label is literal.
+    """
+    cdef:
+        Py_ssize_t i, n = len(data), seg_start = 0
+        int comment_depth = 0
+        bint in_quote = False
+        Py_UCS4 c
+        list out = []
+
+    for i in range(n):
+        c = data[i]
+        if in_quote:
+            if c == u"'":
+                in_quote = False
+            continue
+        if comment_depth > 0:
+            if c == u'[':
+                comment_depth += 1
+            elif c == u']':
+                comment_depth -= 1
+                if comment_depth == 0:
+                    seg_start = i + 1
+            continue
+        if c == u"'":
+            in_quote = True
+        elif c == u'[':
+            out.append(data[seg_start:i])
+            comment_depth += 1
+
+    if comment_depth > 0:
+        # An unterminated ``[`` comment: ``seg_start`` still points at the
+        # pre-comment text (already emitted), so appending the tail here would
+        # duplicate it and reintroduce the ``[``. Treat the input as malformed.
+        raise ValueError("Unbalanced '[' comment in newick string")
+    out.append(data[seg_start:n])
+    return u''.join(out)
+
+
+cdef void _set_node_metadata(Py_ssize_t ptr, unicode token,
+                             cnp.ndarray[object, ndim=1] names,
+                             cnp.ndarray[cnp.double_t, ndim=1] lengths,
+                             cnp.ndarray[cnp.int32_t, ndim=1] edges,
+                             bint convert_underscores):
+    """Inplace update of names, lengths, and edges given token details."""
+    cdef:
+        cnp.double_t length
+        cnp.int32_t edge
+        Py_ssize_t split_idx, curly
+        unicode name, token_parsed
+
+    name = None
+    length = 0.0
+    edge = 0
+
+    if len(token) > 0 and token[0] == u':':
+        # length (and optional edge number) only, e.g. ":0.5" or ":0.5{3}"
+        token_parsed = token[1:]
+        length = length_from_edge(token_parsed)
+        edge = number_from_edge(token_parsed)
+    else:
+        split_idx = _find_length_colon(token)
+        if split_idx != -1:
+            # name:length[{edge}]
+            name = _unquote_name(token[:split_idx], convert_underscores)
+            token_parsed = token[split_idx + 1:]
+            length = length_from_edge(token_parsed)
+            edge = number_from_edge(token_parsed)
+        else:
+            curly = _find_edge_curly(token)
+            if curly != -1:
+                # an edge number with no branch length, e.g. "{3}" or "name{3}".
+                # A ``{`` inside a quoted label (e.g. "'a{3}'") is literal and is
+                # not matched here, so it stays part of the name.
+                if curly > 0:
+                    name = _unquote_name(token[:curly], convert_underscores)
+                edge = number_from_edge(token[curly:])
+            else:
+                name = _unquote_name(token, convert_underscores)
+
+    # Whitespace around a branch-length ``:`` (e.g. ") :0.1") can leave an
+    # empty name once unquoted; an unnamed node is None, not "".
+    if name is not None and len(name) == 0:
+        name = None
+
+    names[ptr] = name
+    lengths[ptr] = length
+    edges[ptr] = edge
+
+
+def _check_bptree(object tree):
+    if not isinstance(tree, BPTree):
+        raise TypeError(
+            "Expected a BPTree, not %s." % type(tree).__name__
+        )
+
+
+def write_newick(object tree, object output, bint include_edge):
+    """Write a BPTree as a Newick string.
+
+    Parameters
+    ----------
+    tree : BPTree
+        The tree to serialize.
+    output : file-like object
+        An open, writable handle (anything with a ``write`` method) that the
+        Newick string is written to.
+    include_edge : bool
+        If ``True``, write each node's edge number alongside its branch length
+        using the ``:length{edge}`` convention. If ``False``, write the branch
+        length only.
+
+    Notes
+    -----
+    The string is written in place to ``output``; the function returns nothing.
+    Node names containing whitespace or any of the characters
+    ``_ ; , : ( ) [ ]`` are wrapped in single quotes, and apostrophes are
+    doubled (``'`` -> ``''``) whether quoted or not, as by the TreeNode writer,
+    so the output re-parses losslessly with either reader.
+
+    """
+    cdef:
+        list name_stack
+        list edge_stack
+        list length_stack
+        list open_paren_stack
+        object name
+        cnp.float64_t length
+        Py_ssize_t idx
+        cnp.uint8_t v
+        Py_ssize_t root_close
+        _BPKernel k
+
+    _check_bptree(tree)
+    k = tree._kernel
+
+    length_stack = []
+    name_stack = []
+    edge_stack = []
+    open_paren_stack = []
+    root_close = k.close(0)
+
+    # the host copy of the topology: ``tree.data`` may be on a GPU, where
+    # reading it one element at a time costs a transfer per parenthesis
+    for idx, v in enumerate(tree._data):
+        if v:
+            if not k.is_tip(idx):
+                output.write('(')
+            name_stack.append(k.name(idx))
+            length_stack.append(k.length(idx))
+            edge_stack.append(k.edge(idx))
+            open_paren_stack.append(idx)
+        else:
+            name = name_stack.pop()
+            length = length_stack.pop()
+            edge = edge_stack.pop()
+
+            if name is not None:
+                # Quote names with structural characters or whitespace, and
+                # double apostrophes, so the output re-parses cleanly. An
+                # apostrophe alone needs no quotes, and a quoted name made of
+                # apostrophes only would read back with one too many
+                chars = set(name)
+                escaped = name.replace("'", "''")
+                if (chars & {"_", ";", ",", ":", "(", ")", "[", "]"}
+                        or any(ch.isspace() for ch in chars)):
+                    output.write("'%s'" % escaped)
+                else:
+                    output.write(escaped)
+
+            if include_edge:
+                output.write(':%s{%d}' % (length, edge))
+            else:
+                output.write(':%s' % length)
+
+            if k.next_sibling(open_paren_stack.pop()) == 0:
+                if idx != root_close:
+                    output.write(')')
+            else:
+                output.write(',')
+
+    output.write(';\n')
+
+
+cpdef parse_newick(unicode data, bint convert_underscores=True):
+    """Parse a Newick string into a BPTree.
+
+    Parameters
+    ----------
+    data : str
+        A Newick-formatted string, terminated with a semicolon (``;``). Branch
+        lengths and ``{}``-delimited edge numbers are parsed if present, and
+        ``[]`` comments are ignored.
+    convert_underscores : bool, optional
+        If ``True`` (default), underscores in unquoted labels are converted to
+        spaces, matching the TreeNode Newick reader. Quoted labels are always
+        taken literally.
+
+    Returns
+    -------
+    BPTree
+        The tree topology, with names, branch lengths, and edge numbers
+        attached.
+
+    Raises
+    ------
+    ValueError
+        If ``data`` is not terminated with a semicolon, if it describes a
+        tree with only a single node, or if it does not describe a single tree
+        (e.g. its parentheses or single quotes are unbalanced).
+
+    """
+    cdef:
+        Py_ssize_t ptr, last, size, token_ptr, tmp, datalen
+        bint expect_child
+        unicode token
+        list stack
+        cnp.ndarray[cnp.uint8_t, ndim=1] topology
+        cnp.ndarray[object, ndim=1] names
+        cnp.ndarray[cnp.double_t, ndim=1] lengths
+        cnp.ndarray[cnp.int32_t, ndim=1] edges
+
+    data = _strip_comments(data.strip()).strip()
+    if not data.endswith(';'):
+        raise ValueError("Newick does not appear terminated with a semicolon")
+
+    datalen = len(data)
+    size = 2 * _count_nodes(data, datalen)
+    if size <= 2:
+        raise ValueError("Only trees with more than 1 node supported")
+
+    topology = np.empty(size, dtype=np.uint8)
+    names = np.full(size, None, dtype=object)
+    lengths = np.zeros(size, dtype=np.double)
+    edges = np.full(size, 0, dtype=np.int32)
+
+    # One pass over the tokens writes the parentheses and the node metadata
+    # together. Each '(' and ',' starts a child. A child that does not start
+    # with '(' is a tip, whether or not it has a label. A label belongs to the
+    # node it follows: the tip it starts, or the node closed by the ')' before
+    # it. ``stack`` holds the open position of every unclosed node, and
+    # ``last`` the node a label would belong to.
+    stack = []
+    ptr = last = 0
+    expect_child = True
+    token_ptr = 0
+    while True:
+        tmp = _ctoken(data, datalen, token_ptr)
+        token = data[token_ptr:tmp]
+        token_ptr = tmp
+        if len(token) == 0:
+            raise ValueError("Newick does not appear terminated with a semicolon")
+        if token == ';':
+            break
+
+        if token == '(':
+            if not expect_child or ptr >= size:
+                raise ValueError("Newick does not describe a single tree")
+            topology[ptr] = 1
+            stack.append(ptr)
+            ptr += 1
+            continue
+
+        if expect_child and not token.isspace():
+            # a child that is not a '(' is a tip; a label starts it, and a ','
+            # or ')' ends a tip without one
+            if ptr + 2 > size:
+                raise ValueError("Newick does not describe a single tree")
+            topology[ptr] = 1
+            topology[ptr + 1] = 0
+            last = ptr
+            ptr += 2
+            expect_child = False
+
+        if token == ',':
+            if len(stack) == 0:
+                raise ValueError("Newick does not describe a single tree")
+            expect_child = True
+        elif token == ')':
+            if len(stack) == 0 or ptr >= size:
+                raise ValueError("Unbalanced parentheses in newick string")
+            topology[ptr] = 0
+            ptr += 1
+            last = stack.pop()
+        elif not token.isspace():
+            _set_node_metadata(last, token, names, lengths, edges,
+                               convert_underscores)
+
+    if len(stack) != 0 or ptr != size:
+        raise ValueError("Unbalanced parentheses in newick string")
+
+    return BPTree(topology, lengths, names, edges)
+
+
+cdef Py_ssize_t _count_nodes(unicode data, Py_ssize_t datalen):
+    """Number of nodes in the first tree of a Newick string.
+
+    Each '(' outside quotes opens a node and starts its first child, and each
+    ',' starts another child. Every node but the root is a child.
+    """
+    cdef:
+        Py_ssize_t i, n = 1
+        bint in_quote = False
+        Py_UCS4 c
+
+    for i in range(datalen):
+        c = data[i]
+        if c == u"'":
+            in_quote = not in_quote
+        elif in_quote:
+            continue
+        elif c == u'(' or c == u',':
+            n += 1
+        elif c == u';':
+            return n
+
+    if in_quote:
+        raise ValueError("Unbalanced quote in newick string")
+    return n
+
+
+cdef inline int _ccheck(Py_UCS4 c):
+    """structure check"""
+    cdef:
+        Py_ssize_t i
+
+    if c == u'(':
+        return 1
+    elif c == u')':
+        return 1
+    elif c == u',':
+        return 1
+    elif c == u';':
+        return 1
+    else:
+        return 0
+
+
+cdef inline int _is_quote(Py_UCS4 c):
+    if c == u"'":
+        return 1
+    else:
+        return 0
+
+
+cdef inline Py_ssize_t _ctoken(unicode data, Py_ssize_t datalen, Py_ssize_t start):
+    cdef:
+        Py_ssize_t idx, in_quote = 0
+        Py_UCS4 c
+
+    if start >= (datalen - 1):
+        return datalen
+
+    for idx in range(start, datalen):
+        c = data[idx]
+
+        if in_quote:
+            if _is_quote(c):
+                in_quote = 0
+            continue
+        else:
+            if _is_quote(c):
+                in_quote = 1
+                continue
+
+        if _ccheck(c):
+            if idx == start:
+                return idx + 1
+            else:
+                return idx
+
+    return idx + 1
+
+
+def parse_jplace(object data):
+    """Parse a jplace string into a placement table and a tree.
+
+    Parameters
+    ----------
+    data : str
+        A jplace-formatted JSON string, as produced by phylogenetic placement
+        tools.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The placements, with one row per (fragment, placement) pair. Columns
+        are ``fragment`` followed by the ``fields`` declared in the jplace
+        document. Rows are restricted to edges present in the tree.
+    BPTree
+        The reference tree parsed from the jplace ``tree`` entry, carrying its
+        ``{}`` edge numbers.
+
+    Raises
+    ------
+    ValueError
+        If the document is not a JSON object, if a required member (``tree``,
+        ``placements``, ``fields``, ``version``) is missing, or if ``fields``
+        does not include ``edge_num``.
+    KeyError
+        If a placement record lacks the required ``n`` member.
+
+    Notes
+    -----
+    Implementation-specific caveats:
+
+    1. Multiplicities are not supported. Placements are required to have an
+       ``"n"`` entry, and any ``"nm"`` entry is ignored.
+    2. Matsen et al. [1]_ allow ``[]`` or ``{}`` to delimit edge numbers. Here
+       edge numbers use ``{}`` only; ``[]`` is treated as a standard Newick
+       comment and ignored, so legacy ``[]``-delimited edge numbers are not
+       recognized.
+
+    References
+    ----------
+    .. [1] Matsen FA, Hoffman NG, Gallagher A, Stamatakis A. (2012). A format
+       for phylogenetic placements. PLoS ONE 7(2): e31009.
+
+    """
+    cdef:
+        dict as_json
+        list fields, columns, placements, fragments, placement_data
+        list placement_inner_data, pquery, entry
+        unicode frag, newick
+        Py_ssize_t placement_idx, placement_inner_idx, fragment_idx
+        Py_ssize_t n_fragments
+        object tree
+        object df, parsed
+        set edges
+
+    # Load into an untyped object first: a non-object JSON document (e.g. a
+    # list) would raise TypeError when bound to the ``dict``-typed ``as_json``,
+    # bypassing the ValueError wrapping the caller expects.
+    parsed = json.loads(data)
+    if not isinstance(parsed, dict):
+        raise ValueError("jplace document must be a JSON object")
+    as_json = parsed
+
+    for key in ('tree', 'placements', 'fields', 'version'):
+        if key not in as_json:
+            raise ValueError(
+                "jplace document is missing the required '%s' member" % key
+            )
+
+    # A present-but-mistyped member (e.g. ``null``) would otherwise raise a raw
+    # TypeError (str.strip on None, len(None), list(None)); normalize those to
+    # the ValueError the caller wraps.
+    if not isinstance(as_json['tree'], str):
+        raise ValueError("jplace 'tree' member must be a Newick string")
+    if not isinstance(as_json['placements'], list):
+        raise ValueError("jplace 'placements' member must be a list")
+    if not isinstance(as_json['fields'], list):
+        raise ValueError("jplace 'fields' member must be a list")
+
+    newick = as_json['tree']
+    placement_data = as_json['placements']
+    fields = list(as_json['fields'])
+
+    if 'edge_num' not in fields:
+        raise ValueError(
+            "jplace 'fields' must include 'edge_num' to map placements onto "
+            "the reference tree"
+        )
+
+    columns = ['fragment', ] + fields
+
+    placements = []
+    for placement_idx in range(len(placement_data)):
+        placement = placement_data[placement_idx]
+
+        if 'n' not in placement:
+            raise KeyError("jplace parsing limited to entries with 'n' keys")
+
+        placement_inner_data = placement['p']
+        fragments = placement['n']
+        n_fragments = len(fragments)
+
+        for placement_inner_idx in range(len(placement_inner_data)):
+            pquery = placement_inner_data[placement_inner_idx]
+
+            for fragment_idx in range(n_fragments):
+                frag = fragments[fragment_idx]
+                entry = [frag, ] + pquery
+                placements.append(entry)
+
+    # Preserve underscores in reference-tree labels: jplace taxa are typically
+    # accessions where '_' is significant, not a stand-in for a space.
+    tree = parse_newick(newick, convert_underscores=False)
+    edges = {tree.edge(i) for i, v in enumerate(tree.data) if v}
+    df = pd.DataFrame(placements, columns=columns)
+    df = df[df['edge_num'].isin(edges)]
+
+    return df, tree
+
+
+def _json_default(object obj):
+    """Fallback JSON encoder that unwraps NumPy scalars to Python types."""
+    if isinstance(obj, np.generic):
+        return obj.item()
+    raise TypeError(
+        "Object of type %s is not JSON serializable" % type(obj).__name__
+    )
+
+
+def write_jplace(object tree, object output, object fields=None,
+                 object version=None, object metadata=None):
+    """Write a reference tree as a jplace document.
+
+    A ``BPTree`` holds a reference tree but no placements, so the document is
+    written with an empty ``placements`` list; ``fields``, ``version``, and
+    ``metadata`` fill the remaining required jplace members. This mirrors the
+    ``jplace`` read path, which returns only the reference tree.
+
+    Parameters
+    ----------
+    tree : BPTree
+        The reference tree, serialized as Newick with ``{}`` edge numbers via
+        :func:`write_newick`. Its edge numbers are written as-is and must be
+        unique, since jplace edge numbers identify edges. A tree read from plain
+        Newick has ``0`` on every edge and is rejected (see ``Raises``).
+    output : file-like object
+        An open, writable handle that the JSON document is written to.
+    fields : list of str, optional
+        The placement field names to record. Defaults to ``["edge_num"]``.
+    version : int, optional
+        The jplace format version to record. Defaults to ``3``.
+    metadata : dict, optional
+        Free-form metadata to record. Defaults to ``{}``.
+
+    Raises
+    ------
+    TypeError
+        If ``fields`` is a string rather than a sequence of field names.
+    ValueError
+        If ``fields`` is given but does not include ``edge_num``, which the
+        reader requires to map placements onto the reference tree; or if the
+        tree's edge numbers are not unique (e.g. a tree read from plain Newick,
+        which has ``0`` on every edge), since duplicate edge numbers cannot
+        unambiguously identify edges in jplace.
+
+    """
+    cdef:
+        unicode tree_str
+        list field_names, edge_vals
+        object buf, document
+
+    _check_bptree(tree)
+
+    from io import StringIO
+
+    # Normalize/validate ``fields``: a bare string would be split into single
+    # characters by ``list()``, and the document must carry ``edge_num`` to be
+    # readable by ``parse_jplace``.
+    if fields is None:
+        field_names = ["edge_num"]
+    elif isinstance(fields, str):
+        raise TypeError("fields must be a list of field names, not a string")
+    else:
+        field_names = list(fields)
+        if "edge_num" not in field_names:
+            raise ValueError("fields must include 'edge_num'")
+
+    # jplace edge numbers identify edges, so they must be unique. The root has no
+    # incoming edge and is not numbered in jplace; in a BPTree it defaults to edge
+    # 0 and may coincide with a real edge 0, so it is excluded here (the root is
+    # the first node in the parentheses array). A tree with no real edge numbers
+    # has 0 on every edge and would produce ambiguous, invalid jplace.
+    edge_vals = [tree.edge(i) for i, v in enumerate(tree._data) if v][1:]
+    if len(set(edge_vals)) != len(edge_vals):
+        raise ValueError(
+            "cannot write jplace: the tree's edge numbers are not unique. jplace "
+            "edge numbers must uniquely identify edges; a tree read from plain "
+            "Newick has 0 on every edge and is not a valid jplace reference tree."
+        )
+
+    buf = StringIO()
+    write_newick(tree, buf, True)
+    tree_str = buf.getvalue().strip()
+
+    document = {
+        "tree": tree_str,
+        "placements": [],
+        "fields": field_names,
+        "version": version if version is not None else 3,
+        "metadata": metadata if metadata is not None else {},
+    }
+
+    json.dump(document, output, default=_json_default)

@@ -182,7 +182,7 @@ def weighted_unifrac(
     tree : TreeNode
         Tree relating taxa. The set of tip names in the tree can be a superset
         of ``taxa``, but not a subset. Required.
-    normalized: boolean, optional
+    normalized: bool, optional
         If ``True``, apply branch length normalization, which is described in
         [1]_. Resulting distances will then be in the range ``[0, 1]``.
     validate: bool, optional

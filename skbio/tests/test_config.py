@@ -121,7 +121,7 @@ class TestResolveEngine(TestCase):
             with self.assertRaisesRegex(ImportError, "requires the optional numba"):
                 _resolve_engine("numba", ("cython", "numba"))
 
-    def test_fast_resolves_to_what_the_caller_names(self):
+    def test_fast_uses_caller_target(self):
         # A target the resolver could not have arrived at on its own shows that
         # the caller's value is what gets used, and needs no optional
         # dependency to check. The name is deliberately nonsense so that it
@@ -135,26 +135,26 @@ class TestResolveEngine(TestCase):
         )
 
     @numba_code
-    def test_fast_resolves_to_numba_when_that_is_the_target(self):
+    def test_fast_resolves_to_numba(self):
         # The production case: every wired call site passes "numba" when numba
         # imports. Marked, since resolving to it imports numba.
         self.assertEqual(
             _resolve_engine("fast", ("cython", "numba"), fast="numba"), "numba"
         )
 
-    def test_fast_without_a_target_falls_back_to_the_default(self):
+    def test_fast_without_target_is_default(self):
         # A function with nothing faster to offer does not pass fast=, and
         # engine="fast" then has to be a no-op rather than an error.
         set_config("compute_engine", "cython")
         self.assertEqual(_resolve_engine("fast", ("cython", "numba")), "cython")
 
-    def test_fast_is_resolved_after_the_global_default(self):
+    def test_global_fast_uses_caller_target(self):
         set_config("compute_engine", "fast")
         self.assertEqual(
             _resolve_engine(None, ("cython", "numba"), fast="cython"), "cython"
         )
 
-    def test_fast_stays_a_no_op_when_the_default_is_itself_fast(self):
+    def test_global_fast_without_target(self):
         set_config("compute_engine", "fast")
         self.assertEqual(_resolve_engine(None, ("cython", "numba")), "cython")
         self.assertEqual(_resolve_engine("fast", ("cython", "numba")), "cython")
@@ -187,7 +187,7 @@ class TestResolveEngine(TestCase):
         assert_allclose(result, [[1., -1.], [-1., 1.]])
         assert_allclose(data, [[0., 2.], [2., 0.]])
 
-    def test_fast_target_still_checked_against_supported(self):
+    def test_fast_target_must_be_supported(self):
         with self.assertRaisesRegex(ValueError, "engine='numba' is not supported"):
             _resolve_engine("fast", ("cython",), fast="numba")
 

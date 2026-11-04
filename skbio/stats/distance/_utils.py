@@ -25,9 +25,9 @@ def is_symmetric_and_hollow(mat):
 
     Result:
     -------
-    is_symmetric: Boolean
+    is_symmetric : bool
         not (mat.T != mat).any()
-    is_hollow: Boolean
+    is_hollow : bool
         np.trace(mat) == 0
 
     Notes
@@ -70,7 +70,7 @@ def is_symmetric(mat):
 
     Result:
     -------
-    is_symmetric: Boolean
+    is_symmetric : bool
         not (mat.T != mat).any()
 
     Notes
@@ -97,7 +97,7 @@ def is_hollow(mat):
 
     Result:
     -------
-    is_hollow: Boolean
+    is_hollow : bool
         np.trace(mat) == 0
 
     """
@@ -133,9 +133,9 @@ def distmat_reorder(in_mat, reorder_vec, validate=False):
     ----------
     in_mat : 2D array_like
         Distance matrix, must be in c_order
-    reorder_vec : 1D_array_like
+    reorder_vec : 1D array_like
         List of permutation indexes
-    validate: boolean
+    validate : bool
         Optional, if True, validate reorder_vec content, defaults to False
 
     Returns
@@ -196,9 +196,9 @@ def distmat_reorder_condensed(in_mat, reorder_vec, validate=False):
     ----------
     in_mat : 2D array_like
         Distance matrix, must be in c_order
-    reorder_vec : 1D_array_like
+    reorder_vec : 1D array_like
         List of permutation indexes
-    validate: boolean
+    validate : bool
         Optional, if True, validate reorder_vec content, defaults to False
 
     Returns

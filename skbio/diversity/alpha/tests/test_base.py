@@ -239,6 +239,44 @@ class BaseTests(TestCase):
 
         self.assertTrue(np.isnan(kempton_taylor_q([0, 0])))
 
+    def test_kempton_taylor_q_single_taxon(self):
+        self.assertTrue(np.isnan(kempton_taylor_q([])))
+        self.assertTrue(np.isnan(kempton_taylor_q([5])))
+        self.assertTrue(np.isnan(kempton_taylor_q([0, 5, 0])))
+        self.assertTrue(np.isnan(kempton_taylor_q([False, True, False])))
+        self.assertTrue(np.isnan(kempton_taylor_q([5], 0, 1)))
+
+    def test_kempton_taylor_q_quantiles(self):
+        counts = np.arange(1, 11)
+        self.assertAlmostEqual(kempton_taylor_q(counts, 0.1, 0.9),
+                               8 / np.log(10 / 2))
+        self.assertAlmostEqual(kempton_taylor_q(counts, 0, 0.9),
+                               9 / np.log(10))
+        self.assertAlmostEqual(kempton_taylor_q(counts, 0, np.nextafter(1., 0.)),
+                               9 / np.log(10))
+        self.assertAlmostEqual(kempton_taylor_q(counts, 0, 1), 9 / np.log(10))
+        self.assertAlmostEqual(kempton_taylor_q([1, 2], 0, 1), 1 / np.log(2))
+
+    def test_kempton_taylor_q_degenerate_intervals(self):
+        with np.errstate(divide="raise", invalid="raise"):
+            self.assertTrue(np.isnan(kempton_taylor_q([1, 2])))
+            self.assertTrue(np.isnan(kempton_taylor_q([5, 5])))
+            self.assertTrue(np.isnan(kempton_taylor_q([5, 5, 5, 5])))
+            self.assertTrue(np.isnan(kempton_taylor_q([True, True, True])))
+            self.assertTrue(np.isnan(kempton_taylor_q([1, 2, 3], 0.5, 0.6)))
+            self.assertTrue(np.isnan(kempton_taylor_q([1, 2, 3], 0.8, 0.9)))
+
+    def test_kempton_taylor_q_invalid_quantiles(self):
+        with self.assertRaises(ValueError):
+            kempton_taylor_q([], 0.5, 0.5)
+        for lower, upper in [(-0.1, 0.75), (0.25, 1.1),
+                             (0.75, 0.25), (0.5, 0.5),
+                             (np.nan, 0.75), (0.25, np.nan),
+                             (-np.inf, 0.75), (0.25, np.inf)]:
+            with self.subTest(lower=lower, upper=upper):
+                with self.assertRaisesRegex(ValueError, "Quantiles must satisfy"):
+                    kempton_taylor_q([1, 2, 3], lower, upper)
+
     def test_margalef(self):
         self.assertEqual(margalef(self.counts), 8 / np.log(22))
         self.assertTrue(np.isnan(margalef([1])))

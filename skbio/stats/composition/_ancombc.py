@@ -2368,7 +2368,11 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         np.exp(resp, out=resp)
         resp *= sd_inv
         resp *= params[:3, None]  # weights (pi)
-        resp /= np.sum(resp, axis=0, keepdims=True)
+
+        # All three weighted densities can underflow to zero for a feature. R turns
+        # the resulting 0 / 0 responsibilities into zero.
+        np.sum(resp, axis=0, out=intm0)
+        np.divide(resp, intm0, out=resp, where=intm0 != 0)
 
         ### M-step ###
         # Weights of components (pi)
@@ -2396,13 +2400,18 @@ def _estimate_bias_em(beta, var_hat, tol=1e-5, max_iter=100):
         np.subtract(beta, delta, out=resp[0])  # reuse as intermediate
         intm *= resp[0]
         numer = np.sum(intm, axis=1)
-        l1, l2 = numer / denom
+
+        # A component can receive zero responsibility from every feature. R
+        # converts the resulting undefined l1/l2 update to zero.
+        np.divide(numer, denom, out=numer, where=denom != 0)
+        np.copyto(numer, 0.0, where=denom == 0)
+
         # l1_new = min(sum(r1i * (beta - delta) / (nu0 + kappa1)) /
         #              sum(r1i / (nu0 + kappa1)), 0)
-        updated[4] = np.minimum(l1, 0)
+        updated[4] = np.minimum(numer[0], 0)
         # l2_new = min(sum(r2i * (beta - delta) / (nu0 + kappa2)) /
         #              sum(r2i / (nu0 + kappa2)), 0)
-        updated[5] = np.maximum(l2, 0)
+        updated[5] = np.maximum(numer[1], 0)
 
         # Perform numeric optimization to minimize variances of negative and positive
         # components (kappa). The component means and responsibilities stay fixed

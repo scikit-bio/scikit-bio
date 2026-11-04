@@ -17,6 +17,8 @@ Format Support
 +======+======+===============================================================+
 |Yes   |Yes   |:mod:`skbio.tree.TreeNode`                                     |
 +------+------+---------------------------------------------------------------+
+|Yes   |Yes   |:mod:`skbio.tree.BPTree`                                       |
++------+------+---------------------------------------------------------------+
 
 Format Specification
 --------------------
@@ -168,6 +170,22 @@ program in which the underscores were not escaped. This parameter only affects
 `read` operations. It does not exist for `write` operations; they will always
 properly escape underscores.
 
+Balanced parentheses trees
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+In addition to :class:`~skbio.tree.TreeNode`, this format reads and writes
+:class:`~skbio.tree.BPTree`, the succinct balanced-parentheses representation
+intended for very large trees. Reading and writing a ``BPTree`` never
+materializes a ``TreeNode`` (or any other per-node object): the parenthesis,
+name, and length arrays are built directly, preserving ``BPTree``'s memory
+scalability. For throughput on trees with millions to billions of nodes, the
+``BPTree`` reader and writer are backed by a compiled (Cython) implementation
+in :mod:`skbio.tree.bp`.
+
+.. note:: The ``BPTree`` reader uses its own compiled newick scanner rather
+   than the tokenizer described above, but it honors ``convert_underscores``
+   the same way (default ``True``): underscores in unquoted labels are read as
+   spaces unless ``convert_underscores=False`` is passed.
+
 Examples
 --------
 This is a simple Newick string.
@@ -221,7 +239,7 @@ References
 # ----------------------------------------------------------------------------
 
 from skbio.io import create_format, NewickFormatError
-from skbio.tree import TreeNode
+from skbio.tree import TreeNode, BPTree
 
 newick = create_format("newick")
 
@@ -488,3 +506,40 @@ def _tokenize_newick(fh, convert_underscores=True):
             #      the sequence ''' to result in ''.
             #    * We have encountered whitespace that is not properly escaped.
             last_non_ws_char = character
+
+
+# ---------------------------------------------------------------------------
+# BPTree support
+#
+# BPTree is a succinct balanced-parentheses tree intended for very large trees.
+# Its reader/writer never build a TreeNode (or any other per-node object) as an
+# intermediary -- doing so would allocate one Python object per node and defeat
+# BPTree's memory scalability. To keep reading and writing fast on trees with
+# millions to billions of nodes, the parenthesis/name/length/edge arrays are
+# scanned and serialized by the compiled (Cython) backend in ``skbio.tree.bp``;
+# the registry reader and writer below are thin adapters over it.
+# ---------------------------------------------------------------------------
+
+
+@newick.reader(BPTree)
+def _newick_to_bp(fh, cls=None, convert_underscores=True):
+    from skbio.tree.bp._bp_io import parse_newick
+
+    # The compiled parser scans the whole string at once, so materialize the
+    # handle's contents before handing it off. It raises ValueError on malformed
+    # input; re-raise as the format's error type per the registry convention.
+    try:
+        return parse_newick(fh.read(), convert_underscores=convert_underscores)
+    except ValueError as e:
+        raise NewickFormatError(
+            "Could not parse file as newick into a BPTree: %s" % e
+        ) from e
+
+
+@newick.writer(BPTree)
+def _bp_to_newick(obj, fh):
+    from skbio.tree.bp._bp_io import write_newick
+
+    # Edge numbers are not part of the newick spec; they are handled by the
+    # jplace format. The compiled writer still takes the flag, so pass False.
+    write_newick(obj, fh, False)
