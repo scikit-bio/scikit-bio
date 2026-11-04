@@ -102,6 +102,11 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999, see
     `host_dist` are identical to their ordering in the rows and columns,
     respectively, of the interaction matrix.
 
+    Correlations within 100 floating-point epsilons of the observed correlation
+    are counted as ties when computing the p-value. This accounts for roundoff
+    when equivalent distance pairs are summed in a different order. The
+    returned correlation and permutation statistics are not rounded.
+
     This code is loosely based on the original R code from [1]_.
 
     References
@@ -137,7 +142,7 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999, see
     with the symbiont distances. However, this may also reflect structure
     inherent in the phylogeny, and is not itself indicative of significance.
 
-    >>> p_value <= 0.05
+    >>> print(p_value <= 0.05)
     True
 
     After permuting host : parasite interactions, we find that the observed
@@ -165,11 +170,11 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999, see
         )
     if permutations < 0:
         raise ValueError(
-            "Number of permutations must be greater than or " "equal to zero."
+            "Number of permutations must be greater than or equal to zero."
         )
     if interaction.sum() < 3:
         raise ValueError(
-            "Must have at least 3 host-parasite interactions in " "`interaction`."
+            "Must have at least 3 host-parasite interactions in `interaction`."
         )
 
     # shortcut to eliminate nested for-loops specifying pairwise interaction
@@ -211,7 +216,14 @@ def hommola_cospeciation(host_dist, par_dist, interaction, permutations=999, see
             # calculate shuffled correlation coefficient
             perm_stats[i] = pearsonr(x_p, y_p)[0]
 
-        p_value = ((perm_stats >= corr_coeff).sum() + 1) / (permutations + 1)
+        # Equivalent pairings can have slightly different correlations solely
+        # because of summation order. Correlations have unit scale, so allow
+        # a small absolute roundoff tolerance, including at zero correlation.
+        # perm_stats stores doubles even when pearsonr computes in float32.
+        tolerance = 100 * np.finfo(np.asarray(corr_coeff).dtype).eps
+        p_value = ((perm_stats >= corr_coeff - tolerance).sum() + 1) / (
+            permutations + 1
+        )
 
     return corr_coeff, p_value, perm_stats
 
