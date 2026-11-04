@@ -46,8 +46,9 @@ tree, so a kernel is written once and runs on any tree:
    tree's arrays as ``T``, which is passed to the kernel and on to each
    function. Node attributes are separate arrays:
    :attr:`~skbio.tree.BPTree.lengths` and :attr:`~skbio.tree.BPTree.edges`.
-3. Nodes are positions in the parentheses (their opening parenthesis), as for
-   the ``BPTree`` methods. :meth:`~skbio.tree.BPTree.tip_positions` and
+3. Nodes are given by their positions, as for the ``BPTree`` methods: a
+   node's position is the index of its opening parenthesis in
+   :attr:`~skbio.tree.BPTree.data`. :meth:`~skbio.tree.BPTree.tip_positions` and
    :meth:`~skbio.tree.BPTree.positions` give the positions of the tips and of
    named nodes, and :meth:`~skbio.tree.BPTree.name` maps a position back.
 

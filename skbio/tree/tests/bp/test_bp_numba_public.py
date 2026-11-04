@@ -445,7 +445,8 @@ class GPUNavigationTests(TestCase, ArrayAPITestMixin):
             # positions and node attributes are NumPy arrays on the host
             for obs, exp in ((bp.tip_positions(), host.tip_positions()),
                              (bp.positions(names), host.positions(names)),
-                             (bp.lengths, host.lengths), (bp.edges, host.edges)):
+                             (bp.lengths, host.lengths), (bp.edges, host.edges),
+                             (bp.names, host.names)):
                 self.assertIsInstance(obs, np.ndarray)
                 npt.assert_array_equal(obs, exp)
             self.assertFalse(bp.lengths.flags.writeable)

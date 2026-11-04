@@ -782,6 +782,16 @@ class BPTreeClassTests(TestCase):
         with self.assertRaises(AttributeError):
             self.bp.data = self.B
 
+    def test_data_keyword(self):
+        # the topology is passed as ``data``, the attribute it is kept as
+        bp = BPTree(data=self.B, lengths=self.lengths, names=self.names)
+        npt.assert_array_equal(bp.data, self.B)
+        self.assertEqual(bp.name(1), '2')
+        with self.assertRaisesRegex(ValueError, "^data must have dtype uint8"):
+            BPTree(data=self.B.astype(np.int64))
+        with self.assertRaisesRegex(TypeError, "^data must be a numpy.ndarray"):
+            BPTree(data=[1, 0])
+
     def test_single_node(self):
         bp = BPTree(np.array([1, 0], dtype=np.uint8))
         self.assertEqual(len(bp), 1)
@@ -836,7 +846,7 @@ class BPTreeClassTests(TestCase):
 
         # a saved tree whose topology is bool: .npz and pickle
         with io.BytesIO() as fh:
-            np.savez_compressed(fh, names=self.names, lengths=self.lengths, B=B)
+            np.savez_compressed(fh, names=self.names, lengths=self.lengths, data=B)
             fh.seek(0)
             obs = BPTree.from_npz(fh)
         npt.assert_array_equal(obs.data, self.B)
@@ -872,6 +882,25 @@ class BPTreeClassTests(TestCase):
         self.bp.set_edges(edges)
         self.assertEqual(self.bp.edge(4), 4)
         self.assertEqual(self.bp.edge_from_number(4), 4)
+
+    def test_names(self):
+        bp = self.bp
+        npt.assert_array_equal(bp.names, self.names)
+        self.assertEqual(bp.names[1], bp.name(1))
+        self.assertFalse(bp.names.flags.writeable)
+        with self.assertRaises(ValueError):
+            bp.names[1] = 'x'
+        with self.assertRaises(AttributeError):
+            bp.names = self.names
+        # a view of the tree's array, which stays writable for the tree
+        self.assertTrue(np.shares_memory(bp.names, bp._names))
+        self.assertTrue(bp._names.flags.writeable)
+        # replaced by set_names
+        names = np.full(self.B.size, None, dtype=object)
+        names[1] = 'x'
+        bp.set_names(names)
+        npt.assert_array_equal(bp.names, names)
+        self.assertEqual(bp.name(1), 'x')
 
     def test_pickle_and_copy(self):
         for obs in (pickle.loads(pickle.dumps(self.bp)), copy.copy(self.bp),
