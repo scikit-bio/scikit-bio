@@ -897,6 +897,12 @@ class BPTreeClassTests(TestCase):
         bp = BPTree(self.B)
         self.assertIsNone(copy.deepcopy(bp)._edge_lookup)
 
+    def test_edge_from_number_without_edges(self):
+        with self.assertRaisesRegex(ValueError, "no edge numbers"):
+            BPTree(self.B).edge_from_number(0)
+        with self.assertRaisesRegex(ValueError, "no edge numbers"):
+            BPTree.edge_from_number(BPTree(self.B), 0)
+
     def test_io_descriptors(self):
         self.assertIn('newick', BPTree.read.__doc__)
         self.assertIn('newick', self.bp.write.__doc__)
