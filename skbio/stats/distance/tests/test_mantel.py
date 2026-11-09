@@ -1258,6 +1258,36 @@ class MantelArrayAPITests(TestCase, ArrayAPITestMixin):
             self.assertAlmostEqual(r, r_ref, places=10)
             self.assertAlmostEqual(p, p_ref, places=10)
 
+    def _check_condensed(self, xp, device, engine):
+        # Condensed on both sides, and condensed against full: the device
+        # paths must expand the upper-triangle vector, not read it as a matrix.
+        cx = DistanceMatrix(self.x).condensed_form()
+        cy = DistanceMatrix(self.y).condensed_form()
+        for method in ("pearson", "spearman"):
+            r_ref, p_ref, _ = mantel(
+                DistanceMatrix(self.x), DistanceMatrix(self.y),
+                method=method, permutations=99, seed=0,
+            )
+            mx = DistanceMatrix(self.make_array(xp, device, cx), condensed=True)
+            for my in (
+                DistanceMatrix(self.make_array(xp, device, cy), condensed=True),
+                DistanceMatrix(self.make_array(xp, device, self.y)),
+            ):
+                r, p, _ = mantel(
+                    mx, my, method=method, permutations=99, seed=0, engine=engine
+                )
+                self.assertAlmostEqual(r, r_ref)
+                self.assertAlmostEqual(p, p_ref)
+
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_mantel_condensed_backends(self, xp, device):
+        self._check_condensed(xp, device, None)
+
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_mantel_numba_engine_condensed_backends(self, xp, device):
+        self._check_condensed(xp, device, "numba")
+
     @numba_code
     @array_backends("numpy", "jax", "torch", "cupy")
     def test_mantel_numba_engine_backends(self, xp, device):
