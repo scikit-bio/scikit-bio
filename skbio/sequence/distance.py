@@ -1793,6 +1793,38 @@ def _logpara(seqs, mask, seqtype, pseudocount=None, paralinear=False):
     return _build_dm(func, seqs)
 
 
+_ACGT_CODE = np.full(256, 255, dtype=np.uint8)
+for _i, _base in enumerate(b"ACGT"):
+    _ACGT_CODE[_base] = _i
+
+
+def _unique_acgt_kmer_codes(seq, k, overlap):
+    """Return the sorted unique *k*-mer codes of a canonical DNA sequence.
+
+    Returns ``None`` when the fast path cannot be used (the sequence contains
+    non-ACGT characters, or *k* is outside the range handled here). Each k-mer
+    is encoded in 2 bits per base, so at most 31 bases fit in a uint64.
+    """
+    if k < 1 or k > 31 or not hasattr(seq, "_bytes"):
+        return None
+    codes = _ACGT_CODE[seq._bytes]
+    if (codes == 255).any():
+        return None
+    if overlap:
+        if len(codes) < k:
+            return np.empty(0, dtype=np.uint64)
+        windows = np.lib.stride_tricks.sliding_window_view(codes, k)
+    else:
+        count = len(codes) // k
+        if count == 0:
+            return np.empty(0, dtype=np.uint64)
+        windows = codes[:count * k].reshape(count, k)
+    values = np.zeros(len(windows), dtype=np.uint64)
+    for column in range(k):
+        values = (values << np.uint64(2)) | windows[:, column]
+    return np.unique(values)
+
+
 @_metric_specs()
 def kmer_distance(seq1, seq2, k, overlap=True):
     r"""Compute the *k*-mer distance between a pair of sequences.
@@ -1839,12 +1871,22 @@ def kmer_distance(seq1, seq2, k, overlap=True):
     0.9230769230...
 
     """
-    seq1_kmers = set(map(str, seq1.iter_kmers(k, overlap=overlap)))
-    seq2_kmers = set(map(str, seq2.iter_kmers(k, overlap=overlap)))
-    all_kmers = seq1_kmers | seq2_kmers
-    if not all_kmers:
+    codes1 = _unique_acgt_kmer_codes(seq1, k, overlap)
+    codes2 = _unique_acgt_kmer_codes(seq2, k, overlap)
+    if codes1 is None or codes2 is None:
+        # fall back to the generic (slower) implementation for sequences that
+        # contain anything other than the four canonical DNA bases
+        seq1_kmers = set(map(str, seq1.iter_kmers(k, overlap=overlap)))
+        seq2_kmers = set(map(str, seq2.iter_kmers(k, overlap=overlap)))
+        all_kmers = seq1_kmers | seq2_kmers
+        if not all_kmers:
+            return np.nan
+        shared_kmers = seq1_kmers & seq2_kmers
+        number_unique = len(all_kmers) - len(shared_kmers)
+        return number_unique / len(all_kmers)
+
+    if codes1.size == 0 and codes2.size == 0:
         return np.nan
-    shared_kmers = seq1_kmers & seq2_kmers
-    number_unique = len(all_kmers) - len(shared_kmers)
-    fraction_unique = number_unique / len(all_kmers)
-    return fraction_unique
+    shared = np.intersect1d(codes1, codes2, assume_unique=True).size
+    union = codes1.size + codes2.size - shared
+    return (union - shared) / union

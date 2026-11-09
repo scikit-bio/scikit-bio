@@ -577,6 +577,21 @@ class TestKmerDistance(TestCase):
         obs = kmer_distance(seq1, seq2, 5)
         self.assertTrue(np.isnan(obs))
 
+    def test_fast_path_matches_reference(self):
+        rng = np.random.default_rng(0)
+        for trial in range(10):
+            alphabet = "ACGT" if trial % 2 == 0 else "ACGTN"
+            seq1 = DNA("".join(rng.choice(list(alphabet), 200)))
+            seq2 = DNA("".join(rng.choice(list(alphabet), 200)))
+            for k in (3, 8):
+                for overlap in (True, False):
+                    obs = kmer_distance(seq1, seq2, k, overlap=overlap)
+                    a = set(map(str, seq1.iter_kmers(k, overlap=overlap)))
+                    b = set(map(str, seq2.iter_kmers(k, overlap=overlap)))
+                    union = a | b
+                    exp = (len(union) - len(a & b)) / len(union)
+                    self.assertAlmostEqual(obs, exp)
+
     def test_k_less_than_one_error(self):
         seq1 = Sequence('ATCG')
         seq2 = Sequence('ACTG')
