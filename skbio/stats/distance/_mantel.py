@@ -503,7 +503,7 @@ def mantel(
                 except Exception:
                     # The fused kernel could not build/run on this stack; record
                     # it and fall back to the array-API path (correct anywhere).
-                    _mark_gpu_unavailable(x_data)
+                    _mark_gpu_unavailable(x.data)
             return _mantel_stats_pearson_xp(
                 x_data,
                 y_data,

@@ -648,7 +648,7 @@ def permanova(
                 # The fused kernel could not build/run on this stack (e.g. a
                 # numba-hip build that fails to compile); record it and fall
                 # back to the array-API path, which is correct on any backend.
-                _mark_gpu_unavailable(data)
+                _mark_gpu_unavailable(distmat.data)
         return _permanova_array_api(
             data, grouping, column, permutations, seed, ids=distmat.ids
         )
