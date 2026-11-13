@@ -489,6 +489,39 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
         multi_replace(self.cdata4)
         npt.assert_allclose(self.cdata4, np.array([1, 2, 3, 0, 5]))
 
+        # validation can be skipped
+        exp_1d = np.array([0.087273, 0.174545, 0.261818, 0.04, 0.436364])
+        obs = multi_replace(closure(self.cdata4), delta=0.04, validate=False)
+        npt.assert_allclose(obs, exp_1d, rtol=1e-5, atol=1e-5)
+
+        # input is a pandas Series; output preserves index and name
+        s = pd.Series(self.cdata4.astype(float), name="s1")
+        obs = multi_replace(s)
+        self.assertIsInstance(obs, pd.Series)
+        npt.assert_allclose(obs.to_numpy(), exp_1d, rtol=1e-5, atol=1e-5)
+        self.assertEqual(obs.name, "s1")
+        pd.testing.assert_index_equal(obs.index, s.index)
+
+        # input is a pandas DataFrame
+        exp_2d = np.array([[0.087273, 0.174545, 0.261818, 0.04, 0.436364],
+                           [0.092, 0.04, 0.04, 0.368, 0.46],
+                           [0.066667, 0.133333, 0.2, 0.266667, 0.333333]])
+        df = pd.DataFrame(self.cdata3.astype(float))
+        obs = multi_replace(df)
+        self.assertIsInstance(obs, np.ndarray)
+        npt.assert_allclose(obs, exp_2d, rtol=1e-5, atol=1e-5)
+
+        # apply(axis=1) returns a DataFrame on pandas 3
+        obs = df.apply(multi_replace, axis=1)
+        self.assertIsInstance(obs, pd.DataFrame)
+        npt.assert_allclose(obs.to_numpy(), exp_2d, rtol=1e-5, atol=1e-5)
+
+        # namedtuple with index/name attributes is not mistaken for a Series
+        from collections import namedtuple
+        Counts = namedtuple('Counts', ['a', 'b', 'c', 'd', 'e'])
+        obs = multi_replace(Counts(1, 2, 3, 0, 5))
+        self.assertIsInstance(obs, np.ndarray)
+
     def test_clr(self):
         # 2-D matrix
         mat = self.cdata1
