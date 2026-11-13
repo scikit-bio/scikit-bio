@@ -661,6 +661,29 @@ class PermanovaArrayAPITests(TestCase, ArrayAPITestMixin):
         )
         self.assertAlmostEqual(res['p-value'], self.ref['p-value'], places=10)
 
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permanova_condensed_backends(self, xp, device):
+        # A condensed matrix holds only the upper-triangle vector, which the
+        # device paths must expand rather than read as the full matrix.
+        condensed = DistanceMatrix(self.data).condensed_form()
+        dm = DistanceMatrix(self.make_array(xp, device, condensed), condensed=True)
+        res = permanova(dm, self.grouping, permutations=99, seed=0)
+        self.assertAlmostEqual(
+            res['test statistic'], self.ref['test statistic'], places=10
+        )
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'], places=10)
+
+    @numba_code
+    @array_backends("numpy", "jax", "torch", "cupy")
+    def test_permanova_numba_engine_condensed_backends(self, xp, device):
+        condensed = DistanceMatrix(self.data).condensed_form()
+        dm = DistanceMatrix(self.make_array(xp, device, condensed), condensed=True)
+        res = permanova(
+            dm, self.grouping, permutations=99, seed=0, engine="numba"
+        )
+        self.assertAlmostEqual(res['test statistic'], self.ref['test statistic'])
+        self.assertAlmostEqual(res['p-value'], self.ref['p-value'])
+
     @numba_code
     @array_backends("numpy", "jax", "torch", "cupy")
     def test_permanova_numba_engine_backends(self, xp, device):

@@ -629,12 +629,15 @@ def permanova(
     # kernel on the device-resident matrix; otherwise it takes the backend-
     # agnostic xp path. A NumPy-backed DM keeps the Cython/Numba engine path.
     if not _aac.is_numpy_array(distmat.data):
-        gpu = _numba_gpu_module_for(distmat.data) if engine == "numba" else None
+        # Both paths below need the full matrix; a condensed one is expanded
+        # on its own device.
+        data = distmat.redundant_form()
+        gpu = _numba_gpu_module_for(data) if engine == "numba" else None
         if gpu is not None:
             try:
                 return _run_permanova_gpu(
                     gpu,
-                    distmat.data,
+                    data,
                     grouping,
                     column,
                     permutations,
@@ -647,7 +650,7 @@ def permanova(
                 # back to the array-API path, which is correct on any backend.
                 _mark_gpu_unavailable(distmat.data)
         return _permanova_array_api(
-            distmat.data, grouping, column, permutations, seed, ids=distmat.ids
+            data, grouping, column, permutations, seed, ids=distmat.ids
         )
 
     sample_size = distmat.shape[0]

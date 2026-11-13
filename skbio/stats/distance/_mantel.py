@@ -482,16 +482,19 @@ def mantel(
             # ids exactly like the NumPy path; the reorder/filter stays on the
             # input's device (distmat_reorder is array-API aware).
             x, y = _order_dms(x, y, strict=strict, lookup=lookup)
+            # Both paths below need the full matrices; a condensed one is
+            # expanded on its own device.
+            x_data, y_data = x.redundant_form(), y.redundant_form()
             # With engine="numba" and a matching Numba GPU backend, run the fused
             # GPU kernel on the device-resident matrices; otherwise take the
             # backend-agnostic array-API path.
-            gpu = _numba_gpu_module_for(x.data) if engine == "numba" else None
+            gpu = _numba_gpu_module_for(x_data) if engine == "numba" else None
             if gpu is not None:
                 try:
                     return _run_mantel_gpu(
                         gpu,
-                        x.data,
-                        y.data,
+                        x_data,
+                        y_data,
                         permutations,
                         seed,
                         alternative,
@@ -502,8 +505,8 @@ def mantel(
                     # it and fall back to the array-API path (correct anywhere).
                     _mark_gpu_unavailable(x.data)
             return _mantel_stats_pearson_xp(
-                x.data,
-                y.data,
+                x_data,
+                y_data,
                 permutations,
                 seed,
                 alternative,
