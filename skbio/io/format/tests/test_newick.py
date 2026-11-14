@@ -331,6 +331,31 @@ class TestNewick(unittest.TestCase):
 
             fh.close()
 
+    def test_tree_node_to_newick_whitespace_labels(self):
+        # Labels containing whitespace other than ordinary spaces must be
+        # single-quoted so the output can be read back; ordinary spaces keep
+        # the existing underscore convention.
+        cases = [
+            ("taxon\tA", "('taxon\tA',sibling)root;\n"),
+            ("taxon\nA", "('taxon\nA',sibling)root;\n"),
+            ("taxon\rA", "('taxon\rA',sibling)root;\n"),
+            ("\t", "('\t',sibling)root;\n"),
+            ("a b\tc", "('a b\tc',sibling)root;\n"),
+            ("plain name", "(plain_name,sibling)root;\n"),
+        ]
+        for label, expected in cases:
+            tree = TreeNode(name="root")
+            tree.extend([TreeNode(name=label), TreeNode(name="sibling")])
+            fh = io.StringIO()
+            _tree_node_to_newick(tree, fh)
+            self.assertEqual(expected, fh.getvalue())
+
+            fh.seek(0)
+            read_tree = _newick_to_tree_node(fh)
+            self.assertEqual(label, read_tree.children[0].name)
+            self.assertEqual("sibling", read_tree.children[1].name)
+            fh.close()
+
     def test_roundtrip(self):
         for tree, newicks in self.trees_newick_lists:
             newick = newicks[0]
