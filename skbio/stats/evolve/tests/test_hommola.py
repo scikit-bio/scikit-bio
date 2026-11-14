@@ -117,6 +117,48 @@ class HommolaCospeciationTests(unittest.TestCase):
         self.assertAlmostEqual(obs_r, exp_r)
         npt.assert_equal(obs_perm_stats, exp_perm_stats)
 
+    def test_equivalent_pairings_count_as_ties(self):
+        # The one-to-one example in #810 has eight exact ties in these draws.
+        # Integer covariance ranking gives no strictly greater correlations:
+        # n*sum(x*y)-sum(x)*sum(y) is maximal for the observed pairing. Both
+        # norms are invariant under these one-to-one permutations.
+        _, p_value, _ = hommola_cospeciation(
+            self.hdist, self.pdist, self.interact_1to1, 999, seed=0)
+        self.assertEqual(p_value, 9 / 1000)
+
+    def test_complete_interaction_permutations_are_all_tied(self):
+        # Relabeling a complete bipartite interaction preserves the entire
+        # multiset of paired distances. Every draw is therefore an exact tie,
+        # regardless of last-bit differences in Pearson's correlation.
+        for dtype in (np.float32, np.float64):
+            with self.subTest(dtype=dtype):
+                corr, p_value, perm_stats = hommola_cospeciation(
+                    self.hdist.astype(dtype), self.pdist.astype(dtype),
+                    np.ones((5, 5)), 99, seed=0)
+                self.assertEqual(p_value, 1.0)
+                npt.assert_allclose(perm_stats, corr, rtol=0,
+                                    atol=np.finfo(dtype).eps)
+
+    def test_zero_correlation_ties(self):
+        # x=[1, 2, 3], y=[2, 1, 2] have exactly zero covariance. A
+        # tolerance relative only to the near-zero observed r loses ties.
+        host = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
+        parasite = [[0, 2, 1], [2, 0, 2], [1, 2, 0]]
+        _, p_value, _ = hommola_cospeciation(
+            host, parasite, np.eye(3), 999, seed=0)
+        self.assertEqual(p_value, 657 / 1000)
+
+    def test_distinct_nearby_correlations_are_not_ties(self):
+        # Break one symmetry with a small but resolved distance change.
+        # Formerly tied correlations are separated by about 2.55e-10,
+        # far above floating-point roundoff but below np.isclose's defaults.
+        parasite = self.pdist * 100000000
+        parasite[0, 4] += 1
+        parasite[4, 0] += 1
+        _, p_value, _ = hommola_cospeciation(
+            self.hdist, parasite, self.interact_1to1, 999, seed=0)
+        self.assertEqual(p_value, 6 / 1000)
+
     def test_get_dist(self):
         labels = np.array([0, 1, 1, 2, 3])
         k_labels, t_labels = _gen_lists(labels)
