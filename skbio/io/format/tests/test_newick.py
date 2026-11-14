@@ -331,6 +331,20 @@ class TestNewick(unittest.TestCase):
 
             fh.close()
 
+def test_tree_node_to_newick_whitespace_labels(self):
+    for label in ("taxon\t A", "taxon\nA", "taxon\rA", "\t"):
+        tree = TreeNode(name="root")
+        tree.append(TreeNode(name=label))
+
+        fh = io.StringIO()
+        _tree_node_to_newick(tree, fh)
+        serialized = fh.getvalue()
+
+        self.assertIn("'" + label + "'", serialized)
+
+        read_tree = _newick_to_tree_node(io.StringIO(serialized))
+        self.assertEqual(read_tree.children[0].name, label)
+
     def test_roundtrip(self):
         for tree, newicks in self.trees_newick_lists:
             newick = newicks[0]
