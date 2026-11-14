@@ -817,6 +817,15 @@ class TestStockholmWriter(unittest.TestCase):
             fh = io.StringIO()
             _tabular_msa_to_stockholm(msa, fh)
 
+    def test_boolean_positional_metadata_error(self):
+        msa = TabularMSA([DNA('ACGT'), DNA('ACGA')],
+                         index=['seq1', 'seq2'],
+                         positional_metadata={'lc': [True, False, True, False]})
+        with self.assertRaisesRegex(StockholmFormatError,
+                                    r'boolean column.*lc'):
+            fh = io.StringIO()
+            _tabular_msa_to_stockholm(msa, fh)
+                                        
     def test_unoriginal_gr_feature_names_error(self):
 
         pos_metadata_dataframe = pd.DataFrame(
