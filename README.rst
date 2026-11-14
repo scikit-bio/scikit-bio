@@ -117,4 +117,3 @@ scikit-bio began from code derived from `PyCogent <https://github.com/pycogent/p
    :target: https://anaconda.org/conda-forge/scikit-bio
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Gitter
-   :target: https://gitter.im/biocore/scikit-bio
