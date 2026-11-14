@@ -42,7 +42,8 @@ subsequences (not included in the examples below).
 
    When writing an ``skbio.alignment.TabularMSA`` object as a clustal-formatted
    file, ``TabularMSA`` index labels will be converted to strings and written
-   as sequence identifiers/labels.
+   as sequence identifiers/labels. Labels must be unique both before and after
+   conversion to strings.
 
 Format Parameters
 -----------------
@@ -274,12 +275,12 @@ def _clustal_sniffer(fh):
 
 @clustal.writer(TabularMSA)
 def _tabular_msa_to_clustal(obj, fh):
-    if not obj.index.is_unique:
+    names = [str(label) for label in obj.index]
+    if not obj.index.is_unique or len(set(names)) != len(names):
         raise ClustalFormatError("TabularMSA's index labels must be unique.")
 
     clen = 60  # Max length of clustal lines
     seqs = [str(s) for s in obj]
-    names = [str(label) for label in obj.index]
     nameLen = max(map(len, names))
     seqLen = max(map(len, seqs))
     fh.write("CLUSTAL\n\n\n")
