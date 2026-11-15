@@ -83,7 +83,9 @@ def ace(counts, rare_threshold=10):
 
     """
     counts = _validate_counts_vector(counts)
-    freq_counts = np.bincount(counts)
+    # Ensure a minimum length of 2, such that singletons can be indexed even when
+    # the sample contains no taxon (all counts are zero).
+    freq_counts = np.bincount(counts, minlength=2)
     s_rare = _taxa_rare(freq_counts, rare_threshold)
     singles = freq_counts[1]
 
