@@ -241,8 +241,15 @@ def pcoa(
        Journal on Scientific computing, 33(5), 2580-2594.
 
     """
+    # A condensed input is expanded below into a new matrix that only this
+    # function holds, so it can be centered in place without touching the
+    # caller's data, which saves one full-size copy.
+    condensed_input = (
+        isinstance(distmat, DistanceMatrix) and distmat._flags["CONDENSED"]
+    ) or getattr(distmat, "ndim", None) == 1
     # this converts to redundant form, regardless of input type
     distmat = DistanceMatrix(distmat)
+    inplace = inplace or condensed_input
 
     # If no dimension specified, by default will compute all eigenvectors
     # and eigenvalues

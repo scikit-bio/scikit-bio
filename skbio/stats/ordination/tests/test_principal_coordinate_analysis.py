@@ -72,6 +72,28 @@ class TestPCoA(TestCase):
         assert_ordination_results_equal(results, expected_results,
                                         ignore_directionality=True)
 
+    def test_condensed_input(self):
+        # pcoa centers its own expanded copy of a condensed input in place; the
+        # result must match the full input, and neither input may be modified.
+        for method in ("eigh", "fsvd"):
+            expected = pcoa(self.dm3, method=method, dimensions=3, seed=0)
+            full = self.dm3.copy()
+            full_before = full.data.copy()
+            condensed = self.dm3.as_condensed()
+            condensed_before = condensed.data.copy()
+            vector = self.dm3.condensed_form().copy()
+            vector_before = vector.copy()
+            for dm in (full, condensed):
+                res = pcoa(dm, method=method, dimensions=3, seed=0)
+                assert_ordination_results_equal(
+                    res, expected, ignore_directionality=True)
+            # a bare vector has no sample IDs, so compare the eigenvalues
+            res = pcoa(vector, method=method, dimensions=3, seed=0)
+            npt.assert_allclose(res.eigvals.values, expected.eigvals.values)
+            npt.assert_array_equal(full.data, full_before)
+            npt.assert_array_equal(condensed.data, condensed_before)
+            npt.assert_array_equal(vector, vector_before)
+
     def test_fsvd_inplace(self):
         expected_results = pcoa(
             self.dm3.copy(), method="eigh", dimensions=3, inplace=True)
