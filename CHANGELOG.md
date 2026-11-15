@@ -14,6 +14,7 @@
 * Numba GPU kernels now run through numba-cuda-mlir on NVIDIA GPUs when it is installed, and through numba-cuda otherwise. numba-cuda is deprecated and does not support NumPy 2.5 or later ([#2622](https://github.com/scikit-bio/scikit-bio/pull/2622)).
 * Added Numba GPU acceleration for `permdisp` on NVIDIA and AMD devices. With `engine="numba"` and a GPU-resident `DistanceMatrix`, a fused kernel evaluates the permutation loop on the device for both the centroid and median tests, falling back to the host Numba engine when the kernel is unavailable ([#2597](https://github.com/scikit-bio/scikit-bio/pull/2597)).
 * The `permdisp` GPU kernel now reads only each group's samples instead of scanning all of them, so its time grows far less with the number of groups. The 64-group limit is gone and the dimension limit is raised from 64 to 1024 ([#2649](https://github.com/scikit-bio/scikit-bio/pull/2649)).
+* `pcoa` now centers a condensed `DistanceMatrix` or condensed vector in place after expanding it, which saves one full-size copy of the matrix on NumPy ([#2671](https://github.com/scikit-bio/scikit-bio/pull/2671)).
 
 ### Bug Fixes
 
