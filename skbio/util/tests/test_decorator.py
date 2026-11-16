@@ -121,6 +121,18 @@ class TestOverrides(unittest.TestCase):
 
 
 class TestClassProperty(unittest.TestCase):
+    def test_source_inspection(self):
+        class Foo:
+            @classproperty
+            def foo(cls):
+                return 42
+
+        descriptor = inspect.getattr_static(Foo, "foo")
+        getter = inspect.unwrap(descriptor)
+        self.assertEqual(inspect.getsourcefile(getter), __file__)
+        self.assertIn("def foo(cls):", inspect.getsource(getter))
+        self.assertEqual(str(inspect.signature(getter)), "(cls)")
+
     def test_getter_only(self):
         class Foo:
             _foo = 42

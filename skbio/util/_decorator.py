@@ -125,6 +125,7 @@ class classproperty(property):
         super(classproperty, self).__init__(func)
         self.__name__ = name
         self.__doc__ = doc
+        self.__wrapped__ = func
 
     def __get__(self, obj, owner=None):
         if getattr(self.fget, "__isabstractmethod__", False):
