@@ -1802,6 +1802,51 @@ class Ancombc2Tests(TestCase):
             table.shape[1],
         )
 
+    def test_contrast_test(self):
+        metadata = pd.DataFrame(
+            {"group": pd.Categorical(["a"] * 3 + ["b"] * 3 + ["c"] * 3)},
+            index=[f"s{i}" for i in range(9)],
+        )
+        table = pd.DataFrame(
+            np.tile(self.table.to_numpy(), (2, 1))[:9],
+            index=metadata.index,
+            columns=self.table.columns,
+        )
+        res = ancombc2(
+            table, metadata, "group", grouping=True, max_iter=2, var_quantile=0
+        )
+        self.assertEqual(res._vcov_hat.shape, (table.shape[1], 3, 3))
+
+        contrasts = pd.DataFrame(
+            [[0, 1, -1], [0, 1, 0]],
+            index=["b_vs_c", "b_vs_a"],
+        )
+        observed = res.contrast_test(contrasts)
+        self.assertEqual(observed.index.names, ["FeatureID", "Contrast"])
+        self.assertEqual(observed.shape, (14, 6))
+        self.assertTrue(np.isfinite(observed["SE"]).all())
+
+        identity = res.contrast_test(np.eye(3))
+        identity.index = pd.MultiIndex.from_product(
+            (res._features, res._covariates), names=("FeatureID", "Covariate")
+        )
+        pdt.assert_frame_equal(
+            identity,
+            res.result.loc[:, ["Log(FC)", "SE", "W", "pvalue", "qvalue", "Signif"]],
+            check_names=False,
+        )
+        self.assertEqual(
+            res.contrast_test([1, 0, 0]).index.get_level_values("Contrast").unique()[0],
+            "Contrast1",
+        )
+
+        with self.assertRaisesRegex(ValueError, "grouping=True"):
+            ancombc2(table, metadata, "group", max_iter=2).contrast_test([[1, 0, 0]])
+        with self.assertRaisesRegex(ValueError, "one column per"):
+            res.contrast_test([[1, 0]])
+        with self.assertRaisesRegex(ValueError, "not within 0 and 1"):
+            res.contrast_test([[1, 0, 0]], alpha=1)
+
     def test_ancombc2_atlas(self):
         """Test on the HITChip Atlas dataset."""
         cats = ["lean", "overweight", "obese"]

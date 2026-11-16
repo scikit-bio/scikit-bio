@@ -7,6 +7,9 @@
 * Documented "alignment-like", an abstract for inputs that represent two or more aligned sequences ([#2627](https://github.com/scikit-bio/scikit-bio/pull/2627)). 
 * Alignment encoding now supports arbitrary hashable symbols such as strings, tuples, `None`, and `frozenset` objects while retaining the optimized ASCII path. `bytes` and `bytearray` inputs are handled directly. Documented "sequence-like", an abstract for finite, ordered sequences of hashable symbols. ([#2626](https://github.com/scikit-bio/scikit-bio/pull/2626)).
 * `PairwiseMatrix.from_iterable`, `SymmetricMatrix.from_iterable`, and `DistanceMatrix.from_iterable` accept metric-specific keyword arguments, such as `k` for `kmer_distance` ([#1394](https://github.com/scikit-bio/scikit-bio/issues/1394)).
+* Added user-defined linear contrast testing to `ANCOMBCResult`. Pass `grouping=True`
+  to `ancombc2` (or `ancombc`) to retain the full coefficient covariance matrix, then
+  call `contrast_test` ([#2659](https://github.com/scikit-bio/scikit-bio/issues/2659)).
 * Added `GrammaredSequence.canonical_chars` to expose canonical character set. `noncanonical_chars` is preserved as the existing subclass customization method. `canonical_chars` = `definite_chars` - `noncanonical_chars` ([#2623](https://github.com/scikit-bio/scikit-bio/pull/2623)).
 * Added instruction on interoperability with BioPython and Biotite sequences. In particular, BioPython to scikit-bio conversion can be performed in a zero-copy manner ([#2617](https://github.com/scikit-bio/scikit-bio/pull/2617) and [#2621](https://github.com/scikit-bio/scikit-bio/pull/2621)).
 * Enriched documentation of `GrammaredSequence`, explaining how to create subclasses or modify existing subclasses to represent new biological sequence types ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).
