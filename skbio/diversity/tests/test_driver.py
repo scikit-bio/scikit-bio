@@ -25,7 +25,11 @@ from skbio.diversity import (
     get_beta_diversity_metrics,
 )
 from skbio.diversity.alpha import faith_pd, phydiv, sobs
-from skbio.diversity.beta import unweighted_unifrac, weighted_unifrac
+from skbio.diversity.beta import (
+    unweighted_unifrac,
+    weighted_unifrac,
+    generalized_unifrac,
+)
 from skbio.tree import DuplicateNodeError, MissingNodeError
 from skbio.diversity._driver import (
     _qualitative_metrics,
@@ -775,6 +779,31 @@ class BetaDiversityTests(TestCase):
                 beta_diversity(func, self.table1,
                                taxa=self.oids1, tree=self.tree1)
 
+    def test_callable_generalized_unifrac_warns(self):
+        # generalized_unifrac passed as a callable goes through the exact
+        # same slow per-pair pdist-callback path as unweighted_unifrac/
+        # weighted_unifrac above, so it must warn too (it did not, before
+        # this fix, because it was missing from `_slow_beta_callables`).
+        #
+        # Unlike unweighted_unifrac/weighted_unifrac, generalized_unifrac has
+        # no CPU implementation: it requires engine='gpu', but `engine` is
+        # beta_diversity's own named parameter, so it is consumed there and
+        # never forwarded into the callable's own kwargs. The callable's
+        # `engine` therefore stays at its default (None), and calling it
+        # raises NotImplementedError once pdist actually invokes it per
+        # pair -- after the warning (checked here) has already fired.
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            with self.assertRaises(NotImplementedError):
+                beta_diversity(generalized_unifrac, self.table1,
+                                taxa=self.oids1, tree=self.tree1, alpha=0.5,
+                                engine='gpu')
+        self.assertTrue(any(
+            issubclass(w.category, UserWarning)
+            and "generalized_unifrac" in str(w.message)
+            for w in caught
+        ))
+
     def test_string_unifrac_does_not_warn(self):
         # The recommended string form should not emit the slow-callable warning.
         for name in ("unweighted_unifrac", "weighted_unifrac"):
@@ -820,6 +849,7 @@ class MetricGetters(TestCase):
         # basic sanity checks
         self.assertTrue('unweighted_unifrac' in m)
         self.assertTrue('weighted_unifrac' in m)
+        self.assertTrue('generalized_unifrac' in m)
 
     def test_get_beta_diversity_metrics_sorted(self):
         m = get_beta_diversity_metrics()
@@ -861,6 +891,24 @@ class TestPartialBetaDiversity(TestCase):
                                         expected_dm[id1, id2], 6)
 
         # pass in iter(foo)
+
+    def test_variance_adjust_not_supported(self):
+        # partial_beta_diversity's own preprocessing already alters the
+        # abundances variance adjustment needs, and the per-pair functions it
+        # builds have no variance-adjusted form, so this must raise a clear
+        # error rather than fail downstream with a confusing TypeError.
+        for metric in ('unweighted_unifrac', 'weighted_unifrac'):
+            with self.assertRaisesRegex(ValueError, 'variance_adjust'):
+                partial_beta_diversity(
+                    metric, self.table1, self.sids1, taxa=self.oids1,
+                    tree=self.tree1, id_pairs=[('B', 'C')],
+                    variance_adjust=True)
+
+    def test_generalized_unifrac_not_supported(self):
+        with self.assertRaisesRegex(ValueError, 'only compatible with'):
+            partial_beta_diversity(
+                'generalized_unifrac', self.table1, self.sids1,
+                taxa=self.oids1, tree=self.tree1, id_pairs=[('B', 'C')])
 
     def test_unweighted_unifrac_partial(self):
         # TODO: update npt.assert_almost_equal calls to use DistanceMatrix
