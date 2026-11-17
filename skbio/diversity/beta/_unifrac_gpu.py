@@ -118,23 +118,13 @@ def _get_cuda_module():
     )
 
 
-def _build_pair_index(n_samples):
-    """Precompute condensed-index (i, j) pairs for i < j, scipy pdist order.
-
-    ``np.triu_indices`` walks the upper triangle row by row, which is exactly
-    ``scipy.spatial.distance.pdist``'s condensed order.
-    """
-    pair_i, pair_j = np.triu_indices(n_samples, k=1)
-    return pair_i.astype(np.int32), pair_j.astype(np.int32)
-
-
 def _build_block_pair_index(n_samples, tile):
     """Precompute (block_i, block_j) pairs of TILE x TILE sample blocks.
 
-    Unlike `_build_pair_index`, diagonal blocks (``block_i == block_j``) are
-    included (``k=0``, not ``k=1``): a diagonal block still contains valid
-    ``i < j`` pairs within itself (just not the whole block), so it cannot be
-    skipped the way a fully lower-triangle block can.
+    Diagonal blocks (``block_i == block_j``) are included (``k=0``, not
+    ``k=1``): a diagonal block still contains valid ``i < j`` pairs within
+    itself (just not the whole block), so it cannot be skipped the way a
+    fully lower-triangle block can.
     """
     num_blocks = (n_samples + tile - 1) // tile
     block_i, block_j = np.triu_indices(num_blocks, k=0)

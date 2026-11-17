@@ -1109,6 +1109,11 @@ def generalized_unifrac(
 
 if NUMBA_AVAILABLE:
 
+    # generalized_unifrac's public API requires engine='gpu' (see
+    # generalized_unifrac's docstring); the CPU kernels below are not
+    # reachable from it. They exist only as the CPU reference the test
+    # suite checks the GPU/array-API result against.
+
     @njit(inline="always")
     def _generalized_unifrac_row_nb(
         row,

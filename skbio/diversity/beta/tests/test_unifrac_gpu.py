@@ -17,7 +17,6 @@ from skbio.diversity.beta._unifrac_gpu import (
     _KERNEL_CACHE,
     _TILE_CANDIDATES,
     _TILE_CONFIG_CACHE,
-    _build_pair_index,
     _get_tile_config,
     _make_unifrac_kernel,
     _probe_tile_config,
@@ -120,36 +119,6 @@ class NumbaOptionalImportTests(QiimeTinyTestMixin, TestCase):
             table, taxa, tree, normalized=True, validate=True
         )
         self.assertEqual(len(obs), len(table) * (len(table) - 1) // 2)
-
-
-class BuildPairIndexTests(TestCase):
-    """GPU-independent coverage for `_build_pair_index` (no GPU required)."""
-
-    def test_matches_scipy_pdist_condensed_order(self):
-        from scipy.spatial.distance import squareform
-
-        n = 5
-        pair_i, pair_j = _build_pair_index(n)
-        n_pairs = n * (n - 1) // 2
-        self.assertEqual(pair_i.shape, (n_pairs,))
-        self.assertEqual(pair_j.shape, (n_pairs,))
-
-        # squareform gives the (i, j) scipy's condensed order expects per index.
-        square = np.arange(n * n).reshape(n, n)
-        condensed = squareform(square, checks=False)
-        for idx in range(n_pairs):
-            i, j = pair_i[idx], pair_j[idx]
-            self.assertLess(i, j)
-            self.assertEqual(condensed[idx], square[i, j])
-
-    def test_dtype_and_trivial_cases(self):
-        for n in (0, 1, 2, 3):
-            pair_i, pair_j = _build_pair_index(n)
-            expected_len = n * (n - 1) // 2
-            self.assertEqual(len(pair_i), expected_len)
-            self.assertEqual(len(pair_j), expected_len)
-            self.assertEqual(pair_i.dtype, np.int32)
-            self.assertEqual(pair_j.dtype, np.int32)
 
 
 class _FakeDeviceArray:
