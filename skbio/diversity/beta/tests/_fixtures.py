@@ -20,10 +20,9 @@ from skbio.util._testing import get_data_path
 def patch_gpu_backend(backend):
     """Patch `_detect_gpu_backend` to report ``backend``.
 
-    ``None`` forces the no-usable-backend branch of the `*_gpu_or_xp`
-    dispatch wrappers (i.e. the array-API fallback), and 'cuda'/'hip' force
-    the GPU branch, deterministically and independently of what hardware the
-    machine running the tests actually has.
+    ``None`` forces the array-API fallback branch of the `*_gpu_or_xp`
+    wrappers and 'cuda'/'hip' force the GPU branch, regardless of what
+    hardware the machine running the tests has.
     """
     return patch(
         'skbio.diversity.beta._unifrac_gpu._detect_gpu_backend', return_value=backend
@@ -49,9 +48,8 @@ class QiimeTinyTestMixin:
     def _assert_matches_dm_fixture(self, condensed, sample_ids, filename, atol):
         """Assert a condensed vector matches a qiime-191-tt fixture matrix.
 
-        Both matrices are filtered to ``sample_ids`` so the comparison is
-        order-independent (the fixture files are not necessarily in the OTU
-        table's sample order).
+        Both are filtered to ``sample_ids``: the fixture files are not
+        necessarily in the OTU table's sample order.
         """
         obs = DistanceMatrix(condensed, sample_ids)
         expected = self._load_dm_fixture(filename)

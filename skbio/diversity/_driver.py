@@ -272,11 +272,9 @@ def _numba_unifrac_fast_path_eligible(engine, pairwise_func, kwargs):
 def _reject_partial_variance_adjust(metric, kwargs):
     """Reject variance_adjust for partial_beta_diversity's unifrac metrics.
 
-    The per-pair functions partial_beta_diversity builds have no
-    variance-adjusted form (they would fail on the missing sample totals),
-    and its upstream count qualification has already altered the abundances
-    variance adjustment is defined over, so the result would be wrong even if
-    it ran.
+    The per-pair functions it builds have no variance-adjusted form, and its
+    upstream count qualification has already altered the abundances variance
+    adjustment is defined over.
     """
     if kwargs.pop("variance_adjust", False):
         raise ValueError(
@@ -387,9 +385,8 @@ def beta_diversity(
     if metric in _qualitative_metrics and not (
         metric == "unweighted_unifrac" and kwargs.get("variance_adjust")
     ):
-        # variance_adjust needs the real abundances (sample/node totals), so
-        # skip the presence/absence qualification that the plain (non-VAW)
-        # unweighted UniFrac metric would otherwise get here.
+        # variance_adjust needs the real abundances, so the presence/absence
+        # qualification plain unweighted UniFrac gets here is skipped for it.
         counts = _qualify_counts(counts)
     if metric in ("unweighted_unifrac", "weighted_unifrac", "generalized_unifrac"):
         taxa, tree, kwargs = _get_phylogenetic_kwargs(kwargs, taxa)
@@ -471,10 +468,8 @@ def beta_diversity(
         alpha = kwargs.pop("alpha", 1.0)
         variance_adjust = kwargs.pop("variance_adjust", False)
         if engine != "gpu":
-            # generalized_unifrac has no CPU implementation in this release
-            # (it ships GPU-only; CPU/numba support is planned for a future
-            # PR), so this must raise rather than silently compute something
-            # else -- deliberately before alpha-range validation below.
+            # Before the alpha-range check below, so an unavailable
+            # implementation is reported ahead of a bad parameter.
             raise NotImplementedError(_GENERALIZED_UNIFRAC_GPU_ONLY)
         _reject_unusable_gpu_kwargs(metric, pairwise_func, kwargs)
         if not (0.0 <= alpha <= 1.0):

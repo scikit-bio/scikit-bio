@@ -42,11 +42,10 @@ from skbio.diversity.beta.tests._fixtures import (
 
 
 def _make_fake_cupy(device_count=1, fail_asarray=False):
-    """A minimal stand-in for `cupy`, just enough to drive
+    """A minimal stand-in for `cupy`, enough to drive
     `_detect_array_api_gpu_module`/`_move_to_array_api_gpu` without real GPU
-    hardware. Wraps plain NumPy, so a successful call is numerically
-    identical to the no-GPU path -- tests inspect `asarray_calls`/the raised
-    exception, not the type of what comes back.
+    hardware. It wraps plain NumPy, so tests inspect `asarray_calls` or the
+    raised exception rather than the type of what comes back.
     """
 
     class _Runtime:
@@ -73,21 +72,15 @@ def _make_fake_cupy(device_count=1, fail_asarray=False):
                 raise RuntimeError("simulated CuPy device error")
             return np.asarray(arr)
 
-    # An instance, not the class itself: `type.__name__` is a data
-    # descriptor on the metaclass, so a bare class object's `__name__`
-    # always reports its real Python class name ("_FakeCupy") regardless of
-    # what the class body assigns -- only a plain instance's `__name__`
-    # attribute lookup actually finds the class-body value, which
-    # `_move_to_array_api_gpu` relies on to tell CuPy-like from
-    # PyTorch-like.
+    # An instance, not the class: `type.__name__` is a metaclass data
+    # descriptor, so a bare class object reports "_FakeCupy" rather than the
+    # class-body `__name__` that `_move_to_array_api_gpu` checks.
     return _FakeCupy()
 
 
 def _make_fake_torch(available=True, fail_asarray=False):
-    """A minimal stand-in for `torch`, the same role `_make_fake_cupy` plays
-    for CuPy, used to test the "CuPy absent/unusable, fall back to PyTorch"
-    branch of `_detect_array_api_gpu_module`.
-    """
+    """A minimal stand-in for `torch`, for the "CuPy absent/unusable, fall
+    back to PyTorch" branch of `_detect_array_api_gpu_module`."""
 
     class _Cuda:
         @staticmethod
@@ -112,21 +105,14 @@ def _make_fake_torch(available=True, fail_asarray=False):
 
     return _FakeTorch()  # see the comment in `_make_fake_cupy` re: instance vs class
 
-# Measured max abs deviation, array-API path vs CPU-numba kernel, for the
-# method/normalized combinations both implement (no variance_adjust) on the
-# qiime-191-tt table: ~3.3e-16 (ordinary float64 noise) for weighted_unifrac,
-# which still has its own independent @njit kernel. 1e-10 matches the
-# tolerance used for the equivalent GPU-vs-CPU-numba comparison in
-# test_unifrac_gpu.py. unweighted_unifrac's non-variance_adjust numba path
-# now delegates to _unweighted_unifrac_xp directly (see _unifrac.py's
-# _unweighted_unifrac_pdist_numba), so that comparison is exact (0.0), not
-# independently-measured noise.
+# Max abs deviation, array-API path vs the independent @njit weighted_unifrac
+# kernel, on the qiime-191-tt table is ~3.3e-16 (ordinary float64 noise).
+# Matches test_unifrac_gpu.py's GPU_CPU_TOLERANCE.
 XP_CPU_TOLERANCE = 1e-10
 
 # variance_adjust and unweighted_unifrac's normalized=False have no CPU/numba
-# counterpart (GPU-only in this release), so those combinations are checked
-# against the qiime-191-tt SSU fixture distance matrices directly instead,
-# using the same tolerance as test_unifrac_gpu.py's GPU_FIXTURE_TOLERANCE.
+# counterpart, so they are compared against the qiime-191-tt SSU fixture
+# matrices, which agree only to ~1e-6.
 XP_FIXTURE_TOLERANCE = 1.5e-6
 
 
@@ -249,14 +235,9 @@ class GeneralizedUnifracXpTests(QiimeTinyTestMixin, TestCase):
 
 
 class GpuOrXpDispatchTests(QiimeTinyTestMixin, TestCase):
-    """Unit coverage for the `*_gpu_or_xp` dispatch wrappers themselves.
-
-    Forces the no-usable-backend branch by monkeypatching
-    `_detect_gpu_backend` to return None, independent of what hardware this
-    machine actually has, and checks the result against the CPU reference.
-    Public-API-level coverage of the same fallback (through
-    unweighted_unifrac/weighted_unifrac/generalized_unifrac and
-    beta_diversity) lives in test_unifrac.py.
+    """The `*_gpu_or_xp` wrappers' no-usable-backend branch, forced by
+    patching `_detect_gpu_backend` to None regardless of local hardware.
+    Public-API-level coverage of the same fallback lives in test_unifrac.py.
     """
 
     @numba_code
@@ -280,8 +261,7 @@ class GpuOrXpDispatchTests(QiimeTinyTestMixin, TestCase):
     @numba_code
     def test_generalized_unifrac_gpu_or_xp_falls_back_without_gpu(self):
         # generalized_unifrac has no CPU implementation reachable from the
-        # public API, so this does not raise when no GPU backend is usable
-        # -- it is the regression this whole fallback exists to fix.
+        # public API, so without this fallback the call would raise.
         table, taxa, tree, _ = self._load_qiime_191_tt()
         with patch_gpu_backend(None):
             obs = _generalized_unifrac_gpu_or_xp(
@@ -294,14 +274,11 @@ class GpuOrXpDispatchTests(QiimeTinyTestMixin, TestCase):
 class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
     """A bad tree/taxa input must raise its real validation error, not get
     misclassified by `_dispatch_gpu_or_xp` as "this backend's kernel can't
-    run" (which would both hide the error behind the array-API fallback and
-    permanently degrade the backend to that fallback for the rest of the
-    process, over what was really just bad input on one call).
+    run", which would hide the error and degrade the backend to the array-API
+    fallback for the rest of the process.
     """
 
     def setUp(self):
-        # Never let a previous test's (or this test's own) backend
-        # unavailability bleed across tests.
         self._backends_backup = set(_unavailable_backends)
         _unavailable_backends.clear()
         self.addCleanup(_unavailable_backends.clear)
@@ -332,10 +309,8 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
         self.assertNotIn("hip", _unavailable_backends)
 
     def test_dispatch_still_marks_backend_unavailable_for_genuine_kernel_errors(self):
-        # Sanity check for the other side of the fix: a non-validation
-        # exception (standing in for e.g. a numba-hip compile/runtime
-        # failure) must still fall through to the array-API path and mark
-        # the backend unavailable, exactly as before this fix.
+        # A non-validation exception stands in for a numba-hip compile or
+        # runtime failure, which must still degrade the backend.
         def bad_gpu_func(*args, **kwargs):
             raise RuntimeError("kernel failed to build")
 
@@ -350,18 +325,10 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
 
     @numba_code
     def test_invalid_taxa_under_engine_gpu_raises_and_keeps_backend_usable(self):
-        # End-to-end version through the real `_weighted_unifrac_gpu` driver:
-        # `_setup_multiple_unifrac` (called inside `_weighted_unifrac_gpu`,
-        # before any GPU-specific code) raises on duplicate taxa (a
-        # ValueError -- "All taxa must be unique" -- distinct from the
-        # DuplicateNodeError the same validator raises for duplicate *tip
-        # names in the tree*; both are TreeError/ValueError cases this fix
-        # covers). A fake, never-actually-used cuda module stands in for
-        # `_get_cuda_module`'s real backend-presence check, so this is
-        # exercisable without real GPU hardware; what is under test is
-        # purely the exception classification in
-        # `_dispatch_gpu_or_xp`/`_weighted_unifrac_gpu`, not the kernel
-        # itself.
+        # Duplicate taxa raise ValueError from `_setup_multiple_unifrac`,
+        # which runs inside `_weighted_unifrac_gpu` before any GPU-specific
+        # code; the fake cuda module only satisfies the backend-presence
+        # check, so no real hardware is needed.
         table, taxa, tree, _ = self._load_qiime_191_tt()
         duplicate_taxa = list(taxa)
         duplicate_taxa[1] = duplicate_taxa[0]
@@ -380,19 +347,14 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
             self.assertNotIn("hip", _unavailable_backends)
             self.assertEqual(spy_gpu_func.call_count, 1)
 
-            # A second, valid request on the still-usable backend must still
-            # attempt the real kernel driver, rather than having been
-            # silently routed to the fallback by the first call's
-            # (correctly re-raised) validation error.
+            # A second, valid request must still reach the kernel driver
+            # rather than having been routed to the fallback for good.
             obs = _weighted_unifrac_gpu_or_xp(
                 table, taxa, tree, normalized=True, validate=True
             )
             self.assertEqual(spy_gpu_func.call_count, 2)
-            # The fake cuda module has none of numba.cuda's real API, so the
-            # kernel launch itself fails and this call falls back to the
-            # array-API path -- expected, since this test's fake-GPU setup
-            # cannot run a real kernel; what matters is that the driver was
-            # attempted (checked above) and the fallback result is correct.
+            # The fake cuda module has none of numba.cuda's API, so the launch
+            # itself fails and this call lands on the array-API path.
             cpu = _weighted_unifrac_pdist_numba(
                 table, taxa, tree, normalized=True, validate=True
             )
@@ -402,15 +364,10 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
     def test_invalid_taxa_under_engine_gpu_validate_false_raises_and_keeps_usable(
         self,
     ):
-        # Same contract as the validate=True test above, but for
-        # validate=False: skipping `_validate_taxa_and_tree` means a
-        # taxon absent from the tree is never caught by that check, so it
-        # instead surfaces as a plain `KeyError` from `_nodes_by_counts`
-        # (via `vectorize_counts_and_tree`/`_setup_multiple_unifrac`),
-        # confirmed by tracing the real call chain -- not a `ValueError`/
-        # `TreeError`. This must still be re-raised immediately rather than
-        # misclassified as "this backend's kernel can't run" (which would
-        # hide the error and permanently degrade the backend).
+        # With validate=False, `_validate_taxa_and_tree` is skipped, so a
+        # taxon absent from the tree surfaces as a plain `KeyError` from
+        # `_nodes_by_counts` rather than a ValueError/TreeError. It must
+        # still be re-raised instead of degrading the backend.
         table, taxa, tree, _ = self._load_qiime_191_tt()
         mismatched_taxa = list(taxa)
         mismatched_taxa[0] = "not-a-real-tip-name"
@@ -429,9 +386,6 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
             self.assertNotIn("hip", _unavailable_backends)
             self.assertEqual(spy_gpu_func.call_count, 1)
 
-            # A second, valid request on the still-usable backend must still
-            # attempt the real kernel driver, exactly as in the validate=True
-            # test above.
             obs = _weighted_unifrac_gpu_or_xp(
                 table, taxa, tree, normalized=True, validate=True
             )
@@ -445,9 +399,7 @@ class DispatchValidationErrorTests(QiimeTinyTestMixin, TestCase):
 class _ArrayApiGpuStateMixin:
     """Resets `_unifrac_xp`'s module-level GPU-array-API detection state
     (cache + disabled flag) and `sys.modules['cupy'/'torch']` around each
-    test, mirroring `GetTileConfigTests`'s cache save/restore in
-    test_unifrac_gpu.py so tests cannot see each other's cached result or
-    leak a fake module into later tests.
+    test, so no cached result or fake module leaks into later tests.
     """
 
     def setUp(self):
@@ -476,16 +428,12 @@ class _ArrayApiGpuStateMixin:
 
 
 class ArrayApiGpuDetectionTests(_ArrayApiGpuStateMixin, TestCase):
-    """Unit coverage for `_detect_array_api_gpu_module`: prefers CuPy, falls
-    back to PyTorch, returns None when neither is usable, and caches its
-    result for the rest of the process -- independent of real GPU hardware,
-    via fake modules injected into `sys.modules` (the same "simulate absent/
-    present without needing the real package" trick
-    `NumbaOptionalImportTests` uses in test_unifrac_gpu.py).
+    """`_detect_array_api_gpu_module` prefers CuPy, falls back to PyTorch,
+    returns None when neither is usable, and caches its result, exercised via
+    fake modules injected into `sys.modules`.
 
-    This is deliberately independent of `_detect_gpu_backend`
-    (numba-cuda/numba.hip): a machine can have one working while the other
-    is broken, so the two detectors must not be conflated.
+    Deliberately independent of `_detect_gpu_backend` (numba-cuda/numba.hip):
+    a machine can have one working while the other is broken.
     """
 
     def test_prefers_cupy_when_both_are_usable(self):
@@ -528,9 +476,8 @@ class ArrayApiGpuDetectionTests(_ArrayApiGpuStateMixin, TestCase):
         fake_cupy = _make_fake_cupy()
         sys.modules["cupy"] = fake_cupy
         first = _detect_array_api_gpu_module()
-        # A second, distinct fake module -- if this were returned instead of
-        # `fake_cupy`, it would prove the cache did not take, i.e. detection
-        # re-probed instead of reusing the first result.
+        # A second, distinct fake module: being handed this one back would
+        # mean detection re-probed instead of reusing the cached result.
         sys.modules["cupy"] = _make_fake_cupy()
         second = _detect_array_api_gpu_module()
         self.assertIs(first, fake_cupy)
@@ -566,11 +513,10 @@ class MoveToArrayApiGpuTests(_ArrayApiGpuStateMixin, TestCase):
 class PrepareArrayApiGpuWiringTests(
     _ArrayApiGpuStateMixin, QiimeTinyTestMixin, TestCase
 ):
-    """`_prepare` (exercised here through `_weighted_unifrac_xp`/
-    `_unweighted_unifrac_xp`) must actually use a detected GPU array-API
-    module when one is available, and must fall back to plain NumPy --
-    correctly, not just without crashing -- when moving the data onto it
-    fails.
+    """`_prepare` (exercised through `_weighted_unifrac_xp`/
+    `_unweighted_unifrac_xp`) must use a detected GPU array-API module when
+    one is available, and fall back to plain NumPy, with correct results,
+    when moving the data onto it fails.
     """
 
     @numba_code
@@ -584,8 +530,7 @@ class PrepareArrayApiGpuWiringTests(
             obs = _weighted_unifrac_xp(
                 table, taxa, tree, normalized=True, validate=True
             )
-        # counts_by_node, sample_totals, branch_lengths -- all 3 arrays
-        # `_prepare` builds from tree traversal before the pairwise math.
+        # The 3 arrays are counts_by_node, sample_totals and branch_lengths.
         self.assertEqual(fake_cupy.asarray_calls, 3)
         cpu = _weighted_unifrac_pdist_numba(
             table, taxa, tree, normalized=True, validate=True
@@ -593,11 +538,9 @@ class PrepareArrayApiGpuWiringTests(
         np.testing.assert_allclose(obs, cpu, rtol=0, atol=XP_CPU_TOLERANCE)
 
     def test_prepare_also_moves_proportions_onto_the_gpu_module(self):
-        # `_unweighted_unifrac_xp` takes `need_proportions=False`, so this
-        # covers `_weighted_unifrac_xp`'s `need_proportions=True` path,
-        # where `proportions` itself must come out of the detected module's
-        # `xp`, not a stray NumPy array left over from `_prepare`'s own
-        # `np.ascontiguousarray` calls (the thing the whole task fixes).
+        # Covers `_weighted_unifrac_xp`'s `need_proportions=True` path, where
+        # `proportions` must come from the detected module rather than being
+        # a stray NumPy array from `_prepare`'s `np.ascontiguousarray` calls.
         table, taxa, tree, _ = self._load_qiime_191_tt()
         fake_cupy = _make_fake_cupy()
         with patch(
@@ -607,12 +550,9 @@ class PrepareArrayApiGpuWiringTests(
             xp, counts_by_node, sample_totals, branch_lengths, proportions = (
                 _unifrac_xp_mod._prepare(table, taxa, tree, validate=True)
             )
-        # The fake module wraps plain NumPy, so `xp` itself still reports as
-        # the NumPy namespace -- what this checks is that `proportions` was
-        # computed from the already-"moved" `counts_by_node`/`sample_totals`
-        # (i.e. after the move, not from the pre-move NumPy locals), which
-        # the 3-array `asarray_calls` count below confirms occurred before
-        # `proportions` was built.
+        # The fake module wraps plain NumPy, so `xp` still reports as the
+        # NumPy namespace; the call count is what shows the move happened
+        # before `proportions` was built.
         self.assertEqual(fake_cupy.asarray_calls, 3)
         self.assertIsNotNone(proportions)
 
@@ -635,31 +575,24 @@ class PrepareArrayApiGpuWiringTests(
         self.assertTrue(_unifrac_xp_mod._array_api_gpu_disabled)
 
     def test_a_failed_move_permanently_disables_the_gpu_module_for_the_process(self):
-        # Unlike the other tests in this class, this one does NOT mock
-        # `_detect_array_api_gpu_module` -- it injects the fake module via
-        # `sys.modules` instead, so the real detection function runs,
-        # caches `fake_cupy`, and (after the move below fails) sets the
-        # real `_array_api_gpu_disabled` flag that later calls check.
+        # Injects the fake module via `sys.modules` rather than mocking
+        # detection, so the real detector runs and sets the real
+        # `_array_api_gpu_disabled` flag when the move below fails.
         table, taxa, tree, _ = self._load_qiime_191_tt()
         fake_cupy = _make_fake_cupy(fail_asarray=True)
         sys.modules["cupy"] = fake_cupy
         with self.assertWarns(UserWarning):
             _weighted_unifrac_xp(table, taxa, tree, normalized=True, validate=True)
-        # A second call must not even attempt the (still-failing) GPU
-        # module again: `_detect_array_api_gpu_module` itself must
-        # short-circuit to None now, not just have `_prepare` catch a
-        # second failure.
+        # Detection itself must now short-circuit to None, rather than
+        # `_prepare` catching a second failure.
         self.assertIsNone(_detect_array_api_gpu_module())
         self.assertEqual(fake_cupy.asarray_calls, 1)
 
 
 class ThreeTierDispatchTests(_ArrayApiGpuStateMixin, QiimeTinyTestMixin, TestCase):
-    """End-to-end confirmation that `_dispatch_gpu_or_xp`'s fallback branch
-    (taken when the fused GPU kernel is unusable) genuinely benefits from a
-    detected GPU array-API module, automatically, with no change needed in
-    `_unifrac_gpu.py` itself -- `_weighted_unifrac_gpu_or_xp` calls
-    `_weighted_unifrac_xp` as its fallback, and `_weighted_unifrac_xp` calls
-    `_prepare`, which is where the new detection+transfer lives.
+    """`_dispatch_gpu_or_xp`'s fallback branch, taken when the fused GPU
+    kernel is unusable, still benefits from a detected GPU array-API module,
+    since detection and transfer live in `_prepare`.
     """
 
     @numba_code
@@ -673,10 +606,8 @@ class ThreeTierDispatchTests(_ArrayApiGpuStateMixin, QiimeTinyTestMixin, TestCas
             obs = _weighted_unifrac_gpu_or_xp(
                 table, taxa, tree, normalized=True, validate=True
             )
-        # Proof the 3rd tier (GPU array-API module) actually activated
-        # rather than silently falling through to tier 4 (plain NumPy):
-        # `_weighted_unifrac_xp`'s `_prepare` call must have moved all 3
-        # setup arrays onto the fake module.
+        # All 3 setup arrays moved onto the fake module, which shows the GPU
+        # array-API tier activated rather than falling through to plain NumPy.
         self.assertEqual(fake_cupy.asarray_calls, 3)
         cpu = _weighted_unifrac_pdist_numba(
             table, taxa, tree, normalized=True, validate=True

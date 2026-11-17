@@ -29,23 +29,11 @@ GENERALIZED = 4
 
 _backend_cache = None
 
-# Compiled kernels, keyed by id() of the cuda-API module they were built
-# against. The module itself is stored alongside so the id stays valid.
-#
-# (`skbio.stats.distance._gpu._get_kernel` is the PERMANOVA/Mantel precedent
-# for a "compile once per backend, cache it" helper, but its cache key is
-# backend name alone; UniFrac's cache key needs an extra dimension -- `tile`,
-# `node_chunk` -- since the tile-probe below tries several kernel builds per
-# backend, and the probe also needs to evict one specific failed entry
-# (`_evict_kernel_cache_entry`), which `_get_kernel`'s simpler contract has no
-# equivalent of. So a small UniFrac-local cache is used here instead of
-# reusing or extending that helper.)
+# Compiled kernels, keyed by (id() of the cuda-API module, tile, node_chunk,
+# variance_adjust). The module itself is stored alongside so the id stays valid.
 _KERNEL_CACHE = {}
 
-# Guards the check-compile-store sequence in `_make_unifrac_kernel` so
-# concurrent calls from different threads cannot both miss the cache and
-# redundantly recompile. Not a hot path (compilation is memoized after the
-# first call), so a single coarse lock is sufficient.
+# Guards the check-compile-store sequence in `_make_unifrac_kernel`.
 _KERNEL_CACHE_LOCK = threading.Lock()
 
 
@@ -104,13 +92,11 @@ def _get_cuda_module():
     NVIDIA support comes from the ``numba-cuda`` package, installable via
     scikit-bio's ``gpu-nvidia`` extra. AMD support requires ``numba-hip``,
     which is published only on test.pypi and must be pinned to match the
-    installed ROCm version (for example
-    ``numba-hip[rocm-7-0-0]==0.1.6`` for ROCm 7.0.0), so there is no
-    single pip specification that works across ROCm releases and hence no
-    ``gpu-amd`` extra. Note that ``hip-python`` alone is not sufficient: it
-    provides low-level HIP bindings, not ``numba.hip``/``pose_as_cuda()``.
-    See ``docs/superpowers/specs/2026-10-02-ssu-unifrac-numba-phase1-design.md``
-    for the full install path.
+    installed ROCm version (for example ``numba-hip[rocm-7-0-0]==0.1.6`` for
+    ROCm 7.0.0), so there is no single pip specification that works across
+    ROCm releases and hence no ``gpu-amd`` extra. ``hip-python`` alone is not
+    sufficient: it provides low-level HIP bindings, not
+    ``numba.hip``/``pose_as_cuda()``.
 
     """
     backend = _detect_gpu_backend()
@@ -158,29 +144,18 @@ def _build_block_pair_index(n_samples, tile):
 def _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust):
     """Return the UniFrac pair kernel compiled against a cuda-API module.
 
-    Shared by all 5 UniFrac methods (``UNWEIGHTED``, ``UNWEIGHTED_UNNORMALIZED``,
-    ``WEIGHTED_NORMALIZED``, ``WEIGHTED_UNNORMALIZED``, ``GENERALIZED``) so that
-    only one kernel is compiled and launched regardless of which method a given
-    driver function dispatches.
+    Shared by all 5 UniFrac methods, so only one kernel is compiled and
+    launched regardless of which method a driver function dispatches.
 
-    ``tile``/``node_chunk`` are closed over as compile-time constants, since
+    ``tile``/``node_chunk`` are closed over as compile-time constants because
     the shared-memory tiles are sized from them; which pair is safe differs
     per device, so it is discovered at runtime (see ``_get_tile_config``).
-    ``variance_adjust`` is *also* closed over as a compile-time constant
-    (unlike ``method``/``alpha``, which stay runtime kernel arguments): the
-    ``sh_cnt_i``/``sh_cnt_j`` shared tiles and the cooperative load that
-    fills them are needed only when ``variance_adjust`` is True, so baking
-    it in at compile time lets the ``variance_adjust=False`` variant (the
-    overwhelmingly common case) skip declaring those 2 shared tiles and
-    the counts-loading half of the cooperative load entirely, rather than
-    allocating and filling shared memory the kernel body then never reads.
+    ``variance_adjust`` is closed over too (unlike ``method``/``alpha``, which
+    stay runtime arguments) so that the ``variance_adjust=False`` variant does
+    not declare or fill the ``sh_cnt_i``/``sh_cnt_j`` tiles it never reads.
 
-    ``cuda.jit`` returns a fresh Dispatcher (and so pays full compilation
-    cost, seconds) each time this runs, which would otherwise happen on every
-    single ``*_unifrac_gpu`` call. The result is therefore memoized per
-    backend module, tile config, and now ``variance_adjust`` in
-    ``_KERNEL_CACHE``; only the compiled kernel object is cached, never any
-    per-call state.
+    ``cuda.jit`` pays full compilation cost (seconds) on every call, so the
+    result is memoized in ``_KERNEL_CACHE``.
 
     """
     cache_key = (id(cuda), tile, node_chunk, variance_adjust)
@@ -189,24 +164,16 @@ def _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust):
         if cached is not None:
             return cached[1]
 
-        # Imported here, not at module level: this module must stay
-        # importable (and the array-API fallback reachable) on a system with
-        # no numba installed at all. This function is only ever reached via
-        # `_launch_unifrac_kernel`, after `_get_cuda_module()` has already
-        # succeeded, which means some numba variant (numba-cuda or
-        # numba.hip, both of which depend on core numba) is installed.
+        # Imported here, not at module level, so this module stays importable
+        # (and the array-API fallback reachable) with no numba installed.
         from numba import float64
 
         TILE = tile
         NODE_CHUNK = node_chunk
-        # A plain Python int, not an expression evaluated inside the jitted
-        # function: `numba.hip`'s `cuda.shared.array` typing requires every
-        # shape element to already be a literal int and cannot constant-fold
-        # `NODE_CHUNK + 1` itself (confirmed on real AMD hardware -- that
-        # form types as a non-literal int64 and fails with a TypingError on
-        # the hip backend, even though the identical source compiles fine
-        # under numba-cuda). Precomputing it here as its own closure
-        # variable keeps both backends happy.
+        # Must be a literal int closure variable: `numba.hip`'s
+        # `cuda.shared.array` typing cannot constant-fold `NODE_CHUNK + 1`
+        # inside the jitted function and raises a TypingError on it (the same
+        # source compiles fine under numba-cuda).
         NODE_CHUNK_PADDED = node_chunk + 1
         VARIANCE_ADJUST = variance_adjust
 
@@ -230,7 +197,6 @@ def _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust):
             bi = block_i[blk]
             bj = block_j[blk]
 
-            # Offset within the i-block / j-block respectively.
             tx = cuda.threadIdx.x
             ty = cuda.threadIdx.y
 
@@ -240,16 +206,10 @@ def _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust):
 
             n_nodes = proportions.shape[1]
 
-            # sh_prop_i/sh_cnt_i are indexed [tx, col] in the inner loop below,
-            # with tx (a lane index) fast-varying and col loop-invariant
-            # within a warp/wavefront -- a column stride of exactly
-            # NODE_CHUNK, which is always a power of two in
-            # `_TILE_CANDIDATES`, causing shared-memory bank conflicts
-            # (conflict-free 8-byte access wants an odd element stride). Pad
-            # by one column to break that. sh_prop_j/sh_cnt_j are read
-            # [ty, col], a warp-uniform access (every lane in a
-            # warp/wavefront reads the same address), which has no bank
-            # conflict to fix, so they are left unpadded.
+            # The i-tiles are read [tx, col] with tx fast-varying, so an even
+            # column stride would hit shared-memory bank conflicts; the extra
+            # padding column makes the stride odd. The j-tiles are read
+            # [ty, col], warp-uniform, so they need no padding.
             sh_prop_i = cuda.shared.array((TILE, NODE_CHUNK_PADDED), dtype=float64)
             sh_prop_j = cuda.shared.array((TILE, NODE_CHUNK), dtype=float64)
             if VARIANCE_ADJUST:
@@ -271,9 +231,8 @@ def _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust):
                 if chunk_len > NODE_CHUNK:
                     chunk_len = NODE_CHUNK
 
-                # Cooperative load: every thread in the block (valid or not)
-                # helps fill the i-tile and j-tile shared buffers for this
-                # node-chunk, strided by the number of threads in the block.
+                # Every thread in the block, valid or not, helps fill the
+                # shared tiles for this node-chunk.
                 for e in range(lin_tid, tile_elems, n_threads_blk):
                     row = e // NODE_CHUNK
                     col = e % NODE_CHUNK
@@ -339,19 +298,10 @@ def _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust):
                         elif method == GENERALIZED:
                             if s == 0.0:
                                 continue
-                            # alpha arrives as a runtime float, so s**alpha
-                            # lowers to a real pow() call per node in the
-                            # general case. alpha_mode (classified host-side
-                            # in `_run_unifrac_kernel`, since alpha is fixed
-                            # for the whole launch) lets the 3 exact,
-                            # common alpha values skip that: alpha=1.0 is
-                            # algebraically identical to weighted_normalized
-                            # (confirmed: sum_pow*(d/s) = length*s*(d/s) =
-                            # length*d, denominator = length*s -- exactly
-                            # that method's formula), alpha=0.5 replaces
-                            # pow with a plain sqrt, and alpha=0.0 makes
-                            # s**alpha == 1.0 for any s != 0 (already ruled
-                            # out by the `s == 0.0: continue` above).
+                            # alpha is a runtime float, so `s**alpha` lowers
+                            # to a pow() call per node. alpha_mode lets the
+                            # three exact alpha values that have closed forms
+                            # (1.0, 0.5, 0.0) skip it.
                             if alpha_mode == 1:
                                 sum_pow = length * s
                             elif alpha_mode == 2:
@@ -374,7 +324,7 @@ def _make_unifrac_kernel(cuda, tile, node_chunk, variance_adjust):
                 else:
                     out[idx] = 0.0 if denominator == 0.0 else numerator / denominator
 
-        # Keep a reference to the module so its id() cannot be reused by another
+        # The module reference keeps its id() from being reused by another
         # object while this entry lives.
         _KERNEL_CACHE[cache_key] = (cuda, _unifrac_block_kernel)
         return _unifrac_block_kernel
@@ -396,8 +346,7 @@ def _launch_unifrac_kernel(
 
     Every array must already be contiguous float64. Shared by
     ``_run_unifrac_kernel`` and by the tile-config probe below, so the probe
-    exercises exactly the launch path production uses and cannot drift from
-    it.
+    exercises the launch path production uses.
     """
     n_samples = proportions.shape[0]
     n_pairs = n_samples * (n_samples - 1) // 2
@@ -407,9 +356,7 @@ def _launch_unifrac_kernel(
     # asynchronous, so each device array must stay referenced until the
     # copy_to_host() that synchronizes on it.
     d_proportions = cuda.to_device(proportions)
-    # For the unweighted methods, `proportions` *is* `counts_by_node` (the
-    # caller needs no division), so reuse the one transfer already made for
-    # `d_proportions` instead of uploading the identical host array twice.
+    # Callers that need no division pass the same array twice; upload once.
     if counts_by_node is proportions:
         d_counts = d_proportions
     else:
@@ -420,13 +367,7 @@ def _launch_unifrac_kernel(
     d_block_j = cuda.to_device(block_j)
     d_out = cuda.device_array(n_pairs, dtype=np.float64)
 
-    # Classified here, the one choke point every launch (production and the
-    # tile probe alike) goes through, rather than threading a new parameter
-    # into every caller: alpha is fixed for the whole launch, so this is a
-    # one-time-per-call classification, not a per-node cost. Only the
-    # GENERALIZED method's kernel branch reads `alpha_mode` (see
-    # `_unifrac_block_kernel`); every other method ignores it exactly like
-    # it already ignores `alpha`.
+    # Only the GENERALIZED kernel branch reads `alpha_mode`.
     if alpha == 1.0:
         alpha_mode = 1
     elif alpha == 0.5:
@@ -453,16 +394,9 @@ def _launch_unifrac_kernel(
         )
         return d_out.copy_to_host()
     except Exception:
-        # `_make_unifrac_kernel` caches the compiled kernel before it is
-        # ever launched, so a candidate that compiles fine but fails here
-        # (the NVIDIA tile-probe failure mode: launch-time
-        # LAUNCH_OUT_OF_RESOURCES) would otherwise leave a cached-but-
-        # unusable entry -- holding a reference to the CUDA module and a
-        # broken Dispatcher -- for the rest of the process. Evict it so a
-        # failed candidate does not linger; nothing else looks up this
-        # specific (tile, node_chunk, variance_adjust) key again once
-        # probing has moved on (`_get_tile_config` only returns the config
-        # that actually worked).
+        # A kernel is cached as soon as it compiles, but a config can compile
+        # and still fail at launch (NVIDIA's LAUNCH_OUT_OF_RESOURCES), which
+        # would leave an unusable entry behind for the rest of the process.
         _evict_kernel_cache_entry(cuda, tile, node_chunk, variance_adjust)
         raise
 
@@ -470,72 +404,23 @@ def _launch_unifrac_kernel(
 def _evict_kernel_cache_entry(cuda, tile, node_chunk, variance_adjust):
     """Remove ``(id(cuda), tile, node_chunk, variance_adjust)`` from
     ``_KERNEL_CACHE``, if present.
-
-    See the ``except`` clause in ``_launch_unifrac_kernel`` for why this is
-    needed: a kernel is cached as soon as it compiles, before it is ever
-    launched.
     """
     cache_key = (id(cuda), tile, node_chunk, variance_adjust)
     with _KERNEL_CACHE_LOCK:
         _KERNEL_CACHE.pop(cache_key, None)
 
 
-# Block-tiling parameters for the 2D node-chunked kernel (see
-# `_make_unifrac_kernel`). A block is (TILE, TILE) threads, i.e. TILE**2
-# threads/block, using 2 shared (TILE, NODE_CHUNK + 1) float64 tiles
-# (`sh_prop_i`/`sh_cnt_i`, padded by one column to avoid the shared-memory
-# bank conflict their `[tx, col]` access pattern would otherwise cause --
-# see the comment above their declaration in `_make_unifrac_kernel`), 2
-# unpadded shared (TILE, NODE_CHUNK) tiles (`sh_prop_j`/`sh_cnt_j`, read
-# warp-uniformly so padding buys nothing there), plus one (NODE_CHUNK,)
-# tile. The safe choice is hardware-specific, not just backend-specific: it
-# depends on the GPU's actual register file and shared-memory budget, which
-# varies across SKUs of the *same* vendor, not only between vendors. There
-# is no reliable way to pick it from a static per-backend table, so it is
-# discovered at runtime instead (see `_get_tile_config`/`_probe_tile_config`
-# below) by actually compiling and launching the real kernel against
-# trivial dummy data.
-#
-# `_TILE_CANDIDATES`, most aggressive (most shared memory, most
-# threads/block, fastest when it works) to least, are real data points from
-# tuning this kernel on specific hardware, not invented, and double as the
-# starting ladder for the runtime probe. Shared-memory totals below are
-# post-padding (2*TILE*(NODE_CHUNK+1)*8 + 2*TILE*NODE_CHUNK*8 bytes for the
-# 4 node tiles, plus NODE_CHUNK*8 for the branch-length tile):
-#   (32, 32): 1024 threads/block, 2*32*33*8 + 2*32*32*8 = 33280 bytes
-#       (~32.5KB) shared mem. Fastest config measured, on AMD MI300A
-#       (gfx942) at n_samples=5000 (~12.5M pairs). Crashes at kernel
-#       *launch* on every NVIDIA GPU tested at this branch's pre-padding
-#       baseline (RTX 2080 Ti/Turing, A10/Ampere, RTX A4000/Ampere) with
-#       CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES: this kernel's numba-cuda/NVVM
-#       compilation uses more registers/thread at 1024 threads/block than
-#       fit NVIDIA's per-SM register budget, even though the identical
-#       source is fine on AMD's CU register file. (A1's padding alone does
-#       not change this on an RTX A4000 -- confirmed via matched real-
-#       hardware before/after runs; see the A1 commit.)
-#   (16, 64): also 1024 threads/block but a narrower, taller shared tile
-#       (2*16*65*8 + 2*16*64*8 = 33024 bytes, ~32.25KB). Measured on AMD
-#       MI300A: works, but slower than (32, 32).
-#   (16, 32): 256 threads/block, 2*16*33*8 + 2*16*32*8 = 16640 bytes
-#       (~16.25KB) shared mem. The config known to launch and run correctly
-#       on NVIDIA cards tested (RTX 2080 Ti, A10, RTX A4000) for the
-#       variance_adjust=True kernel variant; previously the hardcoded
-#       NVIDIA default. That NVIDIA testing did not separately exercise the
-#       variance_adjust=False variant -- a real A10 hit
-#       CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES on it at this same (TILE,
-#       NODE_CHUNK), despite variance_adjust=True working fine, which is why
-#       `_probe_tile_config` now probes both variants before accepting a
-#       candidate (see its docstring).
-#   (8, 32): 64 threads/block, 2*8*33*8 + 2*8*32*8 = 8320 bytes (~8.125KB)
-#       shared mem. A defensive floor rung below anything actually tuned,
-#       for hardware with even tighter per-block limits than tested
-#       (untested itself, but conservative enough that it should be broadly
-#       safe).
-# A real candidate that failed to compile during tuning: (16, 128) on AMD
-# -- "local memory (66560) exceeds limit (65536)" (pre-padding: 4 shared
-# tiles of 16*128*8 = 16KB each = 64KB, right at AMD's 64KB LDS/block limit
-# and pushed over by other locals). Not included in the ladder since (32, 32)
-# already dominates it on the one backend where it even compiles.
+# (TILE, NODE_CHUNK) candidates for the kernel's block tiling, most
+# aggressive first. Which one is safe depends on the device's register file
+# and shared-memory budget, which varies across SKUs of the same vendor, so
+# it cannot be read off a per-backend table and is probed at runtime instead
+# (see `_probe_tile_config`). Measured notes:
+#   (32, 32): fastest on AMD MI300A (gfx942), but fails at launch with
+#       CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES on every NVIDIA card tested
+#       (Turing, Ampere) -- 1024 threads/block needs more registers/thread
+#       under NVVM than NVIDIA's per-SM budget allows.
+#   (16, 32): the rung known good on those NVIDIA cards.
+#   (8, 32): conservative floor for tighter per-block limits; untested.
 _TILE_CANDIDATES = [
     (32, 32),
     (16, 64),
@@ -543,21 +428,12 @@ _TILE_CANDIDATES = [
     (8, 32),
 ]
 
-# Discovered-safe (TILE, NODE_CHUNK) per backend, filled in by
-# `_get_tile_config` the first time it is called for a given backend.
-# Probing does real compiles/launches (not free), so the result is cached
-# for the rest of the process rather than re-probed on every call. Keyed by
-# backend name ('cuda'/'hip'), not by individual device: a process talks to
-# one GPU backend/vendor at a time in practice, and re-probing per distinct
-# device name would pay the probe cost again for every differently-named
-# card with no real precedent (within this session's tuning) that it would
-# ever choose a different answer on same-vendor hardware.
+# Discovered-safe (TILE, NODE_CHUNK), keyed by backend name ('cuda'/'hip')
+# rather than by device: a process talks to one vendor at a time in practice,
+# and probing costs real compiles and launches.
 _TILE_CONFIG_CACHE = {}
 
-# Guards the check-probe-store sequence in `_get_tile_config`, mirroring
-# `_KERNEL_CACHE_LOCK` above for the same reason: probing is not a hot path
-# (it runs at most once per backend per process), so a single coarse lock
-# is sufficient to stop concurrent callers from redundantly re-probing.
+# Guards the check-probe-store sequence in `_get_tile_config`.
 _TILE_CONFIG_LOCK = threading.Lock()
 
 
@@ -566,39 +442,26 @@ def _probe_tile_config_candidate(cuda, tile, node_chunk, variance_adjust):
     tiny synthetic dummy data, to see whether this configuration is safe on
     the GPU actually present.
 
-    Deliberately goes through `_launch_unifrac_kernel`, i.e. a real block
-    launch of the *actual* kernel rather than a simplified stand-in, since
-    the failure modes this guards against are specific to that kernel's real
-    register/shared-memory usage: an NVIDIA launch-time resource error, or
-    an AMD compile-time (numba.hip compiles lazily, on first invocation)
-    code-generation error. The launch ends in a ``copy_to_host()``, which
-    synchronizes, so a launch-time error surfaces here rather than silently
-    later.
+    Goes through `_launch_unifrac_kernel` rather than a simplified stand-in,
+    because the failures this guards against depend on the real kernel's
+    register and shared-memory usage: an NVIDIA launch-time resource error,
+    or an AMD code-generation error (numba.hip compiles lazily, on first
+    invocation). The launch ends in a synchronizing ``copy_to_host()``, so a
+    launch-time error surfaces here rather than later.
 
     Raises whatever exception the backend produces; the caller decides
     whether to try the next candidate.
 
-    ``variance_adjust`` selects which of the 2 compile-time kernel variants
-    (see `_make_unifrac_kernel`) this probes. It used to be hardcoded to
-    ``True`` on the theory that the ``variance_adjust=True`` variant's extra
-    shared-memory tiles make it strictly more resource-hungry, so a config
-    safe for it would be safe for ``variance_adjust=False`` too -- but that
-    reasoning only accounts for *shared memory*. Register allocation is
-    decided by NVVM/LLVM codegen on the whole compiled function body, not
-    just its shared-memory footprint, and is not guaranteed monotonic in
-    the amount of source code removed: confirmed on a real NVIDIA A10, the
-    ``variance_adjust=False`` variant hit
-    ``CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES`` at a tile config the
-    ``variance_adjust=True`` variant had already launched successfully.
-    Each variant must therefore be probed on its own; see
-    `_probe_tile_config`, which now calls this once per variant.
+    ``variance_adjust`` selects which compile-time kernel variant to probe.
+    Register allocation is decided by NVVM/LLVM codegen over the whole
+    function body and is not monotonic in the amount of source removed: on an
+    NVIDIA A10 the ``variance_adjust=False`` variant hit
+    ``CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES`` at a config where the
+    ``variance_adjust=True`` variant launched fine. Each variant therefore
+    needs its own probe.
     """
-    # Minimal data: 2 samples (one valid i<j pair) and 2 nodes (one real
-    # node-chunk iteration), just enough to exercise one full (tile, tile)
-    # block launch of the real kernel body -- cheap to construct, and the
-    # resource limits this probes for (threads/block, shared-memory/block,
-    # registers/thread) depend only on the launch configuration and
-    # compiled kernel, not on the data size.
+    # Two samples (one i<j pair) and two nodes are enough to exercise one
+    # full block launch; the limits probed for do not depend on data size.
     n_samples = 2
     n_nodes = 2
     _launch_unifrac_kernel(
@@ -616,20 +479,15 @@ def _probe_tile_config_candidate(cuda, tile, node_chunk, variance_adjust):
 
 
 def _probe_tile_config(cuda, backend):
-    """Find the first candidate in `_TILE_CANDIDATES` that actually works
-    on the GPU behind ``cuda``, trying each in order (most aggressive
-    first) and catching both known failure shapes (NVIDIA launch-time,
-    AMD compile-time) plus anything else, since this is a controlled probe
-    against synthetic data, not user input -- contrast `_dispatch_gpu_or_xp`,
-    whose ``except`` narrows deliberately because its inputs *are*
-    user-controlled.
+    """Find the first candidate in `_TILE_CANDIDATES` that works on the GPU
+    behind ``cuda``, trying each in order (most aggressive first).
 
-    A candidate is accepted only if *both* the ``variance_adjust=True`` and
-    ``variance_adjust=False`` kernel variants probe clean at it (see
-    `_probe_tile_config_candidate`'s docstring for why one variant probing
-    safe does not imply the other is): `_get_tile_config` caches a single
-    (TILE, NODE_CHUNK) per backend and hands it to whichever variant a real
-    call needs, so the cached config must actually be safe for both.
+    Catches any exception, not just the two known failure shapes: this is a
+    controlled probe against synthetic data, not user input.
+
+    A candidate is accepted only if both kernel variants probe clean at it,
+    since `_get_tile_config` caches one config per backend and hands it to
+    whichever variant a real call needs.
     """
     failures = []
     for tile, node_chunk in _TILE_CANDIDATES:
@@ -637,33 +495,12 @@ def _probe_tile_config(cuda, backend):
             _probe_tile_config_candidate(cuda, tile, node_chunk, True)
             _probe_tile_config_candidate(cuda, tile, node_chunk, False)
             return tile, node_chunk
-        except Exception as exc:  # noqa: BLE001 -- see docstring above
+        except Exception as exc:
             failures.append(
                 f"(TILE={tile}, NODE_CHUNK={node_chunk}): {type(exc).__name__}: {exc}"
             )
 
     detail = "\n  ".join(failures)
-    # If you land here debugging a real failure: every rung in
-    # _TILE_CANDIDATES above failed on this device, which the ladder was
-    # built to avoid (its smallest rung, (8, 32), is meant to be
-    # conservative enough to not need this). What to do depends on the
-    # error text in `detail` for the *smallest* candidate, (8, 32):
-    #   - "LAUNCH_OUT_OF_RESOURCES" / a register-count complaint (NVIDIA
-    #     shape): this device's register file is smaller than any tested
-    #     so far. Add a new rung below (8, 32) -- e.g. (8, 16) or (4, 32)
-    #     -- to _TILE_CANDIDATES above, in the same most-to-least-aggressive
-    #     order, with a comment recording the device and the real error.
-    #   - "local memory ... exceeds limit" / a shared-memory complaint (AMD
-    #     shape): this device's LDS/shared-memory-per-block budget is
-    #     smaller than 8*32*8*4 = 8KB. Same fix: add a smaller rung, sized
-    #     under that device's real limit (check `detail` for the exact
-    #     numbers the compiler reported).
-    #   - Anything else (an import error, a missing symbol, a totally
-    #     different exception shape): this probably is not a tile-size
-    #     problem at all -- it's more likely a toolchain/driver issue on
-    #     this specific machine. Don't just shrink the ladder in that case;
-    #     investigate why `_get_cuda_module()` returned a module that can't
-    #     actually compile this kernel.
     raise RuntimeError(
         f"No safe (TILE, NODE_CHUNK) tile configuration could be found for "
         f"the '{backend}' GPU backend on this device; every candidate in "
@@ -674,12 +511,6 @@ def _probe_tile_config(cuda, backend):
 def _get_tile_config(cuda, backend):
     """Return a (TILE, NODE_CHUNK) pair known to work on this device for
     ``backend``, probing and caching it on first use.
-
-    Not free the first time (it compiles and launches the real kernel,
-    possibly more than once), so the result is memoized in
-    `_TILE_CONFIG_CACHE` for the rest of the process; later calls for the
-    same backend hit the cache and never re-probe. See `_probe_tile_config`
-    for the probing strategy.
     """
     with _TILE_CONFIG_LOCK:
         cached = _TILE_CONFIG_CACHE.get(backend)
@@ -694,15 +525,11 @@ class _ValidationFailure(Exception):
     bad ``counts``/``taxa``/``tree`` input, before any GPU-specific code ran.
 
     ``_dispatch_gpu_or_xp`` catches this to re-raise the original exception
-    immediately, without marking the GPU backend unavailable. The signal
-    this relies on is *position* (raised only around the validation call,
-    which never touches the GPU), not the original exception's type -- a
-    type-based allowlist is not safe here, since the real exception for bad
-    input varies (``ValueError``/``TreeError`` under ``validate=True``,
-    plain ``KeyError`` from ``_nodes_by_counts`` under ``validate=False``
-    for mismatched taxa/tree) and at least ``KeyError`` is also a plausible
-    failure mode from unrelated numba/CUDA-driver internals during genuine
-    kernel compilation or launch.
+    without marking the GPU backend unavailable. The signal is *position*
+    (raised only around the validation call, which never touches the GPU),
+    not the exception's type: bad input can surface as ``ValueError``,
+    ``TreeError``, or a plain ``KeyError``, and ``KeyError`` is also a
+    plausible failure from numba/CUDA-driver internals.
     """
 
     def __init__(self, original):
@@ -723,21 +550,10 @@ def _run_unifrac_kernel(
     from skbio.diversity.beta._unifrac import _setup_multiple_unifrac, _get_tip_indices
 
     cuda = _get_cuda_module()
-    # Validate before any GPU-specific code, including tile-config probing:
-    # probing now does a real compile+launch against this device (unlike
-    # the old fixed-dict lookup), so it must not run ahead of input
-    # validation -- a bad `taxa`/`tree` should surface its own error
-    # immediately, not after paying for a wasted probe (or worse, a probe
-    # failure masking the real validation error). `_setup_multiple_unifrac`
-    # never touches the GPU, so anything it raises here -- a `ValueError`/
-    # `TreeError` under `validate=True`, or a plain `KeyError` from
-    # `_nodes_by_counts` for mismatched taxa under `validate=False` -- is by
-    # construction an input problem, not a kernel/hardware one. Wrap it so
-    # `_dispatch_gpu_or_xp` can tell the two apart by *where* the exception
-    # came from rather than by its type (see `_ValidationFailure` and
-    # `_dispatch_gpu_or_xp`'s docstring: exception type alone is not a safe
-    # signal, since e.g. `KeyError` could also plausibly come from the real
-    # GPU kernel/launch machinery for an unrelated reason).
+    # Validate before tile probing, which does a real compile and launch: a
+    # bad `taxa`/`tree` should surface its own error rather than a probe
+    # failure masking it. Wrapped so `_dispatch_gpu_or_xp` can tell input
+    # errors from kernel errors by position (see `_ValidationFailure`).
     try:
         counts_by_node, tree_index, branch_lengths = _setup_multiple_unifrac(
             counts, taxa, tree, validate
@@ -747,20 +563,16 @@ def _run_unifrac_kernel(
     tile, node_chunk = _get_tile_config(cuda, _detect_gpu_backend())
     counts_by_node = np.ascontiguousarray(counts_by_node, dtype=np.float64)
 
-    # B2: sample_totals is read by the kernel only inside its own
-    # `if variance_adjust:` guard, and by the proportions division just
-    # below, which is itself skipped for unweighted methods -- so unweighted
-    # + variance_adjust=False needs it nowhere at all. Skip computing it in
-    # that one combination.
+    # Unweighted without variance adjustment reads sample_totals nowhere:
+    # neither the kernel's `variance_adjust` branch nor the division below.
     needs_sample_totals = variance_adjust or method not in (
         UNWEIGHTED,
         UNWEIGHTED_UNNORMALIZED,
     )
     if needs_sample_totals:
         tip_indices = _get_tip_indices(tree_index)
-        # A matrix-vector product against a 0/1 tip mask reduces directly,
-        # without materializing the full fancy-indexed temporary
-        # `counts_by_node[:, tip_indices]` first.
+        # A product against a 0/1 tip mask avoids materializing the
+        # fancy-indexed temporary `counts_by_node[:, tip_indices]`.
         tip_mask = np.zeros(counts_by_node.shape[1], dtype=np.float64)
         tip_mask[tip_indices] = 1.0
         sample_totals = counts_by_node @ tip_mask
@@ -768,27 +580,19 @@ def _run_unifrac_kernel(
         sample_totals = np.zeros(counts_by_node.shape[0], dtype=np.float64)
 
     if method in (UNWEIGHTED, UNWEIGHTED_UNNORMALIZED):
-        # The unweighted kernel branch only tests "proportions" for > 0
-        # (presence/absence), so raw counts can be passed directly in place of
-        # proportions, no division needed.
+        # The unweighted kernel branch only tests "proportions" for > 0, so
+        # raw counts can stand in for them unnormalized.
         proportions = counts_by_node
     else:
-        # B3: sample_totals[i] == 0 implies that whole row of counts_by_node
-        # is zero (counts are non-negative -- a `validate=False` caller that
-        # passes negative counts would violate this and get a wrong, not
-        # just masked, result here, same as it already would have upstream),
-        # so dividing by `where(sample_totals > 0, sample_totals, 1.0)` gives
-        # the identical result in one pass, without np.divide's separate
-        # np.zeros_like fill (which here mostly got overwritten anyway).
+        # Counts are non-negative, so sample_totals[i] == 0 implies that whole
+        # row is zero; substituting 1.0 for the zero divisors leaves those
+        # rows at zero.
         proportions = counts_by_node / np.where(
             sample_totals > 0, sample_totals, 1.0
         )[:, None]
         if not variance_adjust:
-            # B1: the kernel only reads its `counts` argument when
-            # variance_adjust is True. Alias to `proportions` (mirroring the
-            # unweighted case above) so `_launch_unifrac_kernel`'s
-            # `counts_by_node is proportions` check collapses this transfer
-            # instead of uploading the same data twice.
+            # The kernel reads `counts` only when variance_adjust is True.
+            # Aliasing lets `_launch_unifrac_kernel` skip the second upload.
             counts_by_node = proportions
 
     return _launch_unifrac_kernel(
@@ -798,9 +602,6 @@ def _run_unifrac_kernel(
         proportions,
         counts_by_node,
         sample_totals,
-        # B4: elides the copy astype() always makes, even when
-        # branch_lengths is already float64 -- ascontiguousarray is already
-        # used for counts_by_node above, for the same reason.
         np.ascontiguousarray(branch_lengths, dtype=np.float64),
         method,
         alpha,
@@ -868,34 +669,13 @@ def _generalized_unifrac_gpu(
     )
 
 
-# -----------------------------------------------------------------------------
-# Two-tier dispatch: fused GPU kernel when usable, array-API fallback otherwise
-# -----------------------------------------------------------------------------
-#
-# The three driver functions above require a real, detected GPU backend
-# (``_get_cuda_module`` raises ``ImportError`` otherwise): they already run
-# correctly on real NVIDIA/AMD hardware, including proactively moving plain
-# NumPy input onto the device for the fused-kernel speedup. The wrappers below
-# add the fallback: when no GPU backend is detected, or when the fused kernel
-# fails to build/run on the running stack, they run the array-API-generic
-# implementation in :mod:`skbio.diversity.beta._unifrac_xp` instead, which is
-# correct (if slower) on any array-API backend, including plain NumPy on CPU.
-
 # Backends ('cuda'/'hip') whose fused kernel failed to build or run in this
 # process. Populated by `_mark_backend_unavailable` so later calls skip
 # straight to the array-API path instead of retrying a failing kernel.
-# (`skbio.stats.distance._gpu._mark_gpu_unavailable` is the PERMANOVA/Mantel
-# precedent for this, but it keys off an array-API array's device/backend;
-# UniFrac's GPU dispatch is keyed off `_detect_gpu_backend()`'s backend name
-# instead -- plain NumPy input has no device of its own -- so a small
-# UniFrac-local equivalent is used here rather than reusing that helper.)
 _unavailable_backends = set()
 
 # Guards the check-then-add in `_mark_backend_unavailable` and the
-# check-then-attempt in `_dispatch_gpu_or_xp`, mirroring `_KERNEL_CACHE_LOCK`/
-# `_TILE_CONFIG_LOCK` above for the same reason: without it, two concurrent
-# callers could both pass the `not in` check and both attempt the failing
-# GPU path (or both emit the "kernel could not be used" warning).
+# check-then-attempt in `_dispatch_gpu_or_xp`.
 _UNAVAILABLE_BACKENDS_LOCK = threading.Lock()
 
 
@@ -927,27 +707,14 @@ def _dispatch_gpu_or_xp(gpu_func, xp_func, *args, **kwargs):
 
     An exception out of the fused kernel marks its backend unavailable for
     the rest of the process and falls through to the array-API path, so one
-    bad kernel build degrades performance rather than failing the call --
-    *except* for input-validation failures. There are two ways ``gpu_func``
-    surfaces one of those:
+    bad kernel build degrades performance rather than failing the call.
 
-    - Wrapped in ``_ValidationFailure``, when ``gpu_func`` is one of the real
-      ``*_unifrac_gpu`` drivers: ``_run_unifrac_kernel`` wraps whatever its
-      own ``_setup_multiple_unifrac`` call raises before any GPU-specific
-      code runs. See ``_ValidationFailure`` for why this is keyed off
-      *where* the exception came from rather than its type (a type-based
-      allowlist is not safe for every shape a validation error can take,
-      e.g. plain ``KeyError`` under ``validate=False``).
-    - A bare ``ValueError``/``skbio.tree.TreeError``, for any other
-      ``gpu_func`` (e.g. in tests exercising this dispatcher directly) that
-      raises one of those two types itself.
-
-    Either way, these are the caller's fault, not the backend's, so the
-    original exception is re-raised immediately rather than being
-    misclassified as "this backend's kernel can't run" -- which would both
-    hide the real error behind a fallback and permanently (for the rest of
-    the process) degrade every later call to the slow array-API path over
-    one bad input.
+    Input-validation failures are excluded from that: they are the caller's
+    fault, not the backend's, so re-raising them keeps one bad input from
+    permanently demoting the process to the slow path. They arrive either
+    wrapped in ``_ValidationFailure`` (from the real ``*_unifrac_gpu``
+    drivers) or as a bare ``ValueError``/``skbio.tree.TreeError`` from any
+    other ``gpu_func``.
     """
     from skbio.tree import TreeError
 

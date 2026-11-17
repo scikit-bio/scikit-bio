@@ -46,11 +46,9 @@ def _validate_unifrac_engine(engine):
     check, a typo such as ``engine='cuda'`` or ``engine='GPU'`` would fall
     through to the CPU path and silently ignore the request.
 
-    Deliberately not a call to :func:`skbio._config._resolve_engine`: that
-    helper would let the global ``compute_engine`` config silently select
-    ``'gpu'``, which UniFrac does not want -- ``'gpu'`` must stay an
-    explicit, per-call opt-in. The message below still matches
-    ``_resolve_engine``'s phrasing for a consistent reading experience.
+    Deliberately not :func:`skbio._config._resolve_engine`: that helper would
+    let the global ``compute_engine`` config select ``'gpu'``, which must
+    stay an explicit per-call opt-in here.
     """
     if engine not in (None, "gpu"):
         raise ValueError(
@@ -81,11 +79,8 @@ def _reject_gpu_only_options(metric, *, normalized=True, variance_adjust=False):
 def _unifrac_pair_via_pdist(pdist_func, u_counts, v_counts, taxa, tree, **options):
     """Compute one pair's UniFrac distance through a condensed pdist driver.
 
-    Single-pair GPU dispatch is wasteful (kernel launch overhead for one
-    pair), so this routes through the same driver ``beta_diversity`` uses,
-    with a 2-row input whose only pair is the one asked for. The driver uses
-    the fused GPU kernel when a usable backend is detected and the array-API
-    implementation otherwise.
+    Routes through the same driver ``beta_diversity`` uses, with a 2-row
+    input whose only pair is the one asked for.
     """
     counts = np.vstack([u_counts, v_counts])
     return pdist_func(counts, taxa, tree, **options)[0]
@@ -430,7 +425,6 @@ def weighted_unifrac(
             variance_adjust=variance_adjust,
             validate=validate,
         )
-    # Rejected before the setup work below, as in unweighted_unifrac.
     _reject_gpu_only_options("weighted_unifrac", variance_adjust=variance_adjust)
     (
         u_node_counts,
@@ -676,36 +670,17 @@ def _unweighted_unifrac_pdist_numba(counts, taxa, tree, *, validate=True):
     """Compute the condensed unweighted UniFrac distance vector (Numba engine).
 
     Delegates to :func:`skbio.diversity.beta._unifrac_xp._unweighted_unifrac_xp`,
-    the array-API-generic implementation that also backs ``engine='gpu'``'s
-    CPU fallback. Its non-``variance_adjust`` path (the only case reachable
-    here -- see below) reduces the per-pair observed/differs branch-length
-    sums to two matrix products instead of an explicit per-node loop (see
-    that module's docstring and ``_unweighted_unifrac_xp_core``), which
-    plain NumPy's BLAS-backed ``@`` computes faster than the
-    ``@njit(parallel=True)`` loop this function used before -- measured
-    ~8.6x at n_samples=5000 on a 48-core CPU node (old 11.5s, new 1.35s).
-    ``engine='numba'``
+    whose non-``variance_adjust`` path reduces the per-pair branch-length
+    sums to two matrix products that BLAS computes faster than the
+    ``@njit(parallel=True)`` loop this used to run. ``engine='numba'``
     remains the name callers ask for (and Numba must still be installed to
-    request it, enforced by ``_resolve_engine`` upstream in
-    ``beta_diversity``), even though the computation this function now
-    reaches no longer itself runs through Numba.
+    request it), even though the computation no longer goes through Numba.
 
-    This is **not** bit-for-bit identical to the original #2558 loop
-    implementation any more: the summation order changed from sequential
-    per-node accumulation to a BLAS reduction. It matches that
-    implementation, and the ssu-generated fixtures, within
-    ``GPU_CPU_TOLERANCE`` (1e-10) -- see test_unifrac.py and
-    test_unifrac_xp.py.
+    Results are not bit-for-bit identical to that loop, since the summation
+    order is now a BLAS reduction; they agree to within 1e-10.
 
-    ``variance_adjust=True`` has no CPU implementation for
-    ``unweighted_unifrac`` (GPU-only in this release -- see
-    ``_reject_gpu_only_options``, which runs before this function is ever
-    reached), so this function is never asked to compute it and takes no
-    ``variance_adjust`` parameter.
-
-    ``validate`` is keyword-only: the three ``*_pdist_numba`` kernels take
-    different options, and passing them positionally made the orders easy to
-    confuse.
+    ``variance_adjust=True`` is GPU-only in this release (rejected upstream
+    by ``_reject_gpu_only_options``), so there is no such parameter here.
 
     """
     from skbio.diversity.beta._unifrac_xp import _unweighted_unifrac_xp
@@ -824,15 +799,11 @@ if NUMBA_AVAILABLE:
         out = np.empty(n_pairs, np.float64)
         n_half = n_samples // 2
 
-        # Row i has n_samples - 1 - i pairs to compute, so a plain
-        # prange(n_samples - 1) gives thread 0 far more work than the last
-        # thread. Pairing row i with mirror_i = n_samples - i - 2 (as
-        # _permanova_f_stat_sW_condensed_nb does) keeps the work per prange
-        # iteration roughly constant (~n_samples) regardless of i. This also
-        # halves the number of schedulable prange tasks (from n_samples - 1
-        # to n_half), which caps usable parallelism at n_half threads on
-        # machines with more cores than that -- the same tradeoff
-        # _permanova_f_stat_sW_condensed_nb already makes.
+        # Row i has n_samples - 1 - i pairs, so a plain prange(n_samples - 1)
+        # would leave thread 0 with far more work than the last thread.
+        # Pairing row i with its mirror keeps the work per iteration roughly
+        # constant, at the cost of capping parallelism at n_half threads (as
+        # _permanova_f_stat_sW_condensed_nb also does).
         for i in prange(n_half):
             _weighted_unifrac_row_nb(
                 i,
@@ -877,9 +848,6 @@ def _weighted_unifrac_pdist_numba(
     ``_get_tip_indices``, and ``_tip_distances``), then dispatches to the parallel
     Numba kernel. Returns a condensed distance vector consumable by
     ``DistanceMatrix``.
-
-    Everything after ``tree`` is keyword-only; see
-    ``_unweighted_unifrac_pdist_numba``.
 
     """
     counts_by_node, tree_index, branch_lengths = _setup_multiple_unifrac(
@@ -1008,14 +976,10 @@ def _weighted_unifrac_branch_correction(
     ).sum()
 
 
-# The CPU/Numba implementation of generalized UniFrac below (_generalized_
-# unifrac, the *_nb kernels and _generalized_unifrac_pdist_numba) is not
-# reachable from the public generalized_unifrac() function or from
-# beta_diversity -- this release ships generalized_unifrac as GPU-only (see
-# generalized_unifrac's NotImplementedError for the CPU path). It is kept
-# here, unexported, as the reference a future PR can wire up CPU support
-# from, and so the existing kernel-level and GPU-vs-CPU cross-validation
-# tests can keep exercising it directly.
+# The CPU/Numba generalized UniFrac implementation below is unreachable from
+# generalized_unifrac() and beta_diversity, both of which ship this metric as
+# GPU-only. It is kept for the cross-validation tests that call it directly,
+# and as the starting point for CPU support.
 
 
 def _generalized_unifrac(
@@ -1047,8 +1011,6 @@ def _generalized_unifrac(
     s = up + vp
     d = np.abs(up - vp)
     if variance_adjust:
-        # m is the scalar per-sample total (same value for every node), not
-        # a per-node quantity -- this bug class has bitten this plan before.
         m = u_total_count + v_total_count
         mi = u_node_counts.astype(np.float64) + v_node_counts
         with np.errstate(invalid="ignore"):
@@ -1126,8 +1088,8 @@ def generalized_unifrac(
     """
     _validate_unifrac_engine(engine)
     if engine != "gpu":
-        # Deliberately before the alpha-range check below, so that an
-        # unavailable implementation is reported ahead of a bad parameter.
+        # Before the alpha-range check, so an unavailable implementation is
+        # reported ahead of a bad parameter.
         raise NotImplementedError(_GENERALIZED_UNIFRAC_GPU_ONLY)
     if not (0.0 <= alpha <= 1.0):
         raise ValueError(f"alpha must be in [0, 1], got {alpha}.")
@@ -1178,8 +1140,6 @@ if NUMBA_AVAILABLE:
                 s = up + vp
                 d = abs(up - vp)
                 if variance_adjust:
-                    # Scalar per-pair total, shared by every node's VAW term
-                    # below -- not a per-node quantity.
                     m = row_total + v_total
                     mi = counts_by_node[row, k] + counts_by_node[j, k]
                     vaw = np.sqrt(mi * (m - mi))
@@ -1207,27 +1167,11 @@ if NUMBA_AVAILABLE:
         """Full generalized UniFrac distance matrix (condensed) via Numba.
 
         Computes the condensed pairwise generalized UniFrac (GUniFrac)
-        distance vector in a single parallel pass. Parallelised over the
-        first sample index ``i`` (``prange``); the inner ``j`` and node loops
-        are sequential. Each ``(i, j)`` pair writes a unique condensed index,
-        so there are no write races.
-
-        Reproduces exactly the reference algorithm in
-        ``_generalized_unifrac``: node proportions are the per-sample node
-        counts divided by the sample's tip-count total (``0.0`` when the
-        total is ``0``); each node contributes
-        ``branch_length * (up + vp) ** alpha`` to the denominator and
-        additionally ``* |up - vp| / (up + vp)`` to the numerator, and the
-        distance is ``numerator / denominator`` (``0.0`` when the
-        denominator is ``0``). When ``variance_adjust`` is ``True``, ``up +
-        vp`` and ``|up - vp|`` are each additionally divided by ``sqrt(mi *
-        (m - mi))`` (``m`` the scalar sum of the two samples' tip-count
-        totals, ``mi`` the per-node sum of the two samples' counts), and
-        nodes where that quantity is non-positive contribute zero.
-
-        Sample ``i``'s tip-count total depends only on ``i``, so it's read
-        once per ``i`` via ``sample_totals``; ``counts_by_node`` is expected
-        to already be C-contiguous (the caller arranges this).
+        distance vector in a single parallel pass, matching the reference
+        algorithm in ``_generalized_unifrac``. Parallelised over the first
+        sample index ``i`` (``prange``); each ``(i, j)`` pair writes a unique
+        condensed index, so there are no write races. ``counts_by_node`` is
+        expected to already be C-contiguous (the caller arranges this).
 
         Parameters
         ----------
@@ -1299,9 +1243,6 @@ def _generalized_unifrac_pdist_numba(
     totals (reusing ``_setup_multiple_unifrac`` and ``_get_tip_indices``),
     then dispatches to the parallel Numba kernel. Returns a condensed
     distance vector consumable by ``DistanceMatrix``.
-
-    Everything after ``tree`` is keyword-only; see
-    ``_unweighted_unifrac_pdist_numba``.
 
     """
     counts_by_node, tree_index, branch_lengths = _setup_multiple_unifrac(

@@ -32,12 +32,8 @@ from skbio.diversity.beta.tests._fixtures import (QiimeTinyTestMixin,
                                                   patch_gpu_backend)
 from skbio.util import numba_code
 
-# Measured max abs deviation, CPU-numba vs ssu-ascii-fixture, across all 8
-# qiime-191-tt generalized/variance_adjust fixtures and every sample pair:
-# 1.332e-7 (generalized_unifrac, alpha=0.5, f2 vs p2). GPU-vs-CPU-numba
-# deviation is far tighter (3.331e-16, measured on real NVIDIA/AMD hardware).
-# See docs/superpowers/specs/2026-10-02-ssu-unifrac-numba-phase1-design.md.
-# 1.5e-6 gives an ~11x safety margin over the larger (ssu-fixture) figure.
+# Worst measured deviation from the ssu-generated fixtures is 1.332e-7
+# (generalized_unifrac, alpha=0.5), so this leaves an ~11x margin.
 SSU_FIXTURE_TOLERANCE = 1.5e-6
 
 
@@ -425,10 +421,8 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
         expected = 1.0
         self.assertAlmostEqual(actual, expected)
 
-    # Fixture-matched coverage for normalized=False and variance_adjust=True
-    # on unweighted_unifrac now lives in test_unifrac_gpu.py: those options
-    # are GPU-only in this release, with CPU/numba support planned for a
-    # future PR (see the NotImplementedError tests below).
+    # normalized=False and variance_adjust=True are GPU-only in this release,
+    # so their fixture-matched coverage lives in test_unifrac_gpu.py.
 
     def test_unweighted_unifrac_normalized_false_requires_gpu(self):
         with self.assertRaises(NotImplementedError):
@@ -727,10 +721,8 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
         self.assertAlmostEqual(
             _weighted_unifrac(m[:, 1], m[:, 2], m1s, m2s, bl)[0], 4.5)
 
-    # Fixture-matched coverage for weighted_unifrac's variance_adjust now
-    # lives in test_unifrac_gpu.py: that option is GPU-only in this release,
-    # with CPU/numba support planned for a future PR (see the
-    # NotImplementedError test below).
+    # variance_adjust is GPU-only in this release, so its fixture-matched
+    # coverage lives in test_unifrac_gpu.py.
 
     def test_weighted_unifrac_variance_adjust_requires_gpu(self):
         with self.assertRaises(NotImplementedError):
@@ -739,13 +731,8 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
                 variance_adjust=True,
             )
 
-    # generalized_unifrac ships GPU-only in this release; CPU/numba support
-    # is planned for a future PR. The CPU kernel (_generalized_unifrac /
-    # _generalized_unifrac_pdist_numba) stays in skbio.diversity.beta._unifrac
-    # as the reference that future PR can build from, so the fixture- and
-    # kernel-correctness checks below exercise it directly rather than
-    # through the public generalized_unifrac() function, which now always
-    # requires engine='gpu'.
+    # generalized_unifrac() is GPU-only in this release, so the checks below
+    # call the unreachable CPU kernels directly instead of going through it.
 
     def _assert_pairs_match_ssu_fixture(self, condensed, sample_ids, fname):
         """Spot-check a few sample pairs against a qiime-191-tt fixture matrix.
@@ -766,15 +753,9 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
 
     @numba_code
     def test_unweighted_unifrac_numba_matches_ssu_fixture(self):
-        # _unweighted_unifrac_pdist_numba's non-variance_adjust path now
-        # delegates to _unweighted_unifrac_xp's BLAS-matmul reduction
-        # instead of running its own @njit loop (see that function's
-        # docstring), which changes summation order and so is no longer
-        # bit-for-bit identical to the original #2558 kernel. Pin it
-        # against the independent ssu reference directly, the same way
-        # test_generalized_unifrac_matches_ssu_fixture does, rather than
-        # relying only on agreement with the (now literally identical)
-        # xp core.
+        # _unweighted_unifrac_pdist_numba delegates to the xp core, so
+        # agreement with that core proves nothing; pin it against the
+        # independent ssu reference instead.
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
         condensed = _unweighted_unifrac_pdist_numba(table, taxa, tree, validate=True)
         self._assert_pairs_match_ssu_fixture(
@@ -814,15 +795,9 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
         self.assertEqual(obs, 0.0)
 
     def test_generalized_unifrac_both_empty_is_zero_via_real_dispatch(self):
-        # Companion to test_generalized_unifrac_both_empty_is_zero above:
-        # that test only pins the dead/unreachable CPU reference kernel
-        # (_generalized_unifrac) directly. This exercises the same
-        # both-samples-empty case through the live dispatch path
-        # (_generalized_unifrac_gpu_or_xp) that real callers of
-        # generalized_unifrac(engine='gpu')/beta_diversity actually hit --
-        # the fused kernel when a GPU backend is usable, otherwise the
-        # array-API fallback, either way without needing real GPU hardware
-        # to run this test.
+        # test_generalized_unifrac_both_empty_is_zero pins the unreachable
+        # CPU kernel; this covers the same case through the live dispatch
+        # path, which needs no GPU hardware to run.
         from skbio.diversity.beta._unifrac_gpu import _generalized_unifrac_gpu_or_xp
         table = np.array([[0, 0, 0], [0, 0, 0]])
         obs = _generalized_unifrac_gpu_or_xp(
@@ -831,17 +806,11 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
         np.testing.assert_allclose(obs, [0.0])
 
     def test_generalized_unifrac_cpu_raises_not_implemented(self):
-        # generalized_unifrac has no CPU implementation in this release; it
-        # ships GPU-only regardless of numba availability (CPU/numba support
-        # is planned for a future PR).
+        # GPU-only regardless of whether numba is installed.
         with self.assertRaises(NotImplementedError):
             generalized_unifrac([1, 0, 1], [0, 1, 1], ['a', 'b', 'c'], self.t1)
 
     def test_generalized_unifrac_cpu_raises_before_alpha_check(self):
-        # The "requires GPU" check runs before alpha-range validation on the
-        # default (non-'gpu') engine path, mirroring the numba-before-alpha
-        # ordering this replaced (see test_generalized_unifrac_alpha_out_of_
-        # range_raises below for the GPU-available alpha-validation path).
         with self.assertRaises(NotImplementedError):
             generalized_unifrac(
                 [1, 0, 1], [0, 1, 1], ['a', 'b', 'c'], self.t1, alpha=1.5,
@@ -856,7 +825,6 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
                 )
 
     def test_beta_diversity_generalized_unifrac_cpu_raises_before_alpha_check(self):
-        # beta_diversity counterpart of the regression test above.
         with self.assertRaises(NotImplementedError):
             beta_diversity(
                 "generalized_unifrac", self.b1, ids=self.sids1,
@@ -865,12 +833,8 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
 
     @numba_code
     def test_generalized_unifrac_pdist_numba_matches_single_pair(self):
-        # generalized_unifrac has no cython/pairwise_func counterpart to
-        # compare the numba pdist kernel against, so cross-check
-        # _generalized_unifrac_pdist_numba directly against the single-pair
-        # _generalized_unifrac path (already validated against the SSU
-        # fixtures above) for every pair in the tiny-test table, across both
-        # alpha values and with/without variance_adjust.
+        # No cython counterpart exists to compare the pdist kernel against,
+        # so cross-check it against the single-pair _generalized_unifrac.
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
         n = table.shape[0]
         for alpha in (0.5, 1.0):
@@ -1055,9 +1019,6 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
         self.assertEqual(dm_nb.data[0, 0], 0.0)
 
     def test_beta_diversity_generalized_unifrac_cpu_raises_not_implemented(self):
-        # generalized_unifrac ships GPU-only in this release; see
-        # test_beta_diversity_generalized_unifrac_gpu_engine_raises_without_gpu
-        # below for the (hardware-gated) engine='gpu' coverage.
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
         with self.assertRaises(NotImplementedError):
             beta_diversity(
@@ -1068,7 +1029,6 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
     def test_beta_diversity_unweighted_unifrac_variance_adjust_cpu_raises_not_implemented(
         self,
     ):
-        # variance_adjust is GPU-only for unweighted_unifrac in this release.
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
         with self.assertRaises(NotImplementedError):
             beta_diversity(
@@ -1079,7 +1039,6 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
     def test_beta_diversity_weighted_unifrac_variance_adjust_cpu_raises_not_implemented(
         self,
     ):
-        # variance_adjust is GPU-only for weighted_unifrac in this release.
         table, taxa, tree, sample_ids = self._load_qiime_191_tt()
         for normalized in (False, True):
             with self.assertRaises(NotImplementedError):
@@ -1096,11 +1055,8 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
                 taxa=self.oids1, tree=self.t1, engine="julia")
 
     def test_beta_diversity_generalized_unifrac_engine_invalid(self):
-        # generalized_unifrac has no cython/numba choice to resolve (it has
-        # no cython path at all), so unlike unweighted_unifrac/
-        # weighted_unifrac above, this branch never called anything that
-        # validated `engine`; a typo such as 'bogus' or 'cuda' used to fall
-        # through and silently run the CPU numba path.
+        # This metric has no engine to resolve, so nothing else on its branch
+        # validates `engine` and a typo must not pass silently.
         for bad in ('bogus', 'cuda', 'GPU', 'numba', 'cython'):
             with self.assertRaisesRegex(ValueError, 'engine'):
                 beta_diversity(
@@ -1163,23 +1119,15 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
                     taxa=self.oids1, tree=self.t1, engine=engine,
                     bogus_kwarg=True)
 
-    # -- keyword-only signatures ---------------------------------------
-
     def test_unifrac_options_are_keyword_only(self):
-        # Before `normalized`/`variance_adjust`/`alpha`/`engine` were added,
-        # `validate` was the last positional-or-keyword parameter, so
-        # `unweighted_unifrac(u, v, taxa, tree, False)` meant validate=False.
-        # Those options are keyword-only so such a call raises instead of
-        # silently binding False to a different parameter.
+        # A 5th positional argument used to bind to `validate`; it must now
+        # raise rather than silently land on a different parameter.
         for func in (unweighted_unifrac, weighted_unifrac, generalized_unifrac):
             with self.assertRaises(TypeError):
                 func(self.b1[0], self.b1[1], self.oids1, self.t1, False)
 
     @numba_code
     def test_unifrac_pdist_numba_options_are_keyword_only(self):
-        # The three pdist kernels took their options in three different
-        # orders, so positional calls were easy to get wrong; everything
-        # after `tree` is keyword-only now.
         for func in (_unweighted_unifrac_pdist_numba,
                      _weighted_unifrac_pdist_numba,
                      _generalized_unifrac_pdist_numba):
@@ -1192,8 +1140,6 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
                 with self.assertRaisesRegex(ValueError, 'engine'):
                     func(self.b1[0], self.b1[1], self.oids1, self.t1,
                          engine=bad)
-
-    # -- beta_diversity kwarg handling ---------------------------------
 
     def test_beta_diversity_unweighted_unifrac_unnormalized_cpu_raises_not_implemented(
         self,
@@ -1243,16 +1189,9 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
                     tree=self.t1, engine="gpu",
                     pairwise_func=not_a_real_pdist)
 
-    # -- engine='gpu' wiring -------------------------------------------
-    #
-    # engine='gpu' now always produces a result: a fused kernel when a GPU
-    # backend is usable, or the array-API fallback (_unifrac_xp.py)
-    # otherwise. These tests force the no-backend case by monkeypatching
-    # _detect_gpu_backend(), deterministically exercising the fallback path
-    # regardless of what hardware this machine actually has, and check the
-    # result against the CPU reference. GPU-available fused-kernel
-    # correctness coverage for the underlying *_gpu drivers lives in
-    # test_unifrac_gpu.py.
+    # The tests below patch `_detect_gpu_backend` so the array-API fallback
+    # runs whatever hardware this machine has. Fused-kernel correctness
+    # coverage lives in test_unifrac_gpu.py.
 
     def test_unweighted_unifrac_gpu_engine_falls_back_without_gpu(self):
         with patch_gpu_backend(None):
@@ -1324,10 +1263,8 @@ class UnifracTests(QiimeTinyTestMixin, TestCase):
         np.testing.assert_allclose(obs.data, expected.data, atol=1e-10)
 
     def test_weighted_unifrac_gpu_engine_falls_back_on_kernel_failure(self):
-        # Even when a GPU backend IS detected, a fused kernel that fails to
-        # build/run must fall back to the array-API path rather than
-        # propagating the exception (mirrors the PERMANOVA/Mantel
-        # `_mark_gpu_unavailable` precedent).
+        # A detected backend whose kernel fails to build must fall back
+        # rather than propagate the exception.
         from skbio.diversity.beta import _unifrac_gpu
 
         self.addCleanup(_unifrac_gpu._unavailable_backends.discard, "cuda")
