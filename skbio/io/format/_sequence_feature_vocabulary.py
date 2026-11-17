@@ -206,7 +206,7 @@ def _parse_loc_str(loc_str):
 
     References
     ----------
-    .. [1] http://www.insdc.org/files/feature_table.html#3.4
+    .. [1] https://www.insdc.org/submitting-standards/feature-table/#3.4
 
     """
     # define the tokens

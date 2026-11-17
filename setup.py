@@ -182,6 +182,33 @@ extensions = [
     ),
 ]
 
+# Balanced parentheses (BP) tree backend, ported from improved-octo-waddle.
+# All BP modules live under the `skbio.tree.bp` subpackage.
+_bp_includes = [np.get_include()]
+
+extensions += [
+    # compiled engine of the (pure-Python) BPTree class
+    Extension(
+        "skbio.tree.bp._bp_cy",
+        ["skbio/tree/bp/_bp_cy.pyx"],
+        include_dirs=_bp_includes,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+    ),
+    Extension(
+        "skbio.tree.bp._bp_io",
+        ["skbio/tree/bp/_bp_io.pyx"],
+        include_dirs=_bp_includes,
+    ),
+    # Cython test module exercising BP's cdef (C-level) methods, which are not
+    # reachable from Python
+    Extension(
+        "skbio.tree.tests.bp.test_bp_cy",
+        ["skbio/tree/tests/bp/test_bp_cy.pyx"],
+        include_dirs=_bp_includes,
+    ),
+]
+
 extensions = cythonize(extensions, force=True)
 
 

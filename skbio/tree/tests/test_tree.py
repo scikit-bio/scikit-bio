@@ -1586,6 +1586,20 @@ class TreeTests(TestCase):
         obs = self.simple_t.count(tips=True)
         self.assertEqual(obs, exp)
 
+    def test_repr(self):
+        """Return a summary that counts the root as an internal node."""
+        # c and the root are internal nodes; a, b and d are tips
+        t = TreeNode.read(["((a,b)c,d)root;"])
+        self.assertEqual(
+            repr(t), "<TreeNode, name: root, internal node count: 2, tips count: 3>"
+        )
+
+        # a single-node tree is a tip, not an internal node
+        self.assertEqual(
+            repr(TreeNode("a")),
+            "<TreeNode, name: a, internal node count: 0, tips count: 1>",
+        )
+
     def test_subset(self):
         """Return a set of tip names descending from a node."""
         # entire tree

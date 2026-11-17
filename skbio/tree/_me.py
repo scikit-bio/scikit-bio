@@ -1599,7 +1599,8 @@ def _swap_branches(
             /  \                      /  \
         other  child              other  sibling
 
-    Target must be an internal node. Root and tips are not allowed.
+    Target must be an internal node with a parent. The root and tips are not
+    allowed.
 
     This function is specifically designed for nearest neighbor interchange (NNI). It
     may be generalized to swapping non-neighbor branches, but that is not currently
