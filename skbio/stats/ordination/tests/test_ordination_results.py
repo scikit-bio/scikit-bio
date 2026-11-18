@@ -101,6 +101,10 @@ class TestOrdinationResults(unittest.TestCase):
         ordi.rename(rename_dict_feat, matrix='features', strict=False)
         self.assertEqual(list(ordi.features.index), ['abc', 'def', 'Z'])
 
+        # stored IDs follow the renamed matrices
+        self.assertListEqual(ordi.sample_ids, ['001', '010', 'C'])
+        self.assertListEqual(ordi.feature_ids, ['abc', 'def', 'Z'])
+
         # Testing rename when `strict` is True and there are extra keys
         # Should throw a ValueError
         rename_dict_samp = {'001': 'he', '010': 'llo', 'D': 'hello'}
