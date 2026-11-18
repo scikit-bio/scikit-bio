@@ -687,3 +687,9 @@ class OrdinationResults(SkbioObject, PlottableMixin):
                 "The IDs in mapper do not include all IDs in the %s matrix." % matrix
             )
         df.rename(index=mapper, inplace=True)
+        # keep the stored IDs, which are used for display, plotting and writing,
+        # in sync with the renamed matrix
+        if matrix == "samples":
+            self.sample_ids = list(df.index)
+        else:
+            self.feature_ids = list(df.index)
