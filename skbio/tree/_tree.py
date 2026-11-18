@@ -2953,13 +2953,13 @@ class TreeNode(SkbioObject):
             climb_node = tip2
 
         dist_climbed = 0.0
-        while (dist_ := dist_climbed + climb_node.length or 0.0) < half_max_dist:
+        while (dist_ := dist_climbed + (climb_node.length or 0.0)) < half_max_dist:
             dist_climbed = dist_
             climb_node = climb_node.parent
 
         # case 1: midpoint is at the climb node's parent
         # make the parent node as the new root
-        if (dist_climbed + climb_node.length or 0.0) == half_max_dist:
+        if (dist_climbed + (climb_node.length or 0.0)) == half_max_dist:
             new_root = climb_node.parent
 
         # case 2: midpoint is on the climb node's branch to its parent
