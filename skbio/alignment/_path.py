@@ -743,7 +743,7 @@ class AlignPath(SkbioObject):
         if (starts := self._ranges[:, 0]).any():
             idx += starts.reshape(-1, 1)
         if gap == "del":
-            keep = np.repeat(self._states == 0, self._lengths)
+            keep = np.repeat((self._states == 0).all(axis=0), self._lengths)
             return idx[:, keep]
         elif gap == "mask":
             return np.ma.array(idx, mask=(1 - pos))

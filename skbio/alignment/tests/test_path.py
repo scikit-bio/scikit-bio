@@ -506,6 +506,14 @@ class TestAlignPath(unittest.TestCase):
             _ = path.to_indices(gap=2.5)
         self.assertEqual(str(cm.exception), msg)
 
+    def test_to_indices_del_many_seqs(self):
+        # more than 8 sequences span more than one row of packed states
+        seqs = [DNA("ACGT")] * 8 + [DNA("A-GT")]
+        path = AlignPath.from_tabular(TabularMSA(seqs))
+        obs = path.to_indices(gap="del")
+        exp = np.array([[0, 2, 3]] * 8 + [[0, 1, 2]])
+        npt.assert_array_equal(obs, exp)
+
     def test_to_indices_single_segment(self):
         # a gap-free alignment is a path with only one segment
         path = AlignPath(lengths=[3], states=[0], starts=[0, 0])
