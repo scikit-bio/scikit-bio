@@ -375,9 +375,12 @@ def _interval_metadata_to_gff3(obj, fh, seq_id, skip_subregion=True):
 
 def _construct_seq(fh, constructor=DNA, seq_num=1):
     lines = []
-    for i, (data_type, seq_id, L) in enumerate(_yield_record(fh), 1):
-        if data_type == "data" and seq_num == i:
-            lines = L
+    i = 0
+    for data_type, seq_id, L in _yield_record(fh):
+        if data_type == "data":
+            i += 1
+            if seq_num == i:
+                lines = L
     seq = _get_nth_sequence(
         _fasta_to_generator(fh, constructor=constructor), seq_num=seq_num
     )
@@ -386,36 +389,41 @@ def _construct_seq(fh, constructor=DNA, seq_num=1):
 
 
 def _yield_record(fh):
-    """Yield (seq_id, lines) that belong to the same sequence."""
-    lines = []
-    current = False
+    """Yield records grouped by sequence ID.
+
+    All feature lines that share a sequence ID are grouped into a single
+    ``("data", seq_id, lines)`` record, even when they are not contiguous in
+    the file. GFF3 does not require features to be sorted by sequence ID, so
+    interleaved records must still be merged (see issue #1842).
+
+    ``("length", seq_id, length)`` items (from ``##sequence-region`` pragmas)
+    are yielded first, followed by one ``data`` item per sequence ID, in the
+    order in which the sequence IDs first appear.
+    """
+    lengths = []
+    records = {}
+    order = []
     for line in _line_generator(fh, skip_blanks=True, strip=True):
         if line.startswith("##sequence-region"):
             _, seq_id, start, end = line.split()
             length = int(end) - int(start) + 1
-            yield "length", seq_id, length
-        if line.startswith("##FASTA"):
+            lengths.append(("length", seq_id, length))
+        elif line.startswith("##FASTA"):
             # stop once reaching to sequence section
             break
-        if not line.startswith("#"):
+        elif not line.startswith("#"):
             try:
                 seq_id, _ = line.split("\t", 1)
             except ValueError:
                 raise GFF3FormatError("Wrong GFF3 format at line: %s" % line)
-            if current == seq_id:
-                lines.append(line)
-            else:
-                if current is not False:
-                    yield "data", current, lines
-                lines = [line]
-                current = seq_id
-    if current is False:
-        # if the input file object is empty, it should return
-        # an empty generator
-        return
-        yield
-    else:
-        yield "data", current, lines
+            if seq_id not in records:
+                records[seq_id] = []
+                order.append(seq_id)
+            records[seq_id].append(line)
+
+    yield from lengths
+    for seq_id in order:
+        yield "data", seq_id, records[seq_id]
 
 
 def _parse_record(lines, length):
