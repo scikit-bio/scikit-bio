@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 
 from ._base import _table_to_numpy
+from skbio.util._array import ingest_array
 from skbio._config import get_config
 from skbio.util import get_package
 from skbio.util._array import _to_numpy
@@ -208,14 +209,13 @@ def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
             data = np.asarray(table.X)
             samples = table.obs.index
             features = table.var.index
-
     # array-like object
-    # this will generate a NumPy array, regardless of input type
     if data is None:
-        data = np.asarray(table)
+        xp, data = ingest_array(table)
+    else:
+        xp, data = ingest_array(data)
 
-    # zero-dimensional arrays are considered as invalid (such as scalars, non-
-    # convertible objects)
+    # zero-dimensional arrays are considered invalid
     if data.ndim == 0:
         raise TypeError(
             f"'{table.__class__.__name__}' is not a supported table format."
@@ -223,7 +223,8 @@ def _ingest_table(table, sample_ids=None, feature_ids=None, expand=True):
 
     # convert a 1-D vector into a 2-D array
     if data.ndim == 1 and expand:
-        data = data.reshape(1, -1)
+        data = xp.reshape(data, (1, -1))
+
     if data.ndim < 2:
         raise ValueError("Input table has less than 2 dimensions.")
 
