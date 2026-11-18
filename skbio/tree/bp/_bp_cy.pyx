@@ -136,6 +136,8 @@ cdef class _BPKernel:
 
     cpdef Py_ssize_t edge_from_number(self, INT32_t n):
         """Node index of edge number ``n``."""
+        if self._edge_lookup is None:
+            raise ValueError("The tree has no edge numbers.")
         return self._edge_lookup[n]
 
     cdef inline Py_ssize_t rank(self, Py_ssize_t t, Py_ssize_t i) noexcept nogil:
