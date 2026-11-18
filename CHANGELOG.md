@@ -29,7 +29,7 @@
 * Fixed the Stockholm reader to forward extra keyword arguments, such as `lowercase`, to the sequence constructor, so that Stockholm files with lowercase characters can be read ([#1543](https://github.com/scikit-bio/scikit-bio/issues/1543)).
 * Fixed `Sequence` case conversion altering characters that are not letters. `Sequence.lowercase` (used by the `lowercase` option of the FASTA and FASTQ writers) flipped the case bit of every selected character. When a lowercase mask covered non-letter positions, gaps (`-`), dots (`.`) and stop codons (`*`) were turned into control characters (e.g., `\r` and `\n`), and lowercase letters were converted to uppercase. The `lowercase` parameter of `Sequence` treated every character after `Z` as lowercase, rewriting `[`, `\`, `]`, `^`, `_`, `` ` ``, `{`, `|`, `}` and `~`. Case conversion is now restricted to the letters A-Z and a-z.
 * Fixed `permanova`, and `mantel` with the pearson or spearman method, raising on a condensed `DistanceMatrix` backed by a non-NumPy array, such as a GPU-resident one. The matrix is now expanded to full form on its own device ([#2664](https://github.com/scikit-bio/scikit-bio/pull/2664)).
-* Fixed `OrdinationResults.rename` leaving `sample_ids` and `feature_ids` unchanged, so that the printed summary, `plot` and the ordination writer used the old IDs ([#PRNUM](https://github.com/scikit-bio/scikit-bio/pull/PRNUM)).
+* Fixed `OrdinationResults.rename` leaving `sample_ids` and `feature_ids` unchanged, so that the printed summary, `plot` and the ordination writer used the old IDs ([#2679](https://github.com/scikit-bio/scikit-bio/pull/2679)).
 
 ### Miscellaneous
 
