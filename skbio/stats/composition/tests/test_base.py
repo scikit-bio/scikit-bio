@@ -997,6 +997,17 @@ class CompositionTests(TestCase, ArrayAPITestMixin):
 
 class TestTreeBasis(TestCase):
 
+    def test_tree_basis_ilr(self):
+        # the sparse basis returned by tree_basis can be passed to ilr and ilr_inv
+        tree = TreeNode.read(["((b,c)a, d)root;"])
+        basis, _ = tree_basis(tree)
+        mat = np.array([[.2, .3, .5], [.1, .6, .3]])
+        exp = ilr(mat, basis.toarray())
+        for validate in (True, False):
+            obs = ilr(mat, basis, validate=validate)
+            npt.assert_allclose(obs, exp)
+            npt.assert_allclose(ilr_inv(obs, basis, validate=validate), mat)
+
     def test_tree_basis_base_case(self):
         tree = TreeNode.read(["(a,b);"])
         exp_basis = coo_array(
