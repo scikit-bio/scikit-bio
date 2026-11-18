@@ -17,7 +17,7 @@
 
 ### Performance enhancements
 
-* Accelerated `TabularMSA.iter_positions` with `ignore_metadata=True`, and thereby `TabularMSA.conservation`, `TabularMSA.consensus` and `TabularMSA.gap_frequencies`, by slicing positions from a stacked byte array instead of indexing each sequence at each position ([#PRNUM](https://github.com/scikit-bio/scikit-bio/pull/PRNUM)).
+* Accelerated `TabularMSA.iter_positions` with `ignore_metadata=True`, and thereby `TabularMSA.conservation`, `TabularMSA.consensus` and `TabularMSA.gap_frequencies`, by slicing positions from a stacked byte array instead of indexing each sequence at each position ([#2676](https://github.com/scikit-bio/scikit-bio/pull/2676)).
 
 ### Bug Fixes
 
