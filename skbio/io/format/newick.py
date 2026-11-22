@@ -378,7 +378,9 @@ def _tree_node_to_newick(obj, fh):
             label = node._node_label()
             if label:
                 escaped = "%s" % label.replace("'", "''")
-                if any(t in operators for t in label):
+                if any(t in operators for t in label) or any(
+                    t.isspace() and t != " " for t in label
+                ):
                     fh.write("'")
                     fh.write(escaped)
                     fh.write("'")
