@@ -335,29 +335,36 @@ def _fastq_sniffer(fh):
 def _fastq_to_generator(
     fh, cls=None, variant=None, phred_offset=None, constructor=Sequence, **kwargs
 ):
-    # Skip any blank or whitespace-only lines at beginning of file
-    try:
-        seq_header = next(_line_generator(fh, skip_blanks=True))
-    except StopIteration:
+    # Share numbered lines across records and the sequence/quality parsers.
+    lines = enumerate(_line_generator(fh, skip_blanks=False), 1)
+    for header in lines:
+        if header[1]:
+            break
+    else:
         return
 
+    header_line_number, seq_header = header
     if not seq_header.startswith("@"):
         raise FASTQFormatError(
-            "Expected sequence (@) header line at start of file: %r" % str(seq_header)
+            "Expected sequence (@) header line at start of file: "
+            f"{seq_header!r} (line {header_line_number})"
         )
 
-    while seq_header is not None:
+    while header is not None:
+        _, seq_header = header
         id_, desc = _parse_fasta_like_header(seq_header)
-        seq, qual_header = _parse_sequence_data(fh, seq_header)
+        seq, quality_header = _parse_sequence_data(lines, header)
+        quality_line_number, qual_header = quality_header
 
         if qual_header != "+" and qual_header[1:] != seq_header[1:]:
             raise FASTQFormatError(
                 "Sequence (@) and quality (+) header lines do not match: "
-                "%r != %r" % (str(seq_header[1:]), str(qual_header[1:]))
+                f"{seq_header[1:]!r} != {qual_header[1:]!r} "
+                f"(line {quality_line_number})"
             )
 
-        phred_scores, seq_header = _parse_quality_scores(
-            fh, len(seq), variant, phred_offset, qual_header
+        phred_scores, header = _parse_quality_scores(
+            lines, len(seq), variant, phred_offset, quality_header
         )
         yield constructor(
             seq,
@@ -583,57 +590,67 @@ def _tabular_msa_to_fastq(
     )
 
 
-def _blank_error(unique_text):
+def _blank_error(unique_text, line_number):
     error_string = ("Found blank or whitespace-only line {} in FASTQ file").format(
         unique_text
     )
-    raise FASTQFormatError(error_string)
+    raise FASTQFormatError(f"{error_string} (line {line_number})")
 
 
-def _parse_sequence_data(fh, prev):
+def _parse_sequence_data(lines, prev):
     seq_chunks = []
-    for chunk in _line_generator(fh, skip_blanks=False):
+    prev_line_number, prev = prev
+    line_number = prev_line_number
+    for line_number, chunk in lines:
         if chunk.startswith("+"):
             if not prev:
-                _blank_error("before '+'")
+                _blank_error("before '+'", prev_line_number)
             if not seq_chunks:
-                raise FASTQFormatError("Found FASTQ record without sequence data.")
-            return "".join(seq_chunks), chunk
+                raise FASTQFormatError(
+                    f"Found FASTQ record without sequence data. (line {line_number})"
+                )
+            return "".join(seq_chunks), (line_number, chunk)
         elif chunk.startswith("@"):
             raise FASTQFormatError(
                 "Found FASTQ record that is missing a quality (+) header line "
-                "after sequence data."
+                f"after sequence data. (line {line_number})"
             )
         else:
             if not prev:
-                _blank_error("after header or within sequence")
+                _blank_error("after header or within sequence", prev_line_number)
             if _whitespace_regex.search(chunk):
                 raise FASTQFormatError(
-                    "Found whitespace in sequence data: %r" % str(chunk)
+                    f"Found whitespace in sequence data: {chunk!r} (line {line_number})"
                 )
             seq_chunks.append(chunk)
+        prev_line_number = line_number
         prev = chunk
 
-    raise FASTQFormatError("Found incomplete/truncated FASTQ record at end of file.")
+    raise FASTQFormatError(
+        "Found incomplete/truncated FASTQ record at end of file. "
+        f"(after line {line_number})"
+    )
 
 
-def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
+def _parse_quality_scores(lines, seq_len, variant, phred_offset, prev):
     phred_scores = []
     qual_len = 0
-    for chunk in _line_generator(fh, skip_blanks=False):
+    prev_line_number, prev = prev
+    line_number = prev_line_number
+    for line_number, chunk in lines:
         if chunk:
             if chunk.startswith("@") and qual_len == seq_len:
-                return np.hstack(phred_scores), chunk
+                return np.hstack(phred_scores), (line_number, chunk)
             else:
                 if not prev:
-                    _blank_error("after '+' or within quality scores")
+                    _blank_error("after '+' or within quality scores", prev_line_number)
                 qual_len += len(chunk)
 
                 if qual_len > seq_len:
                     raise FASTQFormatError(
                         "Found more quality score characters than sequence "
-                        "characters. Extra quality score characters: %r"
-                        % chunk[-(qual_len - seq_len) :]
+                        "characters. Extra quality score characters: "
+                        f"{chunk[-(qual_len - seq_len) :]!r} (line {line_number})"
                     )
 
                 phred_scores.append(
@@ -641,11 +658,15 @@ def _parse_quality_scores(fh, seq_len, variant, phred_offset, prev):
                         chunk, variant=variant, phred_offset=phred_offset
                     )
                 )
+        # Retain the first blank line when several occur consecutively.
+        if chunk or prev:
+            prev_line_number = line_number
         prev = chunk
 
     if qual_len != seq_len:
         raise FASTQFormatError(
-            "Found incomplete/truncated FASTQ record at end of file."
+            "Found incomplete/truncated FASTQ record at end of file. "
+            f"(after line {line_number})"
         )
     return np.hstack(phred_scores), None
 
