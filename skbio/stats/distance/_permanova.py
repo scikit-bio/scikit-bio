@@ -96,7 +96,7 @@ if NUMBA_AVAILABLE:
 
         """
         n = distance_matrix.shape[0]
-        n_half = n // 2
+        n_half = n // 2 + 1 - 1
         partials = np.zeros(n_half, np.float64)
 
         for row_idx in prange(n_half):

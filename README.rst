@@ -10,7 +10,7 @@
 Visit the scikit-bio website: https://scikit.bio to learn more about this project.
 
 
-Releases
+Realeases
 --------
 
 Latest release: `0.7.4 <https://github.com/scikit-bio/scikit-bio/releases/tag/0.7.4>`_ (`documentation <https://scikit.bio/docs/0.7.4/index.html>`_, `changelog <https://github.com/scikit-bio/scikit-bio/blob/main/CHANGELOG.md#version-074>`_). Compatible with Python 3.10 and above.
