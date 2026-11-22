@@ -6,14 +6,20 @@
 # The full license is in the file LICENSE.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from abc import abstractmethod
+from abc import abstractmethod, update_abstractmethods
+from contextlib import redirect_stdout
+from io import StringIO
+import inspect
+import pydoc
 from unittest import TestCase, main
 
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
 
-from skbio.sequence import DNA, RNA, GrammaredSequence
+import skbio
+from skbio import DNA, RNA, Protein
+from skbio.sequence import GrammaredSequence
 from skbio.util import classproperty
 from skbio.util import assert_data_frame_almost_equal
 from skbio.metadata import IntervalMetadata
@@ -56,6 +62,66 @@ class ExampleMotifsTester(ExampleGrammaredSequence):
 
 
 class TestGrammaredSequence(TestCase):
+    def test_help_package(self):
+        output = StringIO()
+        with redirect_stdout(output):
+            help(skbio)
+        self.assertIn('Help on package skbio', output.getvalue())
+
+    def test_class_introspection(self):
+        for cls in (GrammaredSequence, DNA, RNA, Protein,
+                    ExampleGrammaredSequence):
+            with self.subTest(cls=cls.__name__):
+                attributes = {a.name: a for a in inspect.classify_class_attrs(cls)}
+                self.assertEqual(attributes['definite_chars'].kind, 'property')
+                self.assertIn(cls.__name__, pydoc.render_doc(cls))
+
+    def test_abstract_grammar_dependencies(self):
+        cases = [
+            ('definite_chars', '_definite_hash'),
+            ('definite_chars', '_canonical_hash'),
+            ('definite_chars', '_nongap_hash'),
+            ('definite_chars', '_validation_mask'),
+            ('gap_chars', '_gap_hash'),
+            ('gap_chars', '_validation_mask'),
+            ('degenerate_map', '_degenerate_hash'),
+            ('degenerate_map', '_nongap_hash'),
+            ('degenerate_map', '_validation_mask'),
+            ('noncanonical_chars', '_canonical_hash'),
+            ('noncanonical_chars', '_degen_nonca_hash'),
+        ]
+        for attribute, derived in cases:
+            with self.subTest(attribute=attribute, derived=derived):
+                def getter(cls):
+                    raise NotImplementedError
+
+                getter.__name__ = attribute
+                cls = type('AbstractSequence', (ExampleGrammaredSequence,),
+                           {attribute: classproperty(abstractmethod(getter))})
+                for _ in range(2):
+                    with self.assertRaises(AttributeError):
+                        getattr(cls, derived)
+                    self.assertIsNone(getattr(cls, '_GrammaredSequence_' + derived))
+
+                inspect.classify_class_attrs(cls)
+                update_abstractmethods(cls)
+                self.assertIn(attribute, cls.__abstractmethods__)
+                with self.assertRaises(TypeError):
+                    cls('A')
+
+    def test_concrete_properties_on_abstract_class(self):
+        class AbstractSequence(ExampleGrammaredSequence):
+            @abstractmethod
+            def method(self):
+                pass
+
+        self.assertEqual(AbstractSequence.alphabet, set('.-ABCQXYZW'))
+        npt.assert_array_equal(AbstractSequence._definite_codes, [65, 66, 67, 81])
+        update_abstractmethods(AbstractSequence)
+        self.assertIn('method', AbstractSequence.__abstractmethods__)
+        with self.assertRaises(TypeError):
+            AbstractSequence('A')
+
     def test_default_gap_must_be_in_gap_chars(self):
         with self.assertRaisesRegex(
                 TypeError,

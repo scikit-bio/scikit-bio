@@ -28,6 +28,16 @@ def validate_chars(chars, attr, name):
         )
 
 
+def _get_grammar_property(cls, name):
+    """Get a concrete grammar value, allowing introspection of abstract classes."""
+    value = getattr(cls, name)
+    if getattr(value, "__isabstractmethod__", False):
+        # Abstract class properties remain descriptors for ABCMeta. Derived
+        # properties are unavailable until their dependencies are concrete.
+        raise AttributeError(f"{name} is abstract on {cls.__name__}.")
+    return value
+
+
 class GrammaredSequenceMeta(ABCMeta, type):
     _derived_attrs = frozenset({"canonical_chars", "degenerate_chars"})
 
@@ -371,14 +381,14 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     @classproperty
     def _definite_codes(cls):
         if cls.__definite_codes is None:
-            chars = sorted(cls.definite_chars)
+            chars = sorted(_get_grammar_property(cls, "definite_chars"))
             cls.__definite_codes = np.asarray([ord(d) for d in chars], dtype=int)
         return cls.__definite_codes
 
     @classproperty
     def _gap_codes(cls):
         if cls.__gap_codes is None:
-            chars = sorted(cls.gap_chars)
+            chars = sorted(_get_grammar_property(cls, "gap_chars"))
             cls.__gap_codes = np.asarray([ord(g) for g in chars], dtype=int)
         return cls.__gap_codes
 
@@ -392,7 +402,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     @classproperty
     def _noncanonical_codes(cls):
         if cls.__noncanonical_codes is None:
-            chars = sorted(cls.noncanonical_chars)
+            chars = sorted(_get_grammar_property(cls, "noncanonical_chars"))
             cls.__noncanonical_codes = np.asarray([ord(c) for c in chars], dtype=int)
         return cls.__noncanonical_codes
 
@@ -407,29 +417,33 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     @classproperty
     def _definite_hash(cls):
         if cls.__definite_hash is None:
+            codes = cls._definite_codes
             cls.__definite_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
-            cls.__definite_hash[cls._definite_codes] = True
+            cls.__definite_hash[codes] = True
         return cls.__definite_hash
 
     @classproperty
     def _degenerate_hash(cls):
         if cls.__degenerate_hash is None:
+            codes = cls._degenerate_codes
             cls.__degenerate_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
-            cls.__degenerate_hash[cls._degenerate_codes] = True
+            cls.__degenerate_hash[codes] = True
         return cls.__degenerate_hash
 
     @classproperty
     def _gap_hash(cls):
         if cls.__gap_hash is None:
+            codes = cls._gap_codes
             cls.__gap_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
-            cls.__gap_hash[cls._gap_codes] = True
+            cls.__gap_hash[codes] = True
         return cls.__gap_hash
 
     @classproperty
     def _canonical_hash(cls):
         if cls.__canonical_hash is None:
+            codes = cls._canonical_codes
             cls.__canonical_hash = np.zeros((Sequence._num_ascii_codes,), dtype=bool)
-            cls.__canonical_hash[cls._canonical_codes] = True
+            cls.__canonical_hash[codes] = True
         return cls.__canonical_hash
 
     @classproperty
@@ -471,7 +485,11 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         ``gap_chars``.
 
         """
-        return cls.degenerate_chars | cls.definite_chars | cls.gap_chars
+        return (
+            cls.degenerate_chars
+            | _get_grammar_property(cls, "definite_chars")
+            | _get_grammar_property(cls, "gap_chars")
+        )
 
     @classproperty
     def gap_chars(cls):
@@ -515,9 +533,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
     def _check_default_gap_char(cls):
         gap_char = cls.default_gap_char
         if gap_char is None:
-            raise ValueError(
-                f"{cls.__name__} does not define a default gap character."
-            )
+            raise ValueError(f"{cls.__name__} does not define a default gap character.")
         return gap_char
 
     @classproperty
@@ -538,7 +554,7 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         This property is derived from ``degenerate_map``.
 
         """
-        return set(cls.degenerate_map)
+        return set(_get_grammar_property(cls, "degenerate_map"))
 
     @classproperty
     def nondegenerate_chars(cls):
@@ -606,7 +622,9 @@ class GrammaredSequence(Sequence, metaclass=GrammaredSequenceMeta):
         noncanonical_chars
 
         """
-        return cls.definite_chars.difference(cls.noncanonical_chars)
+        return _get_grammar_property(cls, "definite_chars").difference(
+            _get_grammar_property(cls, "noncanonical_chars")
+        )
 
     @classproperty
     def noncanonical_chars(cls):
