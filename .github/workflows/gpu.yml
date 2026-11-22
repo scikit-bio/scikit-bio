@@ -178,9 +178,13 @@ jobs:
         shell: bash -l {0}
     steps:
       - uses: actions/checkout@v7
+      # Install conda under runner.temp, which the runner clears between jobs,
+      # so a job never reuses the previous job's test environment.
       - uses: conda-incubator/setup-miniconda@v4
         with:
-          auto-update-conda: true
+          miniforge-version: latest
+          conda-remove-defaults: true
+          installation-dir: ${{ runner.temp }}/miniforge3
           python-version: ${{ env.latest_python }}
           environment-file: ci/conda_host_env.yml
       - name: Install scikit-bio + ROCm backend
