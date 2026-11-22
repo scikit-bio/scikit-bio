@@ -14,7 +14,7 @@ from functools import partial
 
 import numpy as np
 
-from skbio import Sequence, DNA, RNA, Protein, TabularMSA
+from skbio import read, Sequence, DNA, RNA, Protein, TabularMSA
 from skbio.io import FASTAFormatError, QUALFormatError
 from skbio.io.format.fasta import (
     _fasta_sniffer, _fasta_to_generator, _fasta_to_sequence,
@@ -484,6 +484,42 @@ class ReaderTests(TestCase):
         for fp, kwargs, error_type, error_msg_regex in self.invalid_fps:
             with self.assertRaisesRegex(error_type, error_msg_regex):
                 list(_fasta_to_generator(fp, **kwargs))
+
+    def test_parse_error_line_numbers(self):
+        cases = [
+            ('missing header', '\n \nAC\n', r'\(line 3\)'),
+            ('blank after header', '\n>one\n\nAC\n', r'\(line 3\)'),
+            ('blank within sequence', '\n>one\nAC\n \nGT\n',
+             r'\(line 4\)'),
+            ('consecutive blanks', '>one\nAC\n\n \nGT\n', r'\(line 3\)'),
+            ('empty first record', '\n>one\n>two\nAC\n',
+             r'\(record starting at line 2\)'),
+            ('empty middle record', '>one\nAC\n>two\n>three\nGT\n',
+             r'\(record starting at line 3\)'),
+            ('empty last record', '>one\nAC\n>two\n \n',
+             r'\(record starting at line 3\)'),
+        ]
+        for name, source, message in cases:
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(FASTAFormatError, message):
+                    list(read(io.StringIO(source), format='fasta', verify=False))
+
+    def test_qual_parse_error_line_numbers(self):
+        cases = [
+            ('missing header', '\n \n40 40\n', r'\(line 3\)'),
+            ('blank within scores', '\n>one\n40\n\n40\n>two\n40 40\n',
+             r'\(line 4\)'),
+            ('empty last record', '\n>one\n40 40\n\n>two\n',
+             r'\(record starting at line 5\)'),
+            ('invalid scores', '>one\n40 X\n>two\n40 40\n',
+             r'\(record starting at line 1\)'),
+        ]
+        for name, source, message in cases:
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(QUALFormatError, message):
+                    list(read(io.StringIO('>one\nAC\n>two\nGT\n'),
+                              format='fasta', verify=False,
+                              qual=io.StringIO(source)))
 
     # light testing of fasta -> object readers to ensure interface is present
     # and kwargs are passed through. extensive testing of underlying reader is

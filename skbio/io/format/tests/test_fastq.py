@@ -332,6 +332,44 @@ class TestReaders(unittest.TestCase):
                 with self.assertRaisesRegex(error_type, error_msg_regex):
                     list(_fastq_to_generator(fp, phred_offset=offset))
 
+    def test_parse_error_line_numbers(self):
+        cases = [
+            ('missing header', '\n \nAC\n', r'\(line 3\)'),
+            ('missing sequence', '@one\n+\n', r'\(line 2\)'),
+            ('blank after header', '@one\n\nAC\n+\n!!\n', r'\(line 2\)'),
+            ('blank before plus', '@one\nAC\n\n+\n!!\n', r'\(line 3\)'),
+            ('blank within sequence', '@one\nA\n\nC\n+\n!!\n',
+             r'\(line 3\)'),
+            ('consecutive sequence blanks', '@one\n\n \nAC\n+\n!!\n',
+             r'\(line 2\)'),
+            ('whitespace in sequence', '@one\nA C\n+\n!!!\n', r'\(line 2\)'),
+            ('missing plus', '@one\nAC\n@two\n', r'\(line 3\)'),
+            ('different quality header', '@one\nAC\n+two\n!!\n',
+             r'\(line 3\)'),
+            ('blank after plus', '@one\nAC\n+\n\n!!\n', r'\(line 4\)'),
+            ('blank within quality', '@one\nAC\n+\n!\n\n!\n',
+             r'\(line 5\)'),
+            ('consecutive quality blanks', '@one\nAC\n+\n\n \n!!\n',
+             r'\(line 4\)'),
+            ('long quality', '@one\nAC\n+\n!!!\n', r'\(line 4\)'),
+            ('long multiline quality', '@one\nAC\n+\n!\n!!\n',
+             r'\(line 5\)'),
+            ('truncated header', '\n@one', r'\(after line 2\)'),
+            ('truncated sequence', '@one\nAC', r'\(after line 2\)'),
+            ('truncated plus', '@one\nAC\n+\n', r'\(after line 3\)'),
+            ('truncated quality', '@one\nAC\n+\n!', r'\(after line 4\)'),
+            ('truncated quality with blank', '@one\nAC\n+\n!\n\n',
+             r'\(after line 5\)'),
+            ('second multiline record',
+             '\n \n@good\nA\nC\n+\n!\n!\n\n@bad\nAC\n+other\n!!\n',
+             r'\(line 12\)'),
+        ]
+        for name, source, message in cases:
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(FASTQFormatError, message):
+                    list(read(io.StringIO(source), format='fastq',
+                              variant='sanger', verify=False))
+
     def test_fastq_to_generator_invalid_files_illumina(self):
         # files that should be invalid for illumina1.3 and illumina1.8 variants
         fps = [get_data_path(fp) for fp in
