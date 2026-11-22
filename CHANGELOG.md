@@ -18,6 +18,7 @@
 
 ### Bug Fixes
 
+* Structural parsing errors in FASTA, QUAL, and FASTQ files now include input line numbers, counting leading blank lines and multi-line records. Errors in a whole FASTA/QUAL record identify its starting line, and truncated FASTQ records identify the last line read ([#917](https://github.com/scikit-bio/scikit-bio/issues/917)).
 * Fixed `checklist.py` raising `UnicodeDecodeError` on platforms whose preferred encoding is not UTF-8, by explicitly reading source files as UTF-8 as declared in `.editorconfig` ([#2607](https://github.com/scikit-bio/scikit-bio/issues/2607)).
 * Fixed `ancombc2` producing NaN results when Gaussian mixture densities underflow to zero during bias estimation ([#2631](https://github.com/scikit-bio/scikit-bio/issues/2631)).
 * Fixed `GrammaredSequence` subclasses with extended alphabets incorrectly inheriting cached character masks from their parent class ([#2620](https://github.com/scikit-bio/scikit-bio/pull/2620)).

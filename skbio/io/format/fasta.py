@@ -793,8 +793,7 @@ def _fasta_to_generator(
                 )
             except ValueError as e:
                 raise ValueError(
-                    "Could not parse the FASTA record with ID %r: %s"
-                    % (fasta_id, e)
+                    "Could not parse the FASTA record with ID %r: %s" % (fasta_id, e)
                 ) from e
 
 
@@ -1005,10 +1004,12 @@ def _parse_fasta_raw(fh, data_parser, error_type, keep_spaces=False):
     the caller to construct the correct in-memory object to hold the data.
 
     """
-    # Skip any blank or whitespace-only lines at beginning of file
-    try:
-        seq_header = next(_line_generator(fh, skip_blanks=True))
-    except StopIteration:
+    # Number lines before skipping blanks so positions refer to the input file.
+    lines = enumerate(_line_generator(fh, skip_blanks=False), 1)
+    for header_line_number, seq_header in lines:
+        if seq_header:
+            break
+    else:
         return
 
     # header check inlined here and below for performance
@@ -1017,30 +1018,47 @@ def _parse_fasta_raw(fh, data_parser, error_type, keep_spaces=False):
     else:
         raise error_type(
             "Found non-header line when attempting to read the 1st record:"
-            "\n%s" % seq_header
+            "\n%s (line %d)" % (seq_header, header_line_number)
         )
 
     # will remove spaces from each sequence (but not quality scores)
     trim_spaces = data_parser.__name__ == "_parse_sequence_data" and not keep_spaces
 
     data_chunks = []
+
+    def parse_data():
+        try:
+            return data_parser(data_chunks)
+        except error_type as e:
+            raise error_type(
+                f"{e} (record starting at line {header_line_number})"
+            ) from e
+
     prev = seq_header
-    for line in _line_generator(fh, skip_blanks=False):
+    prev_line_number = header_line_number
+    for line_number, line in lines:
         if line.startswith(">"):
             # new header, so yield current record and reset state
-            yield data_parser(data_chunks), id_, desc
+            yield parse_data(), id_, desc
             data_chunks = []
             id_, desc = _parse_fasta_like_header(line)
+            header_line_number = line_number
         elif line:
             # ensure no blank lines within a single record
             if not prev:
-                raise error_type("Found blank or whitespace-only line within record.")
+                raise error_type(
+                    "Found blank or whitespace-only line within record. "
+                    f"(line {prev_line_number})"
+                )
             if trim_spaces:
                 line = line.replace(" ", "")
             data_chunks.append(line)
+        # Retain the first blank line when several occur consecutively.
+        if line or prev:
+            prev_line_number = line_number
         prev = line
     # yield last record in file
-    yield data_parser(data_chunks), id_, desc
+    yield parse_data(), id_, desc
 
 
 def _parse_sequence_data(chunks):
