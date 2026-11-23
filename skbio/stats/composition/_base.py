@@ -13,6 +13,7 @@ from warnings import warn
 from typing import Any, TYPE_CHECKING
 
 import numpy as np
+from scipy.sparse import issparse
 
 from skbio.util._decorator import (
     aliased,
@@ -897,6 +898,8 @@ def ilr(
             _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
         )  # dimension (N-1) x N
     else:
+        if issparse(basis):
+            basis = basis.toarray()
         xp_, basis = ingest_array(basis)
         if validate:
             # the following maybe redundant
@@ -1016,15 +1019,18 @@ def ilr_inv(
         basis = xp.asarray(
             _gram_schmidt_basis(N), device=mat.device, dtype=xp.float64
         )  # dimension (N-1) x N
-    elif validate:
-        xp_, basis = ingest_array(basis)
-        # the following maybe redundant as the orthonrmal implicitly check 2-d
-        if basis.ndim != 2:
-            raise ValueError(
-                f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
-            )
-        _check_basis(xp_, basis, orthonormal=True, subspace_dim=N - 1)
-        basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
+    else:
+        if issparse(basis):
+            basis = basis.toarray()
+        if validate:
+            xp_, basis = ingest_array(basis)
+            # the following maybe redundant as the orthonrmal implicitly check 2-d
+            if basis.ndim != 2:
+                raise ValueError(
+                    f"Basis needs to be a 2-D matrix, not a {basis.ndim}-D matrix."
+                )
+            _check_basis(xp_, basis, orthonormal=True, subspace_dim=N - 1)
+            basis = xp.asarray(basis, device=mat.device, dtype=xp.float64)
     axis %= mat.ndim
     return _ilr_inv(xp, mat, basis, axis)
 
