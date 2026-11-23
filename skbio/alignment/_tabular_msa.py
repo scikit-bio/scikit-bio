@@ -1357,6 +1357,12 @@ class TabularMSA(MetadataMixin, PositionalMetadataMixin, SkbioObject):
         if reverse:
             indices = reversed(indices)
 
+        if ignore_metadata and len(self):
+            # Stack the sequences' bytes once and slice columns from the stack,
+            # rather than indexing every sequence at every position.
+            data = np.vstack([seq._bytes for seq in self._seqs])
+            return (Sequence(data[:, index]) for index in indices)
+
         return (
             self._get_position_(index, ignore_metadata=ignore_metadata)
             for index in indices

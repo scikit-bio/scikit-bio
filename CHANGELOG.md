@@ -16,6 +16,10 @@
 * The `permdisp` GPU kernel now reads only each group's samples instead of scanning all of them, so its time grows far less with the number of groups. The 64-group limit is gone and the dimension limit is raised from 64 to 1024 ([#2649](https://github.com/scikit-bio/scikit-bio/pull/2649)).
 * `pcoa` now centers a condensed `DistanceMatrix` or condensed vector in place after expanding it, which saves one full-size copy of the matrix on NumPy ([#2671](https://github.com/scikit-bio/scikit-bio/pull/2671)).
 
+### Performance enhancements
+
+* Accelerated `TabularMSA.iter_positions` with `ignore_metadata=True`, and thereby `TabularMSA.conservation`, `TabularMSA.consensus` and `TabularMSA.gap_frequencies`, by slicing positions from a stacked byte array instead of indexing each sequence at each position ([#2676](https://github.com/scikit-bio/scikit-bio/pull/2676)).
+
 ### Bug Fixes
 
 * Fixed `checklist.py` raising `UnicodeDecodeError` on platforms whose preferred encoding is not UTF-8, by explicitly reading source files as UTF-8 as declared in `.editorconfig` ([#2607](https://github.com/scikit-bio/scikit-bio/issues/2607)).
