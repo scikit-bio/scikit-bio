@@ -1452,6 +1452,18 @@ class TreeTests(TestCase):
             self.assertEqual(o.name, e.name)
             self.assertEqual(o.length, e.length)
 
+    def test_root_at_midpoint_missing_length_climbed(self):
+        # Internal node p has no length and lies on the climb from a to the
+        # midpoint. It is treated as 0. a and b are farthest apart, by 3,
+        # therefore the root should be 1.5 away from each of them.
+        nwk = "(b:1,((a:1,e:1)p,g:1)x:1);\n"
+        t = TreeNode.read([nwk])
+        obs = t.root_at_midpoint(reset=False)
+        for name in "ab":
+            node = obs.find(name)
+            self.assertEqual(sum(x.length or 0.0 for x in node.ancestors(
+                include_self=True) if x.parent is not None), 1.5)
+
     def test_root_at_midpoint_tie(self):
         t = TreeNode.read(["(((a:1,b:1)c:2,(d:3,e:4)f:5),g:1);"])
         obs = t.root_at_midpoint()
