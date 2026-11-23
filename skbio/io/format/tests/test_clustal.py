@@ -262,6 +262,29 @@ UGCUGCAUCA---------------- 33
             with StringIO() as fh:
                 _tabular_msa_to_clustal(msa, fh)
 
+    def test_duplicate_string_labels(self):
+        msa = TabularMSA([CustomSequence('foo'),
+                          CustomSequence('bar')], index=[1, '1'])
+
+        with StringIO() as fh:
+            with self.assertRaisesRegex(ClustalFormatError, r"index.*unique"):
+                _tabular_msa_to_clustal(msa, fh)
+            self.assertEqual(fh.getvalue(), '')
+
+    def test_non_string_labels(self):
+        for labels in ([1, 2], [1, '2']):
+            msa = TabularMSA([CustomSequence('foo'),
+                              CustomSequence('bar')], index=labels)
+
+            with StringIO() as fh:
+                _tabular_msa_to_clustal(msa, fh)
+                fh.seek(0)
+                observed = _clustal_to_tabular_msa(
+                    fh, constructor=CustomSequence)
+
+            self.assertEqual(list(observed.index), ['1', '2'])
+            self.assertEqual([str(seq) for seq in observed], ['foo', 'bar'])
+
     def test_invalid_lengths(self):
         fh = StringIO(
             "CLUSTAL\n"
