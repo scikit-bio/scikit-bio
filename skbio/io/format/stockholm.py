@@ -807,6 +807,14 @@ def _format_positional_metadata(df, data_type):
             "Found %d duplicate names." % (data_type, num_repeated_columns)
         )
 
+    bool_columns = [c for c in df.columns if df[c].dtype == bool]
+    if bool_columns:
+        raise StockholmFormatError(
+            "%s contains boolean column(s) %s, which cannot be written "
+            "as a single character. Convert them to single-character "
+            "strings before writing." % (data_type, bool_columns)
+        )
+
     str_df = df.astype(str)
 
     # Asserts positional metadata dataframe items are one character long
