@@ -11,6 +11,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
+from skbio.diversity import alpha_diversity
 from skbio.diversity.alpha import ace
 
 
@@ -30,6 +31,16 @@ class AceTests(unittest.TestCase):
         # Border case: only singletons and 10-tons, no abundant taxa.
         npt.assert_almost_equal(ace([0, 1, 1, 0, 0, 10, 10, 1, 0, 0]),
                                 9.35681818182)
+
+    def test_ace_empty_sample(self):
+        # A sample with no observed taxon has nothing to estimate.
+        npt.assert_almost_equal(ace(np.array([0])), 0.0)
+        npt.assert_almost_equal(ace(np.array([0, 0, 0])), 0.0)
+
+        # An empty sample must not abort the calculation for the whole table.
+        counts = np.array([[12, 3, 2, 1], [0, 0, 0, 0], [12, 12, 13, 14]])
+        obs = alpha_diversity("ace", counts)
+        npt.assert_almost_equal(obs.values, [4.6, 0.0, 4.0])
 
     def test_ace_only_rare_singletons(self):
         with self.assertRaises(ValueError):
