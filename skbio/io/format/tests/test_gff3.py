@@ -131,6 +131,30 @@ class ReaderTests(GFF3IOTests):
         exp = {'db_xref': 'GO:000152,GO:001234', 'note': 'fooo'}
         self.assertEqual(exp, obs)
 
+    def test_parse_attr_percent_decoding(self):
+        # reserved characters are percent-encoded in column 9 and must be
+        # decoded when read
+        s = 'ID=a%3B%3D%26%2Cb;Note=important%3B useful'
+        obs = _parse_attr(s)
+        exp = {'ID': 'a;=&,b', 'note': 'important; useful'}
+        self.assertEqual(exp, obs)
+
+    def test_parse_attr_percent_decoding_key(self):
+        # the tag itself may be percent-encoded too, and the vocabulary
+        # change must be applied to the decoded tag
+        s = 'Db%78ref=GO:000152'
+        obs = _parse_attr(s)
+        self.assertEqual({'db_xref': 'GO:000152'}, obs)
+
+    def test_parse_record_percent_decoding(self):
+        line = ('ctg123\tProdigal\tgene\t1\t9\t.\t+\t0\t'
+                'ID=a%3B%3D%26%2Cb;Note=important%3B useful')
+        obs = _parse_record([line], 9)
+        exp = {'source': 'Prodigal', 'type': 'gene', 'score': '.',
+               'strand': '+', 'phase': 0, 'ID': 'a;=&,b',
+               'note': 'important; useful'}
+        self.assertEqual([exp], [i.metadata for i in obs._intervals])
+
     def test_yield_record(self):
         obs = [('data', 'seqid1', ['seqid1\txxx', 'seqid1\tyyy']),
                ('data', 'seqid2', ['seqid2\tzzz'])]
@@ -330,6 +354,32 @@ class RoundtripTests(GFF3IOTests):
             exp = [i.rstrip() for i in f.readlines() if not i.startswith('#')]
 
         self.assertEqual(obs, exp)
+
+    def test_roundtrip_escaped_characters(self):
+        # reserved characters escaped by the writer must be decoded on read
+        # so that a read/write/read cycle preserves the original metadata
+        imd = IntervalMetadata(9)
+        imd.add([(0, 9)], metadata={
+            'type': 'gene', 'ID': 'a;=&,b', 'Note': 'important; useful'})
+
+        with io.StringIO() as fh:
+            _interval_metadata_to_gff3(imd, fh, seq_id='ctg123')
+            written = [i for i in fh.getvalue().splitlines()
+                       if not i.startswith('#')]
+
+        self.assertEqual(
+            ['ctg123\t.\tgene\t1\t9\t.\t.\t.\t'
+             'ID=a%3B%3D%26%2Cb;Note=important%3B useful'],
+            written)
+
+        obs = _gff3_to_interval_metadata(
+            io.StringIO('\n'.join(written) + '\n'), seq_id='ctg123')
+        self.assertEqual(imd._intervals[0].bounds,
+                         obs._intervals[0].bounds)
+        self.assertEqual(imd._intervals[0].metadata['ID'],
+                         obs._intervals[0].metadata['ID'])
+        self.assertEqual(imd._intervals[0].metadata['Note'],
+                         obs._intervals[0].metadata['note'])
 
     def test_roundtrip_interval_metadata_generator(self):
         with io.StringIO() as fh:
