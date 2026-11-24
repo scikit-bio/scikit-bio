@@ -45,6 +45,29 @@ class TestUtils(TestCase):
         obs = mean_and_std(self.x, ddof=2)
         npt.assert_almost_equal((3.5, 2.091650066), obs)
 
+    def test_mean_and_std_weighted(self):
+        # Equal weights must give the unweighted result.
+        x = self.x.astype(float)
+        for axis, w in ((None, np.ones(x.shape)), (0, np.ones(2)),
+                        (1, np.ones(3))):
+            for ddof in (0, 1):
+                obs = mean_and_std(x, axis=axis, weights=w, ddof=ddof)
+                npt.assert_allclose(obs[0], x.mean(axis=axis))
+                npt.assert_allclose(obs[1], x.std(axis=axis, ddof=ddof))
+        # Unequal weights along axis 0, against the weighted formulas.
+        w = np.array([1.0, 3.0])
+        avg = (w[:, None] * x).sum(axis=0) / w.sum()
+        std = np.sqrt((w[:, None] * (x - avg) ** 2).sum(axis=0) / w.sum())
+        obs = mean_and_std(x, axis=0, weights=w)
+        npt.assert_allclose(obs[0], avg)
+        npt.assert_allclose(obs[1], std)
+        obs = mean_and_std(x, axis=0, weights=w, with_std=False)
+        npt.assert_allclose(obs[0], avg)
+        self.assertIsNone(obs[1])
+        obs = mean_and_std(x, axis=0, weights=w, with_mean=False)
+        self.assertIsNone(obs[0])
+        npt.assert_allclose(obs[1], std)
+
     def test_mean_and_std_no_mean_no_std(self):
         with npt.assert_raises(ValueError):
             mean_and_std(self.x, with_mean=False, with_std=False)

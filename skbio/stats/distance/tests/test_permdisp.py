@@ -28,6 +28,7 @@ from skbio.stats.distance._permdisp import (
 from skbio.stats.distance import _gpu as gpu_mod
 from skbio.stats.distance import _permdisp_gpu as permdisp_gpu
 from skbio.stats.distance._permdisp_gpu import (
+    _assemble_stat_p,
     _group_order,
     _kernel_sizes,
     _kernel_supports_shape,
@@ -1009,6 +1010,13 @@ class PermdispGpuHostTests(TestCase):
         # dimension limit is what sizes the kernel's shared arrays.
         self.assertTrue(_kernel_supports_shape(_MAX_DIMS))
         self.assertFalse(_kernel_supports_shape(_MAX_DIMS + 1))
+
+    def test_assemble_stat_p(self):
+        stats = np.array([2.0, 1.0, 3.0, 2.0])
+        self.assertEqual(_assemble_stat_p(stats, 3), (2.0, 0.75))
+        stat, p = _assemble_stat_p(stats[:1], 0)
+        self.assertEqual(stat, 2.0)
+        self.assertTrue(np.isnan(p))
 
     def test_kernel_sizes(self):
         # Shared size: next power of two, at least 64. Tile: next power of

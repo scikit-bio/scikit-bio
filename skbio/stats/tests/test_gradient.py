@@ -938,6 +938,13 @@ class TrajectoryGradientANOVATests(BaseTests):
         exp = GradientANOVAResults('trajectory', True, [exp_treatment])
         self.assert_gradientANOVA_results_almost_equal(obs, exp)
 
+    def test_one_sample(self):
+        tv = TrajectoryGradientANOVA(self.coords, self.prop_expl,
+                                     self.metadata_map)
+        obs = tv._compute_trajectories_results('g', pd.DataFrame([[3.0, 4.0]]))
+        npt.assert_allclose(obs.trajectory, [5.0])
+        npt.assert_allclose(obs.info['2-norm'], 5.0)
+
 
 class FirstDifferenceGradientANOVATests(BaseTests):
     def test_get_trajectories(self):
@@ -986,6 +993,14 @@ class FirstDifferenceGradientANOVATests(BaseTests):
                                         None)
         exp = GradientANOVAResults('diff', True, [exp_treatment])
         self.assert_gradientANOVA_results_almost_equal(obs, exp)
+
+    def test_one_sample(self):
+        dv = FirstDifferenceGradientANOVA(self.coords, self.prop_expl,
+                                          self.metadata_map)
+        obs = dv._compute_trajectories_results('g', pd.DataFrame([[3.0, 4.0]]))
+        npt.assert_allclose(obs.trajectory, [5.0])
+        npt.assert_allclose(obs.info['mean'], 5.0)
+        self.assertEqual(obs.info['std'], 0)
 
 
 class WindowDifferenceGradientANOVATests(BaseTests):
@@ -1041,6 +1056,20 @@ class WindowDifferenceGradientANOVATests(BaseTests):
                                         None)
         exp = GradientANOVAResults('wdiff', True, [exp_treatment])
         self.assert_gradientANOVA_results_almost_equal(obs, exp)
+
+    def test_one_sample(self):
+        wdv = WindowDifferenceGradientANOVA(self.coords, self.prop_expl,
+                                            self.metadata_map, 3)
+        obs = wdv._compute_trajectories_results('g', pd.DataFrame([[3.0, 4.0]]))
+        npt.assert_allclose(obs.trajectory, [5.0])
+        npt.assert_allclose(obs.info['mean'], 5.0)
+        self.assertEqual(obs.info['std'], 0)
+
+    def test_window_size_not_positive_integer(self):
+        for size in (0, -1, 2.5):
+            with self.assertRaisesRegex(ValueError, "positive integer"):
+                WindowDifferenceGradientANOVA(self.coords, self.prop_expl,
+                                              self.metadata_map, size)
 
 
 if __name__ == '__main__':
