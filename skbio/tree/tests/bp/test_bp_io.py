@@ -42,6 +42,27 @@ class NewickTests(TestCase):
         self.assertEqual(obs.edge_from_number(4), 7)
         self.assertEqual(obs.edge_from_number(5), 0)
 
+    def test_parse_newick_without_edge_numbers(self):
+        # no edge-number lookup is built for a string without edge numbers
+        obs = parse_newick('((A:.01, B:.01)D:.01, C:.01)r;')
+        self.assertIsNone(obs._edge_lookup)
+        npt.assert_array_equal(obs.edges, np.zeros(obs.data.size, np.int32))
+        self.assertEqual(obs.edge(2), 0)
+        with self.assertRaisesRegex(ValueError, "no edge numbers"):
+            obs.edge_from_number(0)
+
+    def test_parse_newick_any_edge_number(self):
+        # a single edge number, in any form and even 0, gives the lookup
+        for in_, pos, num in (('((a{0},b)c,d)r;', 2, 0),
+                              ('((a,b:1{3})c,d)r;', 4, 3),
+                              ('((a,b)c,d):1{4};', 0, 4),
+                              ('((a,b)c,d{5})r;', 7, 5)):
+            obs = parse_newick(in_)
+            self.assertIsNotNone(obs._edge_lookup, in_)
+            self.assertEqual(obs.edge(pos), num, in_)
+            if num:
+                self.assertEqual(obs.edge_from_number(num), pos, in_)
+
     def _compare_newick(self, obs, exp):
         a = skbio.TreeNode.read([obs])
         b = skbio.TreeNode.read([exp])
