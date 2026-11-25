@@ -71,11 +71,13 @@ def ancombc(
         Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
-    grouping : str, optional
+    grouping : str or bool, optional
         Metadata column defining sample groups for post-hoc analyses. Must be a term
         in ``formula`` and contain at least three groups. Other terms are treated as
         adjustment covariates. It has no impact on the main result. If None (default),
-        post-hoc analyses will be unavailable.
+        post-hoc analyses will be unavailable. If True, retain the full coefficient
+        covariance matrix so that arbitrary contrasts can be tested with
+        :meth:`ANCOMBCResult.contrast_test`.
     max_iter : int, optional
         Maximum number of iterations for the bias estimation process. Default is 100.
     tol : float, optional
@@ -442,11 +444,13 @@ def ancombc2(
         Refer to `Patsy's documentation
         <https://patsy.readthedocs.io/en/latest/formulas.html>`_ on how to specify
         a formula.
-    grouping : str, optional
+    grouping : str or bool, optional
         Metadata column defining sample groups for post-hoc analyses. Must be a term
         in ``formula`` and contain at least three groups. Other terms are treated as
         adjustment covariates. It has no impact on the main result. If None (default),
-        post-hoc analyses will be unavailable.
+        post-hoc analyses will be unavailable. If True, retain the full coefficient
+        covariance matrix so that arbitrary contrasts can be tested with
+        :meth:`ANCOMBCResult.contrast_test`.
     pseudocount : int or float, optional
         Pseudocount to add to all abundance data. Default is 0.
     aggregator : callable, mapping, or 1-D array_like, optional
@@ -1014,8 +1018,10 @@ def _validate_grouping(metadata, dmat, grouping):
     """Validate a post-hoc grouping and return its design-matrix column indices."""
     if grouping is None:
         return None
+    if grouping is True:
+        return True
     if not isinstance(grouping, str):
-        raise TypeError("`grouping` must be a metadata column name or None.")
+        raise TypeError("`grouping` must be a metadata column name, True, or None.")
     if grouping not in metadata.columns:
         raise ValueError("`grouping` is not a metadata column.")
     try:
@@ -2648,7 +2654,7 @@ def _adjust_variance(var_hat, vcov_hat, var_delta, var_quantile, groups=None):
 
     # Keep a retained covariance tensor consistent with the adjusted variances.
     if vcov_hat is not None:
-        if groups is None:
+        if groups is None or groups is True:
             diag = np.arange(var_hat.shape[1])
             vcov_hat[:, diag, diag] = var_hat
         else:
@@ -2789,6 +2795,10 @@ class ANCOMBCResult:
       abundant from the reference category. A feature-covariate pair is marked as
       "True" if the *q*-value is less than or equal to the significance level.
 
+    The :meth:`contrast_test` method tests arbitrary linear combinations of fitted
+    coefficients. Pass ``grouping=True`` to :func:`ancombc` or :func:`ancombc2` to
+    retain the full coefficient covariance matrix needed for this analysis.
+
     See Also
     --------
     ancombc : ANCOM-BC function.
@@ -2839,11 +2849,113 @@ class ANCOMBCResult:
 
     def _require_groups(self, method):
         """Require an upstream grouping for post-hoc analyses."""
-        if self._groups is None:
+        if self._groups is None or self._groups is True:
             raise ValueError(
                 f"`{method}` requires a post-hoc grouping. Rerun the function with "
                 "`grouping` specified to enable post-hoc analysis."
             )
+
+    def contrast_test(
+        self,
+        contrasts,
+        alpha: float | str = "inherit",
+        p_adjust: str = "inherit",
+    ) -> pd.DataFrame:
+        r"""Test user-defined linear contrasts of the fitted coefficients.
+
+        Contrasts are evaluated after fitting and use the full coefficient covariance
+        matrix. To enable this analysis, pass ``grouping=True`` to :func:`ancombc2`
+        (or :func:`ancombc`). Each row of ``contrasts`` defines one contrast and must
+        have one entry for every column in the fitted design matrix, in the order
+        shown by ``result.result``.
+
+        Parameters
+        ----------
+        contrasts : array_like or pd.DataFrame
+            Contrast matrix of shape ``(n_contrasts, n_covariates)``. A one-dimensional
+            array defines a single contrast. DataFrame row labels are used as contrast
+            names; otherwise names are ``Contrast1``, ``Contrast2``, etc.
+        alpha : float or "inherit", optional
+            Significance level. Default is ``"inherit"``.
+        p_adjust : str, optional
+            Multiple testing correction method. Default is ``"inherit"``. Correction
+            is applied independently to each contrast across features.
+
+        Returns
+        -------
+        pd.DataFrame
+            Results indexed by ``(FeatureID, Contrast)`` with ``Log(FC)``, ``SE``,
+            ``W``, ``pvalue``, ``qvalue`` and ``Signif`` columns.
+
+        Notes
+        -----
+        A contrast involving any non-estimable coefficient is conservatively reported
+        as non-estimable, even when a more involved linear combination could be
+        estimable.
+        """
+        if self._groups is not True:
+            raise ValueError(
+                "`contrast_test` requires `grouping=True` when fitting the model."
+            )
+        if isinstance(contrasts, pd.DataFrame):
+            names = [str(x) for x in contrasts.index]
+            matrix = contrasts.to_numpy(dtype=float)
+        else:
+            matrix = np.asarray(contrasts, dtype=float)
+            names = None
+        if matrix.ndim == 1:
+            matrix = matrix[None, :]
+        if matrix.ndim != 2 or matrix.shape[1] != len(self._covariates):
+            raise ValueError(
+                "`contrasts` must have one row per contrast and one column per "
+                "fitted covariate."
+            )
+        if matrix.shape[0] == 0 or not np.isfinite(matrix).all():
+            raise ValueError("`contrasts` must contain at least one finite contrast.")
+        if names is None:
+            names = [f"Contrast{i + 1}" for i in range(matrix.shape[0])]
+        if len(set(names)) != len(names):
+            raise ValueError("Contrast names must be unique.")
+
+        alpha, p_adjust = self._stat_params(alpha, p_adjust)
+        if not 0 < alpha < 1:
+            raise ValueError(f"`alpha`={alpha} is not within 0 and 1.")
+        beta = self._beta_hat
+        vcov = self._vcov_hat
+        estimate = beta @ matrix.T
+        variance = np.einsum("ca,nab,cb->nc", matrix, vcov, matrix)
+        estimable = None
+        if self._estimable is not None:
+            estimable = np.all(
+                self._estimable[:, None, :] | (matrix[None, :, :] == 0), axis=2
+            )
+            estimate = estimate.copy()
+            variance = variance.copy()
+            estimate[~estimable] = np.nan
+            variance[~estimable] = np.nan
+        se = np.sqrt(np.maximum(variance, 0))
+        W = estimate / se
+        pval = _calc_pvalues(W, self._dof)
+        if estimable is not None:
+            pval[~estimable] = 1.0
+        qval = _adjust_pvalues(pval, p_adjust, axis=0)
+        qval = np.where(np.isnan(qval), 1.0, qval)
+        reject = qval <= alpha
+
+        index = pd.MultiIndex.from_product(
+            (self._features, names), names=("FeatureID", "Contrast")
+        )
+        return pd.DataFrame(
+            {
+                "Log(FC)": estimate.ravel(),
+                "SE": se.ravel(),
+                "W": W.ravel(),
+                "pvalue": pval.ravel(),
+                "qvalue": qval.ravel(),
+                "Signif": pd.array(reject.ravel(), dtype="boolean"),
+            },
+            index=index,
+        )
 
     def _stat_params(self, alpha, p_adjust):
         """Get FDR-correction method and significance level from upstream."""
