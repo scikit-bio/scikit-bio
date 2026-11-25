@@ -2,6 +2,10 @@
 
 ## Version 0.7.5-dev
 
+### Performance enhancements
+
+* Faster FASTA writing for sequences without positional metadata, such as `skbio.io.write(seqs, format="fasta", into=fp)`. The writer no longer creates an empty `pandas.DataFrame` for each sequence when checking for quality scores. Writing sequences is about 21x faster. ([#2690](https://github.com/scikit-bio/scikit-bio/issues/2690)).
+
 ### Features
 
 * Documented "alignment-like", an abstract for inputs that represent two or more aligned sequences ([#2627](https://github.com/scikit-bio/scikit-bio/pull/2627)). 
