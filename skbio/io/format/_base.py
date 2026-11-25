@@ -196,14 +196,17 @@ def _format_fasta_like_records(
         else:
             header = id_
 
-        if require_qual and "quality" not in seq.positional_metadata:
+        has_quality = (
+            seq.has_positional_metadata() and "quality" in seq.positional_metadata
+        )
+        if require_qual and not has_quality:
             raise ValueError(
                 "Cannot write %s sequence because it does not have quality "
                 "scores associated with it." % cardinal_to_ordinal(idx + 1)
             )
 
         qual = None
-        if "quality" in seq.positional_metadata:
+        if has_quality:
             qual = seq.positional_metadata["quality"].values
 
         if lowercase is not None:
