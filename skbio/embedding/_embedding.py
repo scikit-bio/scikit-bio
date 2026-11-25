@@ -36,9 +36,15 @@ class Embedding(SkbioObject):
     embedding : array_like
         Embedding matrix where the first axis is indexed by `ids`.
     ids : array_like
-        IDs of biological objects.
+        Identifiers of the biological objects being embedded, one per row of
+        ``embedding`` (e.g., the characters of a sequence, or sample or feature
+        names). The length of ``ids`` must equal the number of rows in
+        ``embedding``.
 
     """
+
+    # noun used in error messages to describe what each embedding row maps to
+    _obj_noun = "ids"
 
     read = Read()
     write = Write()
@@ -55,12 +61,12 @@ class Embedding(SkbioObject):
         return self._ids
 
     def __init__(self, embedding, ids, **kwargs):
-        # make sure that the embedding has the same length as the sequence
+        # the embedding must have exactly one row per id
         ids_len = len(ids)
         if embedding.shape[0] != ids_len:
             raise ValueError(
-                f"The embedding ({embedding.shape[0]}) must have the "
-                f"same length as the ids ({ids_len})."
+                f"The number of rows in the embedding ({embedding.shape[0]}) "
+                f"must match the number of {self._obj_noun} ({ids_len})."
             )
 
         self._embedding = np.asarray(embedding)
@@ -92,6 +98,8 @@ class SequenceEmbedding(Embedding):
     skbio.sequence.Sequence
 
     """
+
+    _obj_noun = "characters in the sequence"
 
     def __init__(self, embedding, sequence, **kwargs):
         if isinstance(sequence, Sequence):
