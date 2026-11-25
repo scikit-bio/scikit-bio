@@ -226,6 +226,30 @@ class BaseTests(TestCase):
 
         self.assertTrue(np.isnan(inv_simpson([0, 0])))
 
+    def test_hill_large_order(self):
+        # Equally abundant taxa have Hill number equal to observed richness
+        # at every order, including when all unscaled powers underflow.
+        for order in (128, 2000, 1e308, np.finfo(float).max):
+            for size in (1, 2, 1024):
+                counts = [0] + [5] * size + [0]
+                with self.subTest(order=order, size=size):
+                    with np.errstate(divide='raise', invalid='raise', over='raise'):
+                        obs = hill(counts, order=order)
+                    npt.assert_allclose(obs, size, rtol=1e-13)
+
+        # Nonuniform examples evaluated from the defining formula using
+        # 90-digit decimal arithmetic.
+        self.assertAlmostEqual(hill([1, 3, 4], order=128), 2.010945546044426)
+        self.assertAlmostEqual(hill([1, 3, 4], order=2000), 2.0006936141748786)
+        self.assertAlmostEqual(hill([1, 10, 10], order=2000), 2.100051255925534)
+
+        # At these finite orders the correction to inverse dominance is
+        # below binary64 precision. This also checks tied maxima.
+        for counts in ([1, 3, 4], [1, 10, 10], [1, 2, 3, 4, 5]):
+            with np.errstate(divide='raise', invalid='raise', over='raise'):
+                obs = hill(counts, order=np.finfo(float).max)
+            npt.assert_allclose(obs, sum(counts) / max(counts), rtol=1e-13)
+
     def test_kempton_taylor_q(self):
         # Approximate Magurran 1998 calculation p143.
         arr = np.array([2, 3, 3, 3, 3, 3, 4, 4, 4, 6, 6, 7, 7, 9, 9, 11, 14,
@@ -385,6 +409,26 @@ class BaseTests(TestCase):
 
         # empty community
         self.assertTrue(np.isnan(renyi([0, 0])))
+
+    def test_renyi_large_order(self):
+        # Equally abundant taxa have Renyi entropy log(S) at every order.
+        for order in (128, 2000, 1e308, np.finfo(float).max):
+            for size in (1, 2, 1024):
+                counts = [0] + [5] * size + [0]
+                with self.subTest(order=order, size=size):
+                    with np.errstate(divide='raise', invalid='raise', over='raise'):
+                        obs = renyi(counts, order=order, base=2)
+                    npt.assert_allclose(obs, np.log2(size), atol=1e-13)
+
+        # Independent 90-digit decimal evaluations of the defining formula.
+        self.assertAlmostEqual(renyi([1, 3, 4], order=128), 0.698605032375378)
+        self.assertAlmostEqual(renyi([1, 3, 4], order=2000), 0.6934939275237072)
+        self.assertAlmostEqual(renyi([1, 10, 10], order=2000), 0.741961752015105)
+
+        for counts in ([1, 3, 4], [1, 10, 10], [1, 2, 3, 4, 5]):
+            with np.errstate(divide='raise', invalid='raise', over='raise'):
+                obs = renyi(counts, order=np.finfo(float).max)
+            npt.assert_allclose(obs, -np.log(max(counts) / sum(counts)), rtol=1e-13)
 
     def test_robbins(self):
         self.assertEqual(robbins(np.array([1, 2, 3, 0, 1])), 2 / 7)
