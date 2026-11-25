@@ -131,6 +131,18 @@ class ReaderTests(GFF3IOTests):
         exp = {'db_xref': 'GO:000152,GO:001234', 'note': 'fooo'}
         self.assertEqual(exp, obs)
 
+    def test_parse_attr_unescape(self):
+        s = 'ID=a%3B%3D%26%2Cb;Note=important%3B useful'
+        obs = _parse_attr(s)
+        exp = {'ID': 'a;=&,b', 'note': 'important; useful'}
+        self.assertEqual(exp, obs)
+
+    def test_parse_attr_unescape_multiple_values(self):
+        s = 'Dbxref=a%2Cb,c%3Bd'
+        obs = _parse_attr(s)
+        exp = {'db_xref': 'a,b,c;d'}
+        self.assertEqual(exp, obs)
+
     def test_yield_record(self):
         obs = [('data', 'seqid1', ['seqid1\txxx', 'seqid1\tyyy']),
                ('data', 'seqid2', ['seqid2\tzzz'])]
@@ -330,6 +342,18 @@ class RoundtripTests(GFF3IOTests):
             exp = [i.rstrip() for i in f.readlines() if not i.startswith('#')]
 
         self.assertEqual(obs, exp)
+
+    def test_roundtrip_interval_metadata_escape(self):
+        imd = IntervalMetadata(9)
+        imd.add([(0, 9)], metadata={
+            'type': 'gene', 'ID': 'a;=&,b', 'note': 'important; useful'})
+        with io.StringIO() as fh:
+            _interval_metadata_to_gff3(imd, fh, seq_id='ctg123')
+            fh.seek(0)
+            obs = _gff3_to_interval_metadata(fh, seq_id='ctg123')
+        md = dict(list(obs.query())[0].metadata)
+        self.assertEqual(md['ID'], 'a;=&,b')
+        self.assertEqual(md['note'], 'important; useful')
 
     def test_roundtrip_interval_metadata_generator(self):
         with io.StringIO() as fh:
